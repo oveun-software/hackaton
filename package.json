@@ -1,15 +1,17 @@
 {
-  "name": "cora-atlas-hackathon",
+  "name": "talentlens",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Evidence-led recruiting workspace powered by NVIDIA Nemotron",
-  "engines": { "node": ">=22.16.0" },
+  "description": "Multilingual CV discovery with verifiable AI recommendations",
+  "engines": {
+    "node": ">=22.16.0"
+  },
   "scripts": {
     "start": "node --env-file-if-exists=.env server/index.js",
     "dev": "node --watch --env-file-if-exists=.env server/index.js",
     "test": "node --test tests/*.test.js",
-    "check": "node --check server/index.js && node --check public/app.js"
+    "check": "node --check server/index.js && node --check public/app.js && node --check public/i18n.js"
   },
   "dependencies": {
     "express": "^5.1.0",

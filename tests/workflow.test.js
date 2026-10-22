@@ -6,9 +6,10 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { zipSync, strToU8 } from 'fflate';
+import { translate } from '../public/i18n.js';
 
 test('flujo completo: carga, vacante, consentimiento, IA, evidencias y revisión persistente', async t => {
-  const directory = await mkdtemp(path.join(tmpdir(), 'cora-atlas-test-'));
+  const directory = await mkdtemp(path.join(tmpdir(), 'talentlens-test-'));
   const seenCalls = [];
   const mock = createServer(async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
@@ -17,9 +18,11 @@ test('flujo completo: carga, vacante, consentimiento, IA, evidencias y revisión
     const request = JSON.parse(body); seenCalls.push(request);
     assert.equal(req.headers.authorization, 'Bearer fixture-token');
     const data = request.messages[1].content;
-    const answer = seenCalls.length === 1
+    const answer = request.messages[0].content.startsWith('You translate recruiting reports')
+      ? { ...JSON.parse(data), summary: 'Une analyse traduite pour examiner les expériences professionnelles.' }
+      : seenCalls.length === 1
       ? { requirements: [{ id: 'r1', label: 'React y TypeScript', priority: 'required', quote: 'React y TypeScript' }], clarificationQuestions: [] }
-      : { summary: 'El documento contiene una experiencia profesional relevante que se debe contrastar en entrevista.', candidates: JSON.parse(data.split('DATOS: ')[1]).candidates.map(c => ({ candidateId: c.id, recommendation: 'possible', rationale: 'El CV declara experiencia profesional con las tecnologías de la oferta.', evidence: [{ requirementId: 'r1', status: 'supported', quote: 'React y TypeScript', explanation: 'La experiencia está descrita en el documento.' }], interviewQuestions: ['¿Qué aportaste a ese proyecto?'] })) };
+      : { summary: 'El documento contiene una experiencia profesional relevante que se debe contrastar en entrevista.', candidates: JSON.parse(data.split('DATA: ')[1]).candidates.map(c => ({ candidateId: c.id, recommendation: 'possible', rationale: 'El CV declara experiencia profesional con las tecnologías de la oferta.', evidence: [{ requirementId: 'r1', status: 'supported', quote: 'React y TypeScript', explanation: 'La experiencia está descrita en el documento.' }], interviewQuestions: ['¿Qué aportaste a ese proyecto?'] })) };
     res.end(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(answer) } }] }));
   });
   await new Promise(resolve => mock.listen(0, '127.0.0.1', resolve));
@@ -33,7 +36,7 @@ test('flujo completo: carga, vacante, consentimiento, IA, evidencias y revisión
     child.stdout.on('data', chunk => { const match = chunk.toString().match(/http:\/\/127\.0\.0\.1:\d+/); if (match) { clearTimeout(timeout); resolve(match[0]); } });
     child.once('exit', code => { clearTimeout(timeout); reject(new Error(`Servidor cerrado: ${code}`)); });
   });
-  const call = async (url, body, headers = {}) => fetch(`${base}${url}`, { method: 'POST', headers: { 'X-Cora-Client': 'atlas', ...(body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), ...headers }, body: body instanceof FormData ? body : JSON.stringify(body) });
+  const call = async (url, body, headers = {}) => fetch(`${base}${url}`, { method: 'POST', headers: { 'X-TalentLens-Client': 'workspace', ...(body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), ...headers }, body: body instanceof FormData ? body : JSON.stringify(body) });
   assert.equal((await fetch(base)).status, 200);
   assert.equal((await call('/api/demo', {}, { Origin: 'https://untrusted.example' })).status, 403);
   const description = 'Es imprescindible experiencia profesional con React y TypeScript para herramientas B2B.';
@@ -54,6 +57,10 @@ test('flujo completo: carga, vacante, consentimiento, IA, evidencias y revisión
   const uploaded = await upload.json(); assert.equal(uploaded.added.length, 3); assert.equal(uploaded.errors.length, 0);
   const invalid = new FormData(); invalid.append('files', new Blob(['Not a PDF']), 'fake.pdf');
   assert.equal((await call('/api/candidates', invalid)).status, 422);
+  for (const language of ['en', 'es', 'fr', 'de']) {
+    const failure = await call('/api/vacancies/missing/analyze', { consent: true }, { 'Accept-Language': language });
+    const payload = await failure.json(); assert.equal(payload.code, 'errors.roleNotFound'); assert.equal(payload.error, translate(language, payload.code));
+  }
   const dtd = new FormData();
   dtd.append('files', new Blob([zipSync({ 'word/document.xml': strToU8('<!DOCTYPE document [<!ENTITY x "unsafe">]><document><t>&x;</t></document>') })]), 'dtd.docx');
   assert.equal((await call('/api/candidates', dtd)).status, 422);
@@ -61,6 +68,14 @@ test('flujo completo: carga, vacante, consentimiento, IA, evidencias y revisión
   const response = await call(`/api/vacancies/${vacancy.id}/analyze`, { consent: true, note: 'Revisar proyectos.' });
   assert.equal(response.status, 200); const report = await response.json();
   assert.equal(report.candidates.length, 3); assert.equal(report.sources.length, 3); assert.equal(seenCalls.length, 2);
+  assert.equal(report.language, 'en');
+  assert.equal((await call(`/api/reports/${report.id}/translate`, { consent: false, language: 'fr' })).status, 400);
+  const translation = await call(`/api/reports/${report.id}/translate`, { consent: true, language: 'fr' });
+  assert.equal(translation.status, 200);
+  const translatedReport = await translation.json(); assert.equal(translatedReport.translations.fr.language, 'fr');
+  assert.deepEqual(translatedReport.sources, report.sources);
+  assert.equal(translatedReport.translations.fr.candidates[0].evidence[0].quote, report.candidates[0].evidence[0].quote);
+  await call(`/api/reports/${report.id}/translate`, { consent: true, language: 'fr' }); assert.equal(seenCalls.length, 3);
   const review = await call('/api/reviews', { reportId: report.id, candidateId: report.candidates[0].candidateId, status: 'interview' }); assert.equal(review.status, 200);
   const state = await (await fetch(`${base}/api/state`)).json(); assert.equal(state.reports.length, 1); assert.equal(state.reviews[0].status, 'interview');
   assert.equal(JSON.stringify(state).includes('fixture-token'), false);

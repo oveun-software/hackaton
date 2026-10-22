@@ -1,30 +1,37 @@
-# Cora Atlas
+# TalentLens
 
-An independent recruiting workspace inspired by the **idea** of Cora, written from scratch for Open Agent Hackathon 2026. No Cora product code, accounts, services, databases or real CVs are included.
+**Find talent. See why.** TalentLens is a multilingual CV discovery workspace that connects job requirements with documented candidate experience. NVIDIA Nemotron interprets the role and CVs and proposes candidates with source citations. A recruiter verifies the evidence and decides the next step.
 
-Atlas turns a job description and an explicit collection of CVs into evidence-led recommendations. **Nemotron extracts the requirements, interprets the CVs and orders its recommendations.** Application code extracts document text, checks response structure and verifies literal citations. It contains no keyword compatibility engine, candidate scoring, percentages or automated hiring/rejection decisions.
+The application has no keyword compatibility engine, local candidate scoring, percentages or automatic hiring/rejection decisions.
 
-## Run locally on Windows
+## Quick start
 
-Requires Node.js **22.16 or later** (Node 22 recommended) and npm.
+Requires **Node.js 22.16 or later** and npm. Node 22 is recommended.
 
 ```powershell
-cd C:\Users\arian\Desktop\Proyectos\hackaton
+cd hackaton
 npm.cmd ci
-Copy-Item .env.example .env # only if .env does not already exist
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 npm.cmd start
 ```
 
-Open [Cora Atlas](http://127.0.0.1:4317). Alternatively, double-click `ABRIR-CORA-ATLAS.cmd`. The server listens only on this computer. Stop it with Ctrl+C. Node 22 may print its built-in SQLite experimental warning.
+Open [TalentLens](http://127.0.0.1:4317). On Windows, you can also double-click `START-TALENTLENS.cmd`. Stop the server with Ctrl+C. The server binds to the local computer only. Node 22 may display an experimental warning for its built-in SQLite module.
 
-The interface works without API credentials: use **Preparar ejemplo** to add three explicitly fictional CVs and a vacancy. Example data does **not** include fabricated AI results. To run an analysis, connect a provider, select a vacancy, provide consent and click **Analizar con Nemotron**.
+Without API credentials, you can create roles, upload/view CVs and load three clearly fictional sample profiles. Sample content contains no fabricated AI results.
 
-## NVIDIA API key
+## Languages
 
-1. Open the [Nemotron 3.5 Super VL model page](https://build.nvidia.com/nvidia/nemotron-3.5-super-vl-120b-a12b).
-2. Sign in to NVIDIA and choose **Generate API Key**. Complete any account verification NVIDIA requires.
-3. In the local `.env`, set `NVIDIA_API_KEY` to that key. Keep `AI_PROVIDER=nvidia`.
-4. Restart the server. In **Conexiones**, check the provider, then run a sample analysis.
+The flag selector in the top bar switches between **English, Spanish, French and German**. English is the initial language. Your selection is remembered locally; `?lang=en`, `?lang=es`, `?lang=fr` and `?lang=de` also select a language explicitly.
+
+Navigation, illustrations, forms, validation, API errors, connection states, sample content, dates and report export labels are localized. Nemotron is instructed to write every narrative field in the selected language. Existing reports can be translated through the active AI provider after explicit consent, and translations are cached locally. Translation preserves candidate IDs, ordering, recommendations, evidence statuses and original quotations.
+
+Uploaded CVs, recruiter notes, company names and other user-provided content retain their original language. Source quotations are never translated: they remain verifiable against the exact document used for the report. The built-in fictional CVs and sample role have curated versions in all four languages.
+
+## Connect NVIDIA Nemotron
+
+1. Sign in to the [Nemotron 3.5 Super VL model page](https://build.nvidia.com/nvidia/nemotron-3.5-super-vl-120b-a12b).
+2. Choose **Generate API Key** and complete any account verification required by NVIDIA.
+3. Save the key in the local `.env`, then restart TalentLens.
 
 ```dotenv
 AI_PROVIDER=nvidia
@@ -32,13 +39,13 @@ NVIDIA_API_KEY=your-private-key
 NVIDIA_MODEL=nvidia/nemotron-3.5-super-vl-120b-a12b
 ```
 
-The model page showed a free prototype endpoint on 22 October 2026. Its availability and quotas are controlled by NVIDIA. The older Nemotron 3 Super free endpoint was marked deprecated. The API key authorizes NVIDIA API access; it is not an OpenAI API key. Never commit `.env` or paste the key into source code. `.env` is ignored by Git.
+In **Connections**, test the active provider. Then open a role, consent to sending its documents and run an analysis. Endpoint availability and usage quotas depend on NVIDIA. Keys remain server-side; `.env`, local data and dependencies are excluded from Git.
 
-## Meterless integration
+## Connect Meterless Nightshift
 
-The backend implements the official [Nightshift OpenAI-compatible provider contract](https://github.com/Meterless/Meterless/blob/main/docs/agent-ready/add-meterless-provider.md): URL normalization, real bearer token, `meterless-app: cora-atlas`, `meterless-scope: user`, routing model IDs and a 180-second request timeout. Connection checks use authenticated `/v1/models` and distinguish missing credentials, unauthorized, offline and online.
+TalentLens implements the [official OpenAI-compatible Nightshift provider contract](https://github.com/Meterless/Meterless/blob/main/docs/agent-ready/add-meterless-provider.md): URL normalization, real bearer authentication, `meterless-app: talentlens`, `meterless-scope: user`, routing model IDs and a 180-second request timeout.
 
-Install and start Nightshift using the [official Meterless site](https://www.meterless.ai/windows.html). Configure its model fleet/lane to use Nemotron, then set:
+Install and start [Nightshift](https://www.meterless.ai/windows.html), configure its model lane to execute Nemotron, then set:
 
 ```dotenv
 AI_PROVIDER=meterless
@@ -47,11 +54,18 @@ METERLESS_RUNTIME_TOKEN=the-real-token-from-your-runtime
 METERLESS_MODEL=meterless/deep
 ```
 
-The runtime token is stored by Nightshift under its `<stateDir>/proxy-token`. `rt-local` is not accepted. Use a routing ID listed by your runtime. `meterless/deep` is a route, not proof of the underlying model: capture the actual Nemotron execution in Nightshift for the submission. This project does not install Nightshift or claim H-MEM engine conformance. End-to-end testing with a real runtime remains pending.
+Nightshift stores its token at `<stateDir>/proxy-token`. The placeholder `rt-local` is rejected. Use a route listed by your runtime. Connection checks authenticate against `/v1/models`, distinguish unauthorized/offline/online states and send no CVs. A routing ID does not establish the underlying model: verify the actual Nemotron execution in Nightshift.
 
-## Zetaris integration
+## Connect Zetaris
 
-The connector supports a **Zetaris deployment exposing a Trino endpoint**, using the documented [Trino client protocol](https://trino.io/docs/current/develop/client-protocol.html). It reads a configured view, pages results and imports source-labelled CVs into the local workspace. It never asks a model to generate SQL. The query selects the four fixed columns below, with `LIMIT 25`; there is no application ranking.
+The read-only adapter supports a **Zetaris deployment exposing a Trino endpoint**, using the [Trino client protocol](https://trino.io/docs/current/develop/client-protocol.html). Configure a dedicated authorised view with these columns:
+
+| Column | Content |
+| --- | --- |
+| `candidate_id` | Stable candidate identifier |
+| `display_name` | Display name |
+| `document_name` | CV filename |
+| `cv_text` | Extracted CV text |
 
 ```dotenv
 ZETARIS_URL=https://your-authorized-trino-endpoint
@@ -60,36 +74,36 @@ ZETARIS_TOKEN=your-token-if-required
 ZETARIS_TABLE=hackathon.recruiting.candidates
 ```
 
-Prepare a read-only view with `candidate_id`, `display_name`, `document_name`, `cv_text`. Populate it through Zetaris from two clearly identified fictional recruiting data sources to demonstrate federation, then use **Conexiones → Importar desde Zetaris**. The chosen endpoint must support Trino and the selected bearer authentication. The separate Zetaris SaaS REST API uses another protocol; its URL is **not** interchangeable with the Trino endpoint. Confirm the access method offered by the hackathon workspace before configuring this adapter. Real Zetaris testing and federation evidence remain pending.
+Choose **Connections → Import from Zetaris**. The adapter uses fixed selected columns and `LIMIT 25`; it does not generate SQL or rank candidates. It pages responses and rejects cross-origin query redirects. The configured endpoint must support Trino and the selected authentication. The separate Zetaris SaaS REST API uses a different protocol and cannot be substituted without adapting the connector.
 
-## Workflow and storage
+## Architecture
 
 ```mermaid
 flowchart LR
-  A[Local PDF / DOCX / TXT] --> B[Bounded text extraction]
-  Z[Zetaris read-only view] --> C[(Local SQLite)]
-  B --> C
-  J[Job description] --> N[Nemotron: extract requirements]
-  C --> P[Explicit consent]
-  N --> R[Nemotron: compare all supplied CVs]
-  P --> R
-  R --> V[Validate schema and literal citations]
+  F[PDF / DOCX / TXT] --> E[Bounded text extraction]
+  E --> D[(Local SQLite)]
+  Z[Zetaris read-only view] --> D
+  J[Job description] --> N[Nemotron: understand requirements]
+  D --> C[Explicit consent]
+  N --> A[Nemotron: compare every supplied CV]
+  C --> A
+  A --> V[Validate IDs, coverage and literal citations]
   V --> H[Human review and interview questions]
 ```
 
-Vacancies, document text, reports, report source snapshots and human review states persist in `data/atlas.sqlite`. Keys remain server-side. Data and reports are excluded from Git. Every analysis creates a new report; previous results retain the exact CV text they used. Reports can be downloaded as Markdown. A filename filter only filters the library display; it does not select, rank or score candidates for the AI.
+Analysis uses two model calls: requirement extraction and candidate comparison. The app validates output structure, coverage and exact source quotations, preserving the model’s recommendation order. Reports retain the job description and CV text they used. These checks provide traceability; they do not establish the truth of a CV or guarantee a correct, unbiased recommendation.
 
-The analysis makes two model calls: requirements first, then comparison of every supplied CV. The model must cover every requirement and candidate once. Responses containing unknown IDs, omitted candidates or unsupported literal quotes are rejected instead of shown as valid reports. These checks establish traceability, not the truth of a CV or the correctness of a recommendation. Prompts instruct the model to ignore document instructions and protected personal attributes; this is not a guarantee against prompt injection or bias. A recruiter reviews the output.
+Roles, document text, source snapshots, reports, translations and human review states persist in `data/talentlens.sqlite`. The application automatically migrates the previous database filename without discarding records. Original upload binaries are not retained.
 
-## Limits of this first version
+## Scope and limits
 
-- Single-user local prototype, not a hosted or production HR system; no authentication, tenant isolation or shared accounts.
-- Up to 25 CVs, 10 files per import, 5 MB per file, 40,000 characters per CV, 200,000 characters per analysis. Limits cause explicit errors, never silent truncation.
-- PDFs: text layer only, at most 50 pages. Scans need external OCR. DOCX: main text, tables, headers and footers; DTDs and oversized archives are rejected.
-- Parsing runs in separate child processes with a 128 MB JavaScript heap budget and 20-second timeout. Native parser failures do not take down the web server. This is not an OS-level security sandbox or a hard cap on native library memory.
-- No background indexing, automatic CV discovery, embeddings, retrieval scoring or automatic candidate rejection. No chat/memory engine is claimed.
-- Original upload binaries are not retained; extracted text and report snapshots are retained locally. Provider requests require an explicit checkbox in the UI and consent flag on the API. Use synthetic data for the hackathon and check provider data terms before real CVs.
-- Live NVIDIA, Meterless and Zetaris credentials are not included; successful mock tests do not prove live service integration.
+- Single-user local prototype; no authentication, tenant isolation or production hosting.
+- Up to 25 CVs, 10 files per import, 5 MB per file, 40,000 characters per CV and 200,000 characters per analysis. Oversized inputs are rejected without silent truncation.
+- Text-based PDFs up to 50 pages; scanned PDFs need OCR first. DOCX reads main text, tables, headers and footers, with archive/XML limits and no DTDs.
+- Parsing uses separate child processes with a 128 MB JavaScript heap budget and a 20-second timeout. This is not an OS-level security sandbox or a hard native-memory cap.
+- Model requests and report translations require explicit consent. Use fictional CVs for demonstrations and check the provider’s data terms before real CVs.
+- Prompts instruct the model to ignore embedded document instructions and protected attributes. Prompt injection resistance and fairness require further evaluation.
+- Real NVIDIA, Meterless and Zetaris integration still requires credentials and live verification; mock tests do not establish that integration.
 
 ## Validation
 
@@ -99,6 +113,6 @@ npm.cmd test
 npm.cmd audit
 ```
 
-Tests cover real PDF/DOCX/TXT parsing, invalid documents, cross-origin writes, explicit consent, a two-call model workflow, persisted reports/reviews, invented citations, missing candidates/requirements, Meterless authentication and Zetaris pagination/credential boundaries. External services are mocked; no paid API calls or real CVs are used.
+Tests cover PDF/DOCX/TXT parsing, invalid inputs, origin controls, consent, evidence validation, locale completeness and parameters, selected model language, translation integrity/cache, localized exports, database migration, provider authentication and Zetaris paging boundaries. External services are mocked; no real CVs or paid model requests are used.
 
-See [HACKATHON.md](HACKATHON.md) for requirements, track rationale, pending submission work and source links. See [CURSOR-HANDOFF.md](CURSOR-HANDOFF.md) to continue in Cursor.
+See [submission notes](docs/SUBMISSION.md) for project provenance, sponsor contribution and verified delivery status.
