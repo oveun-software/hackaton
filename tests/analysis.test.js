@@ -29,6 +29,27 @@ test('conserva el orden del modelo y exige cobertura completa', async () => {
   const result = await runAnalysis({ vacancy, candidates, note: 'Revisar proyectos', complete: async () => ++calls === 1 ? { requirements, clarificationQuestions: [] } : valid() });
   assert.equal(calls, 2); assert.equal(result.candidates[0].candidateId, 'c1'); assert.equal('score' in result.candidates[0], false);
 });
+test('pide una única corrección de una cita inválida y vuelve a validar todas las fuentes', async () => {
+  let calls = 0;
+  const invalid = valid(); invalid.candidates[0].evidence[0].quote = 'Texto inventado que no está en el CV';
+  const report = await runAnalysis({ vacancy, candidates, complete: async messages => {
+    calls++;
+    if (calls === 1) return { requirements, clarificationQuestions: [] };
+    if (calls === 2) return invalid;
+    assert.equal(messages.length, 4);
+    assert.match(messages[3].content, /errors.invalidQuote/);
+    return valid();
+  } });
+  assert.equal(calls, 3); assert.equal(report.candidates[0].evidence[0].quote, valid().candidates[0].evidence[0].quote);
+});
+
+test('no acepta una corrección con otra cita inventada ni entra en reintentos ilimitados', async () => {
+  let calls = 0;
+  const invalid = valid(); invalid.candidates[0].evidence[0].quote = 'Otra afirmación que el CV no contiene';
+  await assert.rejects(() => runAnalysis({ vacancy, candidates, complete: async () => ++calls === 1 ? { requirements, clarificationQuestions: [] } : invalid }), /errors.invalidQuote/);
+  assert.equal(calls, 3);
+});
+
 test('normaliza las URLs de Meterless sin duplicar v1', () => {
   for (const suffix of ['', '/', '/v1', '/v1/chat/completions', '/v1/models', '/healthz']) assert.equal(normalizeBase(`127.0.0.1:8088${suffix}`), 'http://127.0.0.1:8088/v1');
   assert.throws(() => normalizeBase('http://remote.example/v1'), /errors.https/);

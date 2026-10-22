@@ -33,7 +33,7 @@ For the hackathon, connect Nemotron **through Meterless Nightshift**. The [Offic
 
 1. Sign in to the [Nemotron 3.5 Super VL model page](https://build.nvidia.com/nvidia/nemotron-3.5-super-vl-120b-a12b) and choose **Generate API Key**.
 2. If that button does not open the key dialog, use [NVIDIA NGC API Keys](https://org.ngc.nvidia.com/account/api-keys): sign in, generate a personal key and enable **NVIDIA Public API Endpoints**. Follow the [official NGC guide](https://docs.nvidia.com/ngc/latest/ngc-user-guide.html).
-3. Save the key in **Nightshift → Providers**, select `nvidia/nemotron-3.5-super-vl-120b-a12b` if the runtime supports it, and verify which model actually handles a request.
+3. Save the key in **Nightshift → Providers**. For the text-CV workflow, select `nvidia/nemotron-3.5-lightning-30b-a3b` and verify which model actually handles a request. The NVIDIA API key is account-based; changing the selected model does not require sharing an account or creating another key.
 4. Configure TalentLens with the Nightshift URL, runtime token and routing model below. Do not put the NVIDIA key in the application settings for the submitted workflow.
 
 In **Connections**, test the active provider. Then open a role, consent to sending its documents and run an analysis. Endpoint availability and usage quotas depend on NVIDIA. `.env`, local data and dependencies are excluded from Git. The existing direct NVIDIA adapter is a development option and does not demonstrate the required Nightshift integration.
@@ -48,14 +48,18 @@ Install and start [Nightshift](https://meterless.ai/windows.html), save your own
 AI_PROVIDER=meterless
 METERLESS_BASE_URL=http://127.0.0.1:8088/v1
 METERLESS_RUNTIME_TOKEN=the-real-token-from-your-runtime
-METERLESS_MODEL=nvidia/nemotron-3.5-super-vl-120b-a12b
+METERLESS_MODEL=nvidia/nemotron-3.5-lightning-30b-a3b
 ```
 
 Nightshift stores its token at `<stateDir>/proxy-token`. The placeholder `rt-local` is rejected. Use a model or route listed by your runtime. Connection checks authenticate against `/v1/models`, distinguish unauthorized/offline/online states and send no CVs. `npm run doctor` also checks that the selected model is advertised. `npm run doctor -- --infer` adds one small JSON inference without CVs and reports the actual model from Nightshift's response.
 
 **Nightshift 1.2.1 routing caveat:** an application's saved routing profile can override a concrete requested model. In Nightshift's compute sources, enable the intended Nemotron and disable NVIDIA models your account cannot run. Preserve privacy and verification settings. TalentLens refuses a response if Nightshift does not confirm the selected concrete NVIDIA model, and saves actual model/receipt IDs with successful reports. A successful model-catalog check alone does not prove inference or routing.
 
-A live JSON inference through TalentLens's provider adapter, Nightshift 1.2.1 and the selected Nemotron 3.5 endpoint passed on 22 October 2026. The full fictional-CV analysis has encountered NVIDIA 500 responses and Nightshift provider deadlines; it has not yet passed end to end. A working Meterless Engine feature is still pending. Provider compatibility alone does not meet the Engine requirement.
+The verified configuration uses the **fast** application profile in Nightshift with only the selected Nemotron enabled. This profile change preserves privacy and verification settings. TalentLens requests a structured, side-effect-free result tool, so its own two-stage recruiting workflow does not trigger Nightshift's extra code-planning generation when CVs mention programming languages. Streaming avoids the runtime's 45-second wait for buffered provider headers. The adapter accepts Nightshift 1.2.1's complete tool-call deltas as well as incremental OpenAI deltas, bounds the stream to 4 MB, discards reasoning, and refuses incomplete or review-gated responses.
+
+**Live verification passed on 22 October 2026:** three fictional CVs were retrieved from Zetaris and analysed through Nightshift by `nvidia/nemotron-3.5-lightning-30b-a3b`; both actual model IDs and receipt IDs were confirmed. Every candidate and requirement was covered and every source quotation passed validation. The successful run used two model calls. A working Meterless Engine feature is still pending; provider compatibility alone does not meet that separate requirement.
+
+NVIDIA currently advertises this hosted inference catalog as [free for development](https://build.nvidia.com/). This setup uses that endpoint and does not provision paid GPU infrastructure or subscribe to a plan. Trial availability and request limits are controlled by NVIDIA. Running Nightshift locally still uses the computer's resources.
 
 After setting up the fictional Zetaris sources, `npm run verify:live` exercises the actual Zetaris → Nightshift → Nemotron path. It checks every imported field against the three public fictional fixtures **before** sending anything to AI, validates all report citations, and writes a successful report plus execution IDs to ignored `data/live-verification.json`. Additional or changed database records stop the check without sending CVs. This command makes real provider requests and requires available quota; CI uses mocks instead.
 
@@ -102,7 +106,7 @@ flowchart LR
   V --> H[Human review and interview questions]
 ```
 
-Analysis uses two model calls: requirement extraction and candidate comparison. The app validates output structure, coverage and exact source quotations, preserving the model’s recommendation order. Reports retain the job description and CV text they used. These checks provide traceability; they do not establish the truth of a CV or guarantee a correct, unbiased recommendation.
+Analysis has two stages: requirement extraction and candidate comparison. The app validates output structure, coverage and exact source quotations, preserving the model’s recommendation order. If a stage fails citation validation, the model gets one correction attempt; the full result must pass the same validator. No evidence is repaired or silently discarded by application code. There are at most four model calls and no automatic retry of provider/network failures. Reports retain the job description and CV text they used. These checks provide traceability; they do not establish the truth of a CV or guarantee a correct, unbiased recommendation.
 
 Roles, document text, source snapshots, reports, translations and human review states persist in `data/talentlens.sqlite`. The application automatically migrates the previous database filename without discarding records. Original upload binaries are not retained.
 

@@ -1,4 +1,9 @@
 import { randomUUID } from 'node:crypto';
+import { readCompletionStream } from './completion-stream.js';
+
+const resultTool = { type: 'function', function: { name: 'emit_structured_result',
+  description: 'Return the requested JSON result as structured data. This function has no side effects and does not make hiring decisions.',
+  parameters: { type: 'object', additionalProperties: true } } };
 
 export class ServiceError extends Error {
   constructor(message, status = 502) { super(message); this.status = status; }
@@ -42,20 +47,27 @@ export async function completeJson(provider, messages, fetcher = fetch, onExecut
   try {
     response = await fetcher(`${provider.base}/chat/completions`, {
       method: 'POST', headers: headers(provider), redirect: 'error', signal: AbortSignal.timeout(180000),
-      body: JSON.stringify({ model: provider.model, messages, temperature: 0.2, max_tokens: 16384,
-        stream: false, response_format: { type: 'json_object' },
+      body: JSON.stringify({ model: provider.model, messages, temperature: provider.model.includes('nemotron-3.5') ? 1 : 0.2, max_tokens: 16384,
+        ...(provider.id === 'meterless'
+          ? { stream: true, tools: [resultTool], tool_choice: { type: 'function', function: { name: resultTool.function.name } } }
+          : { stream: false, response_format: { type: 'json_object' } }),
         ...(provider.id === 'nvidia' ? { chat_template_kwargs: { enable_thinking: false } } : {}) })
     });
   } catch { throw new ServiceError('errors.providerNetwork'); }
   if ([401, 403].includes(response.status)) throw new ServiceError('errors.providerAuth', 503);
   if (response.status === 429) throw new ServiceError('errors.rateLimit', 429);
   if (!response.ok) throw new ServiceError('errors.providerFailed');
-  const data = await response.json();
+  let data;
+  try { data = response.headers?.get('content-type')?.includes('text/event-stream') ? await readCompletionStream(response) : await response.json(); }
+  catch (error) { throw new ServiceError(error.message?.startsWith('errors.') ? error.message : 'errors.aiResponse'); }
   if (data.meterless?.requires_review || data.choices?.[0]?.finish_reason === 'requires_review') throw new ServiceError('errors.providerReview');
   const actualModel = data.meterless?.winning_route?.model || data.meterless?.routed_model || data.model;
   if (provider.id === 'meterless' && provider.model.startsWith('nvidia/') && actualModel !== provider.model) throw new ServiceError('errors.modelMismatch');
   if (data.choices?.[0]?.finish_reason === 'length') throw new ServiceError('errors.aiTruncated');
-  const content = data.choices?.[0]?.message?.content;
+  const message = data.choices?.[0]?.message;
+  const tools = message?.tool_calls;
+  if (tools && (tools.length !== 1 || tools[0].function?.name !== resultTool.function.name)) throw new ServiceError('errors.aiResponse');
+  const content = tools ? tools[0].function.arguments : message?.content;
   if (typeof content !== 'string') throw new ServiceError('errors.aiResponse');
   try {
     const result = JSON.parse(content.trim().replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, ''));

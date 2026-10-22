@@ -2,6 +2,8 @@
 
 These three fictional profiles were written for TalentLens. They contain no real applicants, proprietary documents or third-party dataset. They are sample inputs, never fabricated model outputs. Regenerate them from `server/demo.js` with `npm run samples:zetaris`.
 
+`verified-analysis.json` is a recorded **real model output**, generated on 22 October 2026 from these three inputs through local Zetaris → Nightshift fast → NVIDIA Nemotron 3.5 Lightning. It includes the exact inputs, validated recommendations/citations and the two execution receipt IDs, with no credentials or reasoning. It can be inspected offline; it is not presented as a new live analysis. Regenerate your own live verification with `npm run verify:live`, which writes to ignored `data/live-verification.json`.
+
 `profiles.csv` represents profile records and `documents.csv` represents CV document text. Zetaris joins the sources into `talentlens.candidates`; Nemotron performs all semantic comparison afterward. Zetaris's join is by stable ID, with no keyword matching or compatibility score.
 
 Copy both CSV files to `/home/zetaris/customer-data/shared/talentlens/` in the local bundle's driver container, using `docker compose cp` from the bundle directory. The bundle's customer-data volume persists those files. Run `create.sql` once in your own Zetaris SQL Editor, one statement per execution. It creates only `TALENTLENS_FILES` and the `talentlens` container/view, and deliberately contains no DROP statements. On an existing instance, inspect any object with the same name before reusing it.

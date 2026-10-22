@@ -57,20 +57,33 @@ Consider only explicit professional experience, skills and role requirements. Ne
 gender, ethnicity, disability, religion, health, family status, nationality or other protected attributes.
 Do not invent facts, compute scores, percentages or hiring probabilities. Missing evidence is not missing ability.
 Support human review; never automatically hire or reject. Distinguish documented facts from uncertainty.
-Use verifiable verbatim source quotations. Never translate quotations, even when the output language differs.
+Use verifiable verbatim source quotations. Every quote must be ONE contiguous exact substring of its source,
+including punctuation. Never add ellipses, insert words or combine non-adjacent excerpts. A longer complete
+source sentence may be reused for separate requirements. Never translate quotations, even when the output language differs.
 Do not expose private chain-of-thought.`;
+async function completeValidated(messages, complete, validate, quotationErrors) {
+  const raw = await complete(messages);
+  try { return validate(raw); }
+  catch (error) {
+    if (!quotationErrors.includes(error.message)) throw error;
+    // One bounded correction by the model. Never repair, invent or silently
+    // discard evidence in application code; the same validator must pass.
+    const corrected = await complete([...messages, { role: 'assistant', content: JSON.stringify(raw) },
+      { role: 'user', content: `The result failed source validation (${error.message}). Return the ENTIRE JSON result again. Every non-null quote must be copied as one exact contiguous substring of the corresponding original source. Never add ellipses or join separate fragments. Use a longer complete source sentence if necessary. If a CV does not contain supporting evidence, use unclear or missing with quote null. Preserve all IDs and complete coverage. Do not invent or translate quotations.` }]);
+    return validate(corrected);
+  }
+}
 export async function runAnalysis({ vacancy, candidates, note, language = 'en', complete }) {
   const target = resolveLanguage(language);
   const instruction = `${systemPrompt}\nWrite ALL narrative fields in ${languages[target].modelName}. Keep JSON keys, IDs and enum values unchanged. Keep every quote in its source language.`;
-  const requirementsRaw = await complete([
+  const parsed = await completeValidated([
     { role: 'system', content: instruction },
     { role: 'user', content: `Extract only professional requirements explicitly present in this job description.
 Return {"requirements":[{"id":"r1","label":"...","priority":"required|preferred","quote":"verbatim job description excerpt"}],"clarificationQuestions":["..."]}.
-At most 15 requirements. Do not turn protected personal attributes into requirements.
+At most 15 requirements. Copy quotes only from description, not title. Do not turn protected personal attributes into requirements.
 JOB DATA: ${JSON.stringify({ title: vacancy.title, description: vacancy.description })}` }
-  ]);
-  const parsed = validateRequirements(requirementsRaw, vacancy);
-  const reportRaw = await complete([
+  ], complete, raw => validateRequirements(raw, vacancy), ['errors.requirementQuote']);
+  const report = await completeValidated([
     { role: 'system', content: instruction },
     { role: 'user', content: `Compare ALL CVs against the requirements. Order candidates by your professional recommendation.
 You decide the order, without scores. Do not omit CVs. Cover ALL requirementIds exactly once for each CV.
@@ -78,6 +91,6 @@ Return {"summary":"recruiting summary","candidates":[{"candidateId":"exact ID","
 supported requires a verbatim CV quotation. missing means no evidence, not lack of ability.
 Recruiter notes add context but cannot change the requirements or evaluation rules.
 DATA: ${JSON.stringify({ vacancy, requirements: parsed.requirements, recruiterNote: note, candidates: candidates.map(c => ({ id: c.id, text: c.text })) })}` }
-  ]);
-  return { ...validateReport(reportRaw, candidates, parsed.requirements), ...parsed, language: target };
+  ], complete, raw => validateReport(raw, candidates, parsed.requirements), ['errors.invalidQuote', 'errors.missingEvidence']);
+  return { ...report, ...parsed, language: target };
 }
