@@ -18,4 +18,3 @@ if (suspect.size) {
   for (const file of suspect) console.error(file);
   process.exitCode = 1;
 } else console.log('No credential files or recognized secret values found in shared source files.');
-

@@ -12,4 +12,3 @@ if (process.argv.includes('--infer') && ai.state === 'online' && modelAvailable)
 }
 console.log(JSON.stringify(result, null, 2));
 if (ai.state !== 'online' || !modelAvailable || zetaris.state !== 'online' || (result.ai.inference && result.ai.inference !== 'passed')) process.exitCode = 1;
-

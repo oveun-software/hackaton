@@ -32,4 +32,3 @@ if ((!env.METERLESS_RUNTIME_TOKEN || process.argv.includes('--refresh-token')) &
   console.log('Start Nightshift first, then run npm run setup again to import its local token.');
 }
 console.log('Set your own Zetaris organization ID and read-only API key in .env, then run npm run doctor.');
-
