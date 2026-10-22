@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateRequirements, validateReport, runAnalysis } from '../server/analysis.js';
-import { normalizeBase, checkProvider, completeJson, readZetaris } from '../server/providers.js';
+import { normalizeBase, checkProvider, completeJson, readZetaris, checkZetaris, isZetarisConfigured } from '../server/providers.js';
 
 const vacancy = { title: 'Developer', description: 'Es imprescindible experiencia profesional con React y TypeScript.' };
 const requirements = [{ id: 'r1', label: 'React y TypeScript', priority: 'required', quote: 'experiencia profesional con React y TypeScript' }];
@@ -46,15 +46,54 @@ test('envía la autenticación y cabeceras oficiales de Meterless', async () => 
     return { ok: true, json: async () => ({ choices: [{ message: { content: '{"ok":true}' } }] }) };
   });
 });
-test('Zetaris pagina sin enviar credenciales a otro servidor', async () => {
-  const env = { ZETARIS_URL: 'https://zetaris.example', ZETARIS_USER: 'reader', ZETARIS_TOKEN: 'secret', ZETARIS_TABLE: 'catalog.schema.candidates' };
-  let calls = 0;
+test('no confunde el modelo solicitado con el ejecutado ni usa respuestas que requieren revisión', async () => {
+  const provider = { id: 'meterless', base: 'http://localhost:8088/v1', key: 'fixture-token', model: 'nvidia/nemotron-3.5-super-vl-120b-a12b' };
+  const data = { choices: [{ message: { content: '{"ok":true}' } }], model: provider.model,
+    meterless: { receipt_id: 'fixture-receipt', winning_route: { model: provider.model } } };
+  const fetcher = async () => ({ ok: true, json: async () => data });
+  let execution;
+  assert.deepEqual(await completeJson(provider, [], fetcher, value => { execution = value; }), { ok: true });
+  assert.equal(execution.actualModel, provider.model); assert.equal(execution.receiptId, 'fixture-receipt');
+  data.meterless.winning_route.model = 'nvidia/another-model';
+  await assert.rejects(() => completeJson(provider, [], fetcher), /errors.modelMismatch/);
+  data.meterless.winning_route.model = provider.model; data.meterless.requires_review = true;
+  await assert.rejects(() => completeJson(provider, [], fetcher), /errors.providerReview/);
+});
+
+test('Zetaris usa Lightning REST con identidad de organización y consultas acotadas de lectura', async () => {
+  const env = { ZETARIS_REST_URL: 'https://zetaris.example/api/v1.0/', ZETARIS_ORG_ID: '7', ZETARIS_API_KEY: 'fixture-key', ZETARIS_TABLE: 'talentlens.candidates' };
   const rows = await readZetaris(env, async (url, options) => {
-    calls++;
-    if (calls === 1) { assert.match(options.body, /^SELECT .* LIMIT 25$/); return { ok: true, json: async () => ({ nextUri: 'https://zetaris.example/next' }) }; }
-    return { ok: true, json: async () => ({ columns: [{ name: 'candidate_id' }], data: [['c1']] }) };
+    assert.equal(url, 'https://zetaris.example/api/v1.0/sql-editor/sqls/run');
+    assert.equal(options.headers.Authorization, 'Bearer fixture-key');
+    assert.equal(options.headers['X-Org-ID'], '7');
+    assert.match(options.headers['X-Request-ID'], /^[\da-f-]{36}$/);
+    assert.equal(options.redirect, 'error');
+    const body = JSON.parse(options.body);
+    assert.equal(body.sql, 'SELECT candidate_id, display_name, document_name, cv_text FROM talentlens.candidates LIMIT 25');
+    assert.equal(body.limit, 25); assert.equal(body.source, 'SqlEditor');
+    return { ok: true, json: async () => ({ data: [['c1', 'Fictional candidate', 'cv.txt', 'Fictional professional experience.']] }) };
   });
-  assert.deepEqual(rows, [{ candidate_id: 'c1' }]);
-  await assert.rejects(() => readZetaris(env, async () => ({ ok: true, json: async () => ({ nextUri: 'https://other.example/steal' }) })), /errors.zetarisRedirect/);
-  await assert.rejects(() => readZetaris({ ...env, ZETARIS_TABLE: 'x;DROP TABLE records' }), /errors.zetarisTable/);
+  assert.deepEqual(rows, [{ candidate_id: 'c1', display_name: 'Fictional candidate', document_name: 'cv.txt', cv_text: 'Fictional professional experience.' }]);
+  let sent = false;
+  await assert.rejects(() => readZetaris({ ...env, ZETARIS_TABLE: 'x;DROP TABLE records' }, async () => { sent = true; }), /errors.zetarisTable/);
+  assert.equal(sent, false);
+  assert.equal(isZetarisConfigured({ ...env, ZETARIS_REST_URL: 'http://remote.example/api/v1.0' }), false);
+  assert.equal(isZetarisConfigured({ ...env, ZETARIS_REST_URL: 'https://zetaris.example/api/v1.0?key=unsafe' }), false);
+  assert.equal(isZetarisConfigured({ ...env, ZETARIS_ORG_ID: 'not-an-org' }), false);
+});
+
+test('Zetaris no presenta errores, respuestas malformadas ni excesos como importaciones válidas', async () => {
+  const env = { ZETARIS_REST_URL: 'http://localhost:8888', ZETARIS_ORG_ID: '1', ZETARIS_API_KEY: 'fixture-key' };
+  for (const result of [{ error: 'query failed', data: [] }, { success: false, data: [] }, {}, { data: [['c1']] }]) {
+    await assert.rejects(() => readZetaris(env, async () => ({ ok: true, json: async () => result })), /errors.zetarisQuery/);
+  }
+  await assert.rejects(() => readZetaris(env, async () => ({ ok: true, json: async () => ({ data: Array(26).fill([]) }) })), /errors.zetarisLimit/);
+  await assert.rejects(() => readZetaris(env, async () => ({ status: 403 })), /errors.zetarisAuth/);
+  assert.equal((await checkZetaris(env, async () => ({ status: 401 }))).state, 'unauthorized');
+  assert.equal((await checkZetaris(env, async () => { throw new Error('fixture-key'); })).state, 'offline');
+  assert.equal((await checkZetaris({})).state, 'unconfigured');
+  assert.equal((await checkZetaris(env, async (_url, options) => {
+    assert.equal(JSON.parse(options.body).sql, 'SELECT 1 AS talentlens_check');
+    return { ok: true, json: async () => ({ data: [[1]] }) };
+  })).state, 'online');
 });

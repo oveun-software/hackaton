@@ -14,10 +14,10 @@ The proposed track is **Wildcard / Tinkerer**, reflecting the existing concept. 
 
 | Technology | Implemented contribution | Verification |
 | --- | --- | --- |
-| NVIDIA Nemotron | Interprets job requirements, compares all supplied CVs and orders evidence-led recommendations; writes in the selected language | Automated tests use a mock provider; a live Nemotron run through Nightshift remains required. The NVIDIA key belongs in Nightshift's Providers tab, not in the submitted app |
-| Meterless Nightshift | OpenAI-compatible provider adapter with authenticated model discovery, runtime headers, routing IDs and long inference timeout | Mock contract tests pass; a real runtime run and proof of its Nemotron lane remain required |
+| NVIDIA Nemotron | Interprets job requirements, compares all supplied CVs and orders evidence-led recommendations; writes in the selected language | A real JSON inference through Nightshift passed with the selected Nemotron 3.5 model. Full fictional-CV analysis is not yet verified: attempts encountered NVIDIA 500 responses and provider deadlines. The NVIDIA key stays in Nightshift, outside the repository |
+| Meterless Nightshift | OpenAI-compatible provider adapter with authenticated model discovery, runtime headers, routing IDs and long inference timeout | Nightshift 1.2.1 is installed. Authenticated discovery and real JSON inference passed. The adapter verifies the actual routed model and saves receipt IDs with successful reports; a complete analysis trace remains pending |
 | Meterless Engine | Required: at least one of H-MEM, Markovian, World Model or Scout Intent must power a working feature | Not yet implemented; requires a meaningful feature integration and passing test. The Nightshift provider adapter is not an Engine |
-| Zetaris | Read-only Trino adapter importing an authorised candidate view with source provenance and bounded paging | Mock Trino protocol tests pass. The event setup now documents Lightning REST/JDBC; adapt the connector and validate the actual data layer before claiming compliance |
+| Zetaris | Lightning REST adapter importing an authorised candidate join view with source provenance and a 25-row bound | Real local deployment, two fictional CSV sources, join view and separate GENERAL user with SELECT-only grant are configured. The application imported all three records successfully. REST contract/error tests pass |
 | Cursor | Optional development environment under the updated rules | Installed with the official Codex extension; future use must be described accurately if competing for the Cursor-built product award |
 
 Sponsor names in the product identify actual integration capabilities; the UI does not claim a verified connection merely because an adapter exists.
@@ -28,7 +28,7 @@ Nemotron performs semantic interpretation and recommendation. Application code v
 
 ## Demonstration and delivery status
 
-The local product, four-language UI, logo, fictional sample workspace, model workflow, translation validation and automated tests are implemented. Live sponsor service validation, the required Meterless Engine feature and the event-specific Zetaris adapter are pending. A video, slide deck and submission form have not been produced or submitted by this application. The repository is still private and must be made public for submission with the owner's authorization. Do not describe pending integrations or development-tool use as completed.
+The local product, four-language UI, logo, fictional sample workspace, model workflow, translation validation and automated tests are implemented. Real Nightshift/Nemotron JSON inference and the Zetaris import passed on 22 October 2026. Full AI analysis and the required Meterless Engine feature remain pending. A video, slide deck and submission form have not been produced or submitted by this application. The repository is still private and must be made public for submission with the owner's authorization. Do not describe pending integrations or development-tool use as completed.
 
 For a demo, use fictional data, show a role and its CV collection, run the actual Nemotron workflow through Meterless, open a supporting citation and an evidence gap, then save a recruiter-controlled next step. Show the actual Zetaris source and federated query rather than implying local uploads demonstrate federation.
 

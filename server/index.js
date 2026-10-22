@@ -7,7 +7,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { Store } from './store.js';
 import { runAnalysis } from './analysis.js';
-import { getProvider, completeJson, checkProvider, readZetaris, ServiceError } from './providers.js';
+import { getProvider, completeJson, checkProvider, readZetaris, isZetarisConfigured, ServiceError } from './providers.js';
 import { demoCandidates, demoVacancy, localizeDemoCandidate, localizeDemoVacancy } from './demo.js';
 import { errorPayload, resolveLanguage } from './localization.js';
 import { translateReport } from './report-translation.js';
@@ -33,7 +33,7 @@ const vacancySchema = z.object({ title: z.string().trim().min(3).max(160), compa
 const publicCandidate = ({ text, hash, ...candidate }) => ({ ...candidate, characters: text.length });
 const state = language => ({ candidates: store.list('candidate').map(c => publicCandidate(localizeDemoCandidate(c, language))), vacancies: store.list('vacancy').map(v => localizeDemoVacancy(v, language)), reports: store.list('report'), reviews: store.list('review') });
 app.get('/api/state', (req, res) => res.json(state(req.language)));
-app.get('/api/status', (req, res) => res.json({ provider: provider.name, providerId: provider.id, model: provider.model, configured: Boolean(provider.key && provider.key !== 'rt-local'), zetarisConfigured: Boolean(process.env.ZETARIS_URL && process.env.ZETARIS_USER), limits: { candidates: 25, totalCharacters: 200000 } }));
+app.get('/api/status', (req, res) => res.json({ provider: provider.name, providerId: provider.id, model: provider.model, configured: Boolean(provider.key && provider.key !== 'rt-local'), zetarisConfigured: isZetarisConfigured(), limits: { candidates: 25, totalCharacters: 200000 } }));
 app.post('/api/integrations/check', async (req, res) => res.json(await checkProvider(provider)));
 app.post('/api/vacancies', (req, res) => res.status(201).json(store.put('vacancy', vacancySchema.parse(req.body))));
 app.get('/api/candidates/:id', (req, res) => {
@@ -93,7 +93,7 @@ app.post('/api/sources/zetaris/import', async (req, res) => {
   try { rows = await readZetaris(); } catch (error) { throw error.status ? error : new ServiceError('errors.zetarisNetwork'); }
   const rowSchema = z.object({ candidate_id: z.union([z.string().min(1), z.number()]), display_name: z.string().min(1).max(160), document_name: z.string().min(1).max(180), cv_text: z.string().min(40).max(40000) });
   const parsed = rows.map(row => rowSchema.parse(row));
-  const mapped = parsed.map(row => ({ id: `zetaris-${createHash('sha256').update(String(row.candidate_id)).digest('hex').slice(0, 24)}`, name: row.display_name, filename: row.document_name, text: row.cv_text, source: 'zetaris', synthetic: false }));
+  const mapped = parsed.map(row => ({ id: `zetaris-${createHash('sha256').update(String(row.candidate_id)).digest('hex').slice(0, 24)}`, name: row.display_name, filename: row.document_name, text: row.cv_text, source: 'zetaris', synthetic: process.env.ZETARIS_SYNTHETIC === 'true' }));
   if (store.list('candidate').length + mapped.filter(c => !store.get('candidate', c.id)).length > 25) throw new ServiceError('errors.zetarisLimit', 400);
   store.transaction(() => { for (const item of mapped) store.put('candidate', item); });
   res.json({ imported: mapped.length });
@@ -109,9 +109,10 @@ app.post('/api/vacancies/:id/analyze', async (req, res) => {
   if (analyzing) throw new ServiceError('errors.analysisBusy', 409);
   analyzing = true;
   try {
-    const result = await runAnalysis({ vacancy, candidates, note: input.note, language, complete: messages => completeJson(provider, messages) });
+    const executions = [];
+    const result = await runAnalysis({ vacancy, candidates, note: input.note, language, complete: messages => completeJson(provider, messages, fetch, execution => executions.push(execution)) });
     const report = store.put('report', { id: randomUUID(), vacancyId: vacancy.id, vacancyTitle: vacancy.title, ...result,
-      provider: provider.name, model: provider.model, recruiterNote: input.note,
+      provider: provider.name, model: provider.model, executions, recruiterNote: input.note,
       sources: candidates.map(c => ({ id: c.id, name: c.name, filename: c.filename, source: c.source, text: c.text })),
       vacancySnapshot: vacancy });
     res.json(report);
