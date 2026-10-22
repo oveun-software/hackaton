@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Cora Atlas: un espacio de selección con propuestas de Nemotron y evidencias de cada CV.">
+  <title>Cora Atlas · Talent workspace</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css"><script type="module" src="/app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#overview" aria-label="Cora Atlas, inicio"><span class="brand-icon">c<span>↗</span></span><span>cora<span class="brand-sub">ATLAS</span></span></a>
+      <div class="workspace"><span class="workspace-avatar">O</span><div>OVEUN Studio<small>Hackathon workspace</small></div><span class="workspace-dot"></span></div>
+      <p class="nav-label">ESPACIO DE TRABAJO</p>
+      <nav aria-label="Navegación principal">
+        <a href="#overview" data-nav="overview"><span data-icon="grid"></span>Vista general</a>
+        <a href="#library" data-nav="library"><span data-icon="users"></span>Biblioteca de CVs<span id="nav-count" class="nav-count">0</span></a>
+        <a href="#vacancies" data-nav="vacancies"><span data-icon="briefcase"></span>Vacantes</a>
+        <a href="#connections" data-nav="connections"><span data-icon="layers"></span>Conexiones</a>
+      </nav>
+      <div class="sidebar-bottom"><div class="lab-card"><span class="lab-label"><i></i> OPEN AGENT HACKATHON</span><strong>De la intuición<br>a la evidencia.</strong><p>Un nuevo espacio para descubrir talento con Nemotron.</p><a href="https://hackathon.genai.works/event/open-agent-hackathon-2026" target="_blank" rel="noopener">Ver el hackatón <span>↗</span></a></div><div class="profile"><span class="profile-avatar">OV</span><div>Equipo OVEUN<small>Entorno local · v0.1</small></div><span class="local-light"></span></div></div>
+    </aside>
+    <div class="main-shell">
+      <header class="topbar"><div><span class="breadcrumb">Workspace</span><span class="slash">/</span><span id="page-crumb">Vista general</span></div><div class="topbar-right"><span class="local-badge"><i></i> Guardado local</span><button id="new-vacancy" class="button button-dark button-small"><span data-icon="plus"></span>Nueva vacante</button></div></header>
+      <main id="main" tabindex="-1"></main>
+      <footer><span>CORA ATLAS <span class="footer-sep">/</span> Una idea de OVEUN</span><span>La IA propone. Tu equipo decide.</span></footer>
+    </div>
+  </div>
+  <dialog id="vacancy-dialog" aria-labelledby="dialog-title"><form id="vacancy-form"><div class="dialog-top"><span class="eyebrow">UN NUEVO PROCESO</span><button type="button" class="icon-button" data-close aria-label="Cerrar">×</button></div><h2 id="dialog-title">¿A quién estás buscando?</h2><p>Cuéntale a Nemotron qué necesita tu equipo.</p><label>Título del puesto<input name="title" required minlength="3" maxlength="160" placeholder="Por ejemplo, Frontend Developer"></label><div class="form-row"><label>Empresa<input name="company" maxlength="160" placeholder="Nombre de la empresa"></label><label>Ubicación<input name="location" maxlength="160" placeholder="Remoto, Madrid…"></label></div><label>Descripción y requisitos<textarea name="description" required minlength="40" maxlength="16000" rows="7" placeholder="Describe el trabajo, los requisitos imprescindibles y los deseables. La IA extraerá los criterios de esta oferta."></textarea></label><div class="dialog-actions"><button type="button" class="button button-outline" data-close>Cancelar</button><button class="button button-dark" type="submit">Crear vacante <span>↗</span></button></div></form></dialog>
+  <dialog id="document-dialog" aria-labelledby="document-title"><div class="dialog-top"><span class="eyebrow">DOCUMENTO FUENTE</span><button type="button" class="icon-button" data-close aria-label="Cerrar">×</button></div><h2 id="document-title">CV</h2><p id="document-meta"></p><pre id="document-text"></pre></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <input id="file-input" type="file" accept=".pdf,.docx,.txt" multiple hidden>
+</body>
+</html>
