@@ -29,17 +29,14 @@ Uploaded CVs, recruiter notes, company names and other user-provided content ret
 
 ## Connect NVIDIA Nemotron
 
-1. Sign in to the [Nemotron 3.5 Super VL model page](https://build.nvidia.com/nvidia/nemotron-3.5-super-vl-120b-a12b).
-2. Choose **Generate API Key** and complete any account verification required by NVIDIA.
-3. Save the key in the local `.env`, then restart TalentLens.
+For the hackathon, connect Nemotron **through Meterless Nightshift**. The [Official Rules updated on 22 October](https://hackathon.genai.works/resources?id=01a08ff1-54cc-709a-bfe7-6b34452b676b) require Nightshift as the primary AI provider and at least one working Meterless Engine. Cursor is optional; any AI coding tool is permitted.
 
-```dotenv
-AI_PROVIDER=nvidia
-NVIDIA_API_KEY=your-private-key
-NVIDIA_MODEL=nvidia/nemotron-3.5-super-vl-120b-a12b
-```
+1. Sign in to the [Nemotron 3.5 Super VL model page](https://build.nvidia.com/nvidia/nemotron-3.5-super-vl-120b-a12b) and choose **Generate API Key**.
+2. If that button does not open the key dialog, use [NVIDIA NGC API Keys](https://org.ngc.nvidia.com/account/api-keys): sign in, generate a personal key and enable **NVIDIA Public API Endpoints**. Follow the [official NGC guide](https://docs.nvidia.com/ngc/latest/ngc-user-guide.html).
+3. Save the key in **Nightshift → Providers**, select `nvidia/nemotron-3.5-super-vl-120b-a12b` if the runtime supports it, and verify which model actually handles a request.
+4. Configure TalentLens with the Nightshift URL, runtime token and routing model below. Do not put the NVIDIA key in the application settings for the submitted workflow.
 
-In **Connections**, test the active provider. Then open a role, consent to sending its documents and run an analysis. Endpoint availability and usage quotas depend on NVIDIA. Keys remain server-side; `.env`, local data and dependencies are excluded from Git.
+In **Connections**, test the active provider. Then open a role, consent to sending its documents and run an analysis. Endpoint availability and usage quotas depend on NVIDIA. `.env`, local data and dependencies are excluded from Git. The existing direct NVIDIA adapter is a development option and does not demonstrate the required Nightshift integration.
 
 ## Connect Meterless Nightshift
 
@@ -56,7 +53,13 @@ METERLESS_MODEL=meterless/deep
 
 Nightshift stores its token at `<stateDir>/proxy-token`. The placeholder `rt-local` is rejected. Use a route listed by your runtime. Connection checks authenticate against `/v1/models`, distinguish unauthorized/offline/online states and send no CVs. A routing ID does not establish the underlying model: verify the actual Nemotron execution in Nightshift.
 
+The provider adapter is implemented, but a live Nightshift run and a working Meterless Engine feature are still pending. Provider compatibility alone does not meet the Engine requirement.
+
 ## Connect Zetaris
+
+The event's current [Zetaris setup repository](https://github.com/zetaris/getting-started) uses a local Docker installation with Lightning JDBC and REST access. Obtain the platform bundle, matching configuration and registry credentials from [Zetaris Cloud](https://cloud.enterprise.zetaris.com), then follow its [local installation guide](https://github.com/zetaris/getting-started/blob/main/docs/install/updated_zetaris_installation_guide.md). The platform distribution and evaluation entitlement are separate from the open-source recipes. On Windows, the guide uses WSL2 with Docker Desktop integration.
+
+**Current limitation:** TalentLens's adapter below supports Trino only. It has not yet been adapted to or verified against the hackathon bundle's Lightning REST/JDBC interfaces. Do not describe the required Zetaris integration as complete. Local uploads do not demonstrate use of Zetaris as the application's data layer.
 
 The read-only adapter supports a **Zetaris deployment exposing a Trino endpoint**, using the [Trino client protocol](https://trino.io/docs/current/develop/client-protocol.html). Configure a dedicated authorised view with these columns:
 

@@ -6,7 +6,7 @@ Recruiters need to connect role requirements with relevant experience across CVs
 
 ## New work and provenance
 
-TalentLens is newly written application code inspired by the pre-existing Cora recruiting concept from OVEUN. No Cora product code, accounts, databases, indexes, documents or services are reused. The implementation, interface, multilingual experience, extraction pipeline and provider connectors are independent. The first implementation was developed in Codex desktop. Use of Cursor must be documented accurately before submission; it has not been verified as completed.
+TalentLens is newly written application code inspired by the pre-existing Cora recruiting concept from OVEUN. No Cora product code, accounts, databases, indexes, documents or services are reused. The implementation, interface, multilingual experience, extraction pipeline and provider connectors are independent. Development has used Codex desktop. Cursor is optional under the Official Rules updated on 22 October. The TalentLens folder was opened in Cursor and the official Codex extension installed; these setup steps alone are not evidence that the product was developed in Cursor.
 
 The proposed track is **Wildcard / Tinkerer**, reflecting the existing concept. No track has been selected or entry submitted through this application.
 
@@ -14,10 +14,11 @@ The proposed track is **Wildcard / Tinkerer**, reflecting the existing concept. 
 
 | Technology | Implemented contribution | Verification |
 | --- | --- | --- |
-| NVIDIA Nemotron | Interprets job requirements, compares all supplied CVs and orders evidence-led recommendations; writes in the selected language | Automated tests use a mock provider; a live key and actual model run remain required |
+| NVIDIA Nemotron | Interprets job requirements, compares all supplied CVs and orders evidence-led recommendations; writes in the selected language | Automated tests use a mock provider; a live Nemotron run through Nightshift remains required. The NVIDIA key belongs in Nightshift's Providers tab, not in the submitted app |
 | Meterless Nightshift | OpenAI-compatible provider adapter with authenticated model discovery, runtime headers, routing IDs and long inference timeout | Mock contract tests pass; a real runtime run and proof of its Nemotron lane remain required |
-| Zetaris | Read-only Trino adapter importing an authorised candidate view with source provenance and bounded paging | Mock protocol tests pass; the hackathon’s actual access method and federated view still need validation |
-| Cursor | Development tool required by the published event rules | Actual development use and evidence remain required |
+| Meterless Engine | Required: at least one of H-MEM, Markovian, World Model or Scout Intent must power a working feature | Not yet implemented; requires a meaningful feature integration and passing test. The Nightshift provider adapter is not an Engine |
+| Zetaris | Read-only Trino adapter importing an authorised candidate view with source provenance and bounded paging | Mock Trino protocol tests pass. The event setup now documents Lightning REST/JDBC; adapt the connector and validate the actual data layer before claiming compliance |
+| Cursor | Optional development environment under the updated rules | Installed with the official Codex extension; future use must be described accurately if competing for the Cursor-built product award |
 
 Sponsor names in the product identify actual integration capabilities; the UI does not claim a verified connection merely because an adapter exists.
 
@@ -27,8 +28,8 @@ Nemotron performs semantic interpretation and recommendation. Application code v
 
 ## Demonstration and delivery status
 
-The local product, four-language UI, logo, fictional sample workspace, model workflow, translation validation and automated tests are implemented. Live sponsor service validation is pending. A video, slide deck and submission form have not been produced or submitted by this application. Do not describe pending integrations or development-tool use as completed.
+The local product, four-language UI, logo, fictional sample workspace, model workflow, translation validation and automated tests are implemented. Live sponsor service validation, the required Meterless Engine feature and the event-specific Zetaris adapter are pending. A video, slide deck and submission form have not been produced or submitted by this application. The repository is still private and must be made public for submission with the owner's authorization. Do not describe pending integrations or development-tool use as completed.
 
 For a demo, use fictional data, show a role and its CV collection, run the actual Nemotron workflow through Meterless, open a supporting citation and an evidence gap, then save a recruiter-controlled next step. Show the actual Zetaris source and federated query rather than implying local uploads demonstrate federation.
 
-The [event rules](https://hackathon.genai.works/event/open-agent-hackathon-2026), reviewed on 22 October 2026, require Zetaris, Meterless and Cursor; source code and setup documentation; a 1–4 minute demo video; a slide deck; and an explanation of sponsor contribution. The deadline is **27 October 2026, 23:45 UTC**. Check the organiser’s latest notices before final submission.
+The [Official Rules updated on 22 October 2026](https://hackathon.genai.works/resources?id=01a08ff1-54cc-709a-bfe7-6b34452b676b), sections 8.1 and 10.1, require Zetaris as the data layer, at least one working Meterless Engine and Meterless Nightshift as the primary AI provider. NVIDIA models connect through Nightshift; Cursor is optional and any AI coding tool is permitted. Submission requires a public source repository and setup documentation, a 1–4 minute demo video, a slide deck and an explanation of sponsor contribution. Three sample inputs/outputs, traces and offline sample mode are recommended in the Rules. The [Technical Execution Guide](https://hackathon.genai.works/resources?id=01a08ff1-54b1-7670-9441-a1e73ff43a6e) describes these in more detail and defers to the Rules. The deadline is **27 October 2026, 23:45 UTC**. Check the organiser's latest notices before final submission.
