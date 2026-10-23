@@ -57,11 +57,17 @@ Nightshift stores its token at `<stateDir>/proxy-token`. The placeholder `rt-loc
 
 The verified configuration uses the **fast** application profile in Nightshift with only the selected Nemotron enabled. This profile change preserves privacy and verification settings. TalentLens requests a structured, side-effect-free result tool, so its own two-stage recruiting workflow does not trigger Nightshift's extra code-planning generation when CVs mention programming languages. Streaming avoids the runtime's 45-second wait for buffered provider headers. The adapter accepts Nightshift 1.2.1's complete tool-call deltas as well as incremental OpenAI deltas, bounds the stream to 4 MB, discards reasoning, and refuses incomplete or review-gated responses.
 
-**Live verification passed on 22 October 2026:** three fictional CVs were retrieved from Zetaris and analysed through Nightshift by `nvidia/nemotron-3.5-lightning-30b-a3b`; both actual model IDs and receipt IDs were confirmed. Every candidate and requirement was covered and every source quotation passed validation. The successful run used two model calls. A working Meterless Engine feature is still pending; provider compatibility alone does not meet that separate requirement.
+**Live verification passed on 22 October 2026:** three fictional CVs were retrieved from Zetaris and analysed through Nightshift by `nvidia/nemotron-3.5-lightning-30b-a3b`; both actual model IDs and receipt IDs were confirmed. Every candidate and requirement was covered and every source quotation passed validation. The successful run used two model calls.
 
 NVIDIA currently advertises this hosted inference catalog as [free for development](https://build.nvidia.com/). This setup uses that endpoint and does not provision paid GPU infrastructure or subscribe to a plan. Trial availability and request limits are controlled by NVIDIA. Running Nightshift locally still uses the computer's resources.
 
 After setting up the fictional Zetaris sources, `npm run verify:live` exercises the actual Zetaris → Nightshift → Nemotron path. It checks every imported field against the three public fictional fixtures **before** sending anything to AI, validates all report citations, and writes a successful report plus execution IDs to ignored `data/live-verification.json`. Additional or changed database records stop the check without sending CVs. This command makes real provider requests and requires available quota; CI uses mocks instead.
+
+## Meterless H-MEM
+
+TalentLens implements the official Meterless H-MEM contract as a persistent SQLite-backed evidence graph. After Nemotron extracts a role's requirements, H-MEM performs the canonical hybrid retrieval across earlier hiring processes, limited to the configured organization and authorised candidates. Only current memories whose original literal quote is still verifiable are passed to Nemotron. Validated current-document evidence becomes deduplicated long-term memory with candidate, document and version lineage plus Trust Ledger audit.
+
+CV updates create new document versions and place older facts into pending verification before reuse. Cumulative facts can supersede earlier versions; incompatible claims are excluded and queued for human resolution. Candidate/fact deletion, source invalidation, feedback, retrieval traces and a compact UI are included. See [H-MEM integration and three-minute demo](docs/HMEM-INTEGRATION.md).
 
 ## Connect Zetaris
 
@@ -101,18 +107,21 @@ flowchart LR
   J[Job description] --> N[Nemotron: understand requirements]
   D --> C[Explicit consent]
   N --> A[Nemotron: compare every supplied CV]
+  N --> M[H-MEM: hybrid verified recall]
+  M --> A
   C --> A
   A --> V[Validate IDs, coverage and literal citations]
+  V --> L[(H-MEM + Trust Ledger)]
   V --> H[Human review and interview questions]
 ```
 
 Analysis has two stages: requirement extraction and candidate comparison. The app validates output structure, coverage and exact source quotations, preserving the model’s recommendation order. If a stage fails citation validation, the model gets one correction attempt; the full result must pass the same validator. No evidence is repaired or silently discarded by application code. There are at most four model calls and no automatic retry of provider/network failures. Reports retain the job description and CV text they used. These checks provide traceability; they do not establish the truth of a CV or guarantee a correct, unbiased recommendation.
 
-Roles, document text, source snapshots, reports, translations and human review states persist in `data/talentlens.sqlite`. The application automatically migrates the previous database filename without discarding records. Original upload binaries are not retained.
+Roles, versioned document text, source snapshots, reports, translations, H-MEM records/traces/ledger and human review states persist in `data/talentlens.sqlite`. The application automatically migrates the previous database filename without discarding records. Original upload binaries are not retained.
 
 ## Scope and limits
 
-- Single-user local prototype; no authentication, tenant isolation or production hosting.
+- Single-user local prototype with one configured organization per process; no production user authentication or remote hosting.
 - Up to 25 CVs, 10 files per import, 5 MB per file, 40,000 characters per CV and 200,000 characters per analysis. Oversized inputs are rejected without silent truncation.
 - Text-based PDFs up to 50 pages; scanned PDFs need OCR first. DOCX reads main text, tables, headers and footers, with archive/XML limits and no DTDs.
 - Parsing uses separate child processes with a 128 MB JavaScript heap budget and a 20-second timeout. This is not an OS-level security sandbox or a hard native-memory cap.
@@ -125,9 +134,10 @@ Roles, document text, source snapshots, reports, translations and human review s
 ```powershell
 npm.cmd run check
 npm.cmd test
+npm.cmd run test:hmem:conformance
 npm.cmd audit
 ```
 
-Tests cover PDF/DOCX/TXT parsing, invalid inputs, origin controls, consent, evidence validation, locale completeness and parameters, selected model language, translation integrity/cache, localized exports, database migration, provider authentication and the Zetaris Lightning REST contract. Automated tests mock external services; live checks are reported separately. CI runs the same checks and a credential scan without personal API keys.
+Tests cover PDF/DOCX/TXT parsing, invalid inputs, origin controls, consent, evidence validation, locale completeness and parameters, selected model language, translation integrity/cache, localized exports, database migration, provider authentication, the Zetaris Lightning REST contract, H-MEM persistence/retrieval/versioning/conflicts/privacy and the official H-MEM conformance suite. Automated tests mock external services; live checks are reported separately. CI runs the same checks and a credential scan without personal API keys.
 
 See [submission notes](docs/SUBMISSION.md) for project provenance, sponsor contribution and verified delivery status.

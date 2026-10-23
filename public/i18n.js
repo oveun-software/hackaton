@@ -78,6 +78,38 @@ const rows = {
   addCvs: ['Add CVs', 'Añadir CVs', 'Ajouter des CV', 'Lebensläufe hinzufügen'],
   fileFilter: ['Filter documents by name…', 'Filtrar documentos por nombre…', 'Filtrer les documents par nom…', 'Dokumente nach Namen filtern…'],
   libraryCount: ['{count} of 25 documents', '{count} de 25 documentos', '{count} documents sur 25', '{count} von 25 Dokumenten'],
+  memoryProfile: ['Verified memory', 'Memoria verificada', 'Mémoire vérifiée', 'Verifizierter Speicher'],
+  viewMemory: ['View memory', 'Ver memoria', 'Voir la mémoire', 'Speicher ansehen'],
+  updateCv: ['New CV version', 'Nueva versión del CV', 'Nouvelle version du CV', 'Neue Lebenslaufversion'],
+  deleteCv: ['Delete candidate', 'Eliminar candidato', 'Supprimer le candidat', 'Kandidat löschen'],
+  deleteMemory: ['Delete fact', 'Eliminar hecho', 'Supprimer le fait', 'Fakt löschen'],
+  deleteReason: ['Give a reason for this privacy deletion (at least 8 characters).', 'Indica el motivo de esta eliminación por privacidad (mínimo 8 caracteres).', 'Indiquez le motif de cette suppression (8 caractères minimum).', 'Begründen Sie diese Datenschutzlöschung (mindestens 8 Zeichen).'],
+  candidateDeleted: ['Candidate, documents and memory deleted.', 'Candidato, documentos y memoria eliminados.', 'Candidat, documents et mémoire supprimés.', 'Kandidat, Dokumente und Speicher gelöscht.'],
+  cvUpdated: ['The new CV version is saved. Previous facts await verification.', 'La nueva versión del CV está guardada. Los hechos anteriores esperan verificación.', 'La nouvelle version du CV est enregistrée. Les faits antérieurs attendent une vérification.', 'Die neue Lebenslaufversion ist gespeichert. Frühere Fakten warten auf Prüfung.'],
+  documentVersion: ['Document v{version}', 'Documento v{version}', 'Document v{version}', 'Dokument v{version}'],
+  memoryCurrent: ['Current', 'Vigente', 'Actuel', 'Aktuell'],
+  memoryPending: ['Pending verification', 'Pendiente de verificación', 'Vérification en attente', 'Prüfung ausstehend'],
+  memorySuperseded: ['Superseded', 'Sustituido', 'Remplacé', 'Ersetzt'],
+  memoryConflicted: ['Needs human review', 'Requiere revisión humana', 'Révision humaine requise', 'Menschliche Prüfung nötig'],
+  memoryUnverified: ['Source unavailable', 'Fuente no disponible', 'Source indisponible', 'Quelle nicht verfügbar'],
+  sourceVerified: ['Source verified', 'Fuente verificada', 'Source vérifiée', 'Quelle verifiziert'],
+  sourceUnverified: ['Source not verifiable', 'Fuente no verificable', 'Source non vérifiable', 'Quelle nicht verifizierbar'],
+  memoryHistory: ['Change history', 'Historial de cambios', 'Historique des modifications', 'Änderungsverlauf'],
+  memoryConflicts: ['Open contradictions', 'Contradicciones abiertas', 'Contradictions ouvertes', 'Offene Widersprüche'],
+  noMemories: ['No verified professional facts yet. Run an analysis to create evidence-backed memory.', 'Aún no hay hechos profesionales verificados. Ejecuta un análisis para crear memoria respaldada por evidencias.', 'Aucun fait professionnel vérifié. Lancez une analyse pour créer une mémoire étayée.', 'Noch keine verifizierten beruflichen Fakten. Starten Sie eine Analyse.'],
+  hmemTitle: ['Meterless H-MEM', 'Meterless H-MEM', 'Meterless H-MEM', 'Meterless H-MEM'],
+  hmemBody: ['Persistent, source-verifiable professional memory with hybrid retrieval and audit.', 'Memoria profesional persistente, verificable en origen, con recuperación híbrida y auditoría.', 'Mémoire professionnelle persistante et vérifiable, avec recherche hybride et audit.', 'Persistenter, quellprüfbarer beruflicher Speicher mit hybrider Suche und Audit.'],
+  hmemRecovered: ['{count} memories retrieved', '{count} recuerdos recuperados', '{count} souvenirs récupérés', '{count} Erinnerungen abgerufen'],
+  hmemPrior: ['{count} from earlier hiring processes', '{count} de procesos anteriores', '{count} issus de recrutements antérieurs', '{count} aus früheren Auswahlverfahren'],
+  hmemUsed: ['{count} used by Nemotron', '{count} utilizados por Nemotron', '{count} utilisés par Nemotron', '{count} von Nemotron verwendet'],
+  hmemNone: ['No prior memory was relevant to this role.', 'Ningún recuerdo previo era relevante para esta vacante.', 'Aucun souvenir antérieur n’était pertinent pour ce poste.', 'Keine frühere Erinnerung war für diese Stelle relevant.'],
+  memoryProvided: ['Provided to Nemotron', 'Enviado a Nemotron', 'Transmis à Nemotron', 'An Nemotron übergeben'],
+  memoryUsed: ['Used in the result', 'Utilizado en el resultado', 'Utilisé dans le résultat', 'Im Ergebnis verwendet'],
+  resolveKeepOld: ['Keep earlier', 'Conservar anterior', 'Conserver l’ancien', 'Frühere behalten'],
+  resolveKeepNew: ['Keep newer', 'Conservar nuevo', 'Conserver le nouveau', 'Neuere behalten'],
+  resolveKeepBoth: ['Keep both', 'Conservar ambos', 'Conserver les deux', 'Beide behalten'],
+  resolutionReason: ['Explain the resolution (at least 8 characters).', 'Justifica la resolución (mínimo 8 caracteres).', 'Justifiez la résolution (8 caractères minimum).', 'Begründen Sie die Lösung (mindestens 8 Zeichen).'],
+  conflictResolved: ['Contradiction resolved and audited.', 'Contradicción resuelta y auditada.', 'Contradiction résolue et auditée.', 'Widerspruch gelöst und protokolliert.'],
   columnDocument: ['DOCUMENT', 'DOCUMENTO', 'DOCUMENT', 'DOKUMENT'],
   columnSource: ['SOURCE', 'ORIGEN', 'SOURCE', 'QUELLE'],
   columnAdded: ['ADDED', 'AÑADIDO', 'AJOUTÉ LE', 'HINZUGEFÜGT'],
@@ -257,6 +289,9 @@ const rows = {
   'errors.zetarisTimeout': ['Zetaris did not finish the query in time.', 'Zetaris no finalizó la consulta a tiempo.', 'Zetaris n’a pas terminé la requête à temps.', 'Zetaris hat die Abfrage nicht rechtzeitig abgeschlossen.'],
   'errors.zetarisNetwork': ['Zetaris could not be reached. Check the connection.', 'No se pudo contactar con Zetaris. Revisa la conexión.', 'Zetaris est injoignable. Vérifiez la connexion.', 'Zetaris ist nicht erreichbar. Prüfen Sie die Verbindung.'],
   'errors.translation': ['The translation could not be verified. The original report has been preserved.', 'No se pudo verificar la traducción. El informe original se conserva.', 'La traduction n’a pas pu être vérifiée. Le rapport original a été conservé.', 'Die Übersetzung konnte nicht geprüft werden. Der Originalbericht bleibt erhalten.']
+  ,'errors.organization': ['This organization is not authorised in this workspace.', 'Esta organización no está autorizada en este espacio.', 'Cette organisation n’est pas autorisée dans cet espace.', 'Diese Organisation ist in diesem Arbeitsbereich nicht autorisiert.']
+  ,'errors.memoryNotFound': ['The memory does not exist in this organization.', 'El recuerdo no existe en esta organización.', 'Le souvenir n’existe pas dans cette organisation.', 'Die Erinnerung existiert in dieser Organisation nicht.']
+  ,'errors.memoryConflictNotFound': ['The contradiction is no longer open.', 'La contradicción ya no está abierta.', 'La contradiction n’est plus ouverte.', 'Der Widerspruch ist nicht mehr offen.']
 };
 export const catalogs = Object.fromEntries(Object.keys(languages).map((code, index) => [code, Object.fromEntries(Object.entries(rows).map(([key, values]) => [key, values[index]]))]));
 export function resolveLanguage(value = 'en') {

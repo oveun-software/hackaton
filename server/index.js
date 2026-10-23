@@ -11,9 +11,13 @@ import { getProvider, completeJson, checkProvider, readZetaris, isZetarisConfigu
 import { demoCandidates, demoVacancy, localizeDemoCandidate, localizeDemoVacancy } from './demo.js';
 import { errorPayload, resolveLanguage } from './localization.js';
 import { translateReport } from './report-translation.js';
+import { TalentMemoryService } from './hmem.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const store = new Store(path.resolve(root, process.env.DATA_DIR || './data'));
+const organizationId = process.env.TALENTLENS_ORG_ID?.trim() || 'talentlens-local';
+if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{1,63}$/.test(organizationId)) throw new Error('TALENTLENS_ORG_ID must be a safe stable identifier');
+const memory = new TalentMemoryService(store, { organizationId });
 const provider = getProvider();
 const app = express();
 app.disable('x-powered-by');
@@ -22,6 +26,7 @@ app.use((req, res, next) => {
   res.set({ 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer',
     'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'" });
   if (!['127.0.0.1', 'localhost', '[::1]'].includes(req.hostname)) return res.status(403).json(errorPayload(new Error('errors.localOnly'), req.language));
+  if (req.get('X-TalentLens-Organization') && req.get('X-TalentLens-Organization') !== organizationId) return res.status(403).json(errorPayload(new Error('errors.organization'), req.language));
   if (req.path.startsWith('/api')) res.set('Cache-Control', 'no-store');
   if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
     if (req.get('X-TalentLens-Client') !== 'workspace' || (req.get('Origin') && req.get('Origin') !== `${req.protocol}://${req.get('host')}`)) return res.status(403).json(errorPayload(new Error('errors.origin'), req.language));
@@ -30,23 +35,42 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: '100kb' }));
 const vacancySchema = z.object({ title: z.string().trim().min(3).max(160), company: z.string().trim().max(160), location: z.string().trim().max(160), description: z.string().trim().min(40).max(16000) });
-const publicCandidate = ({ text, hash, ...candidate }) => ({ ...candidate, characters: text.length });
-const state = language => ({ candidates: store.list('candidate').map(c => publicCandidate(localizeDemoCandidate(c, language))), vacancies: store.list('vacancy').map(v => localizeDemoVacancy(v, language)), reports: store.list('report'), reviews: store.list('review') });
+const owned = item => Boolean(item && item.organizationId === organizationId);
+const publicCandidate = ({ text, hash, organizationId: _organizationId, ...candidate }) => ({ ...candidate, characters: text.length });
+function ensureLegacyOwnership() {
+  store.transaction(() => {
+    for (const kind of ['candidate', 'vacancy', 'report', 'review']) for (const item of store.list(kind)) {
+      if (item.organizationId && (kind !== 'candidate' || item.documentId)) continue;
+      if (kind !== 'candidate') { store.put(kind, { ...item, organizationId: item.organizationId || organizationId }); continue; }
+      const documentId = item.documentId || `doc-${randomUUID()}`, documentVersion = item.documentVersion || 1;
+      store.put('candidate_document', { id: documentId, organizationId: item.organizationId || organizationId, candidateId: item.id, version: documentVersion,
+        filename: item.filename, text: item.text, hash: item.hash || createHash('sha256').update(item.text).digest('hex'), source: item.source, status: 'current' });
+      store.put('candidate', { ...item, organizationId: item.organizationId || organizationId, documentId, documentVersion });
+    }
+  });
+}
+ensureLegacyOwnership();
+const state = language => ({ candidates: store.list('candidate').filter(owned).map(c => publicCandidate(localizeDemoCandidate(c, language))), vacancies: store.list('vacancy').filter(owned).map(v => localizeDemoVacancy(v, language)), reports: store.list('report').filter(owned), reviews: store.list('review').filter(owned) });
 app.get('/api/state', (req, res) => res.json(state(req.language)));
-app.get('/api/status', (req, res) => res.json({ provider: provider.name, providerId: provider.id, model: provider.model, configured: Boolean(provider.key && provider.key !== 'rt-local'), zetarisConfigured: isZetarisConfigured(), limits: { candidates: 25, totalCharacters: 200000 } }));
+app.get('/api/status', (req, res) => res.json({ provider: provider.name, providerId: provider.id, model: provider.model, configured: Boolean(provider.key && provider.key !== 'rt-local'), zetarisConfigured: isZetarisConfigured(), hmem: memory.status(), limits: { candidates: 25, totalCharacters: 200000 } }));
 app.post('/api/integrations/check', async (req, res) => res.json(await checkProvider(provider)));
-app.post('/api/vacancies', (req, res) => res.status(201).json(store.put('vacancy', vacancySchema.parse(req.body))));
+app.post('/api/vacancies', (req, res) => res.status(201).json(store.put('vacancy', { ...vacancySchema.parse(req.body), organizationId })));
 app.get('/api/candidates/:id', (req, res) => {
   const candidate = store.get('candidate', req.params.id);
-  if (!candidate) return res.status(404).json(errorPayload(new Error('errors.cvNotFound'), req.language));
+  if (!owned(candidate)) return res.status(404).json(errorPayload(new Error('errors.cvNotFound'), req.language));
   const { hash, ...safe } = localizeDemoCandidate(candidate, req.language); res.json(safe);
 });
 app.post('/api/demo', (req, res) => {
   store.transaction(() => {
-    if (!store.get('vacancy', 'demo-vacancy')) store.put('vacancy', { ...demoVacancy, id: 'demo-vacancy', synthetic: true });
+    if (!store.get('vacancy', 'demo-vacancy')) store.put('vacancy', { ...demoVacancy, id: 'demo-vacancy', organizationId, synthetic: true });
     for (let i = 0; i < demoCandidates.length; i++) {
       const id = `demo-candidate-${i}`;
-      if (!store.get('candidate', id) && store.list('candidate').length < 25) store.put('candidate', { ...demoCandidates[i], id, source: 'demo', synthetic: true });
+      if (!store.get('candidate', id) && store.list('candidate').filter(owned).length < 25) {
+        const documentId = `demo-document-${i}`;
+        store.put('candidate_document', { id: documentId, organizationId, candidateId: id, version: 1, filename: demoCandidates[i].filename,
+          text: demoCandidates[i].text, hash: createHash('sha256').update(demoCandidates[i].text).digest('hex'), source: 'demo', status: 'current' });
+        store.put('candidate', { ...demoCandidates[i], id, organizationId, documentId, documentVersion: 1, source: 'demo', synthetic: true });
+      }
     }
   });
   res.json(state(req.language));
@@ -66,6 +90,22 @@ function extract(file, extension) {
     reader.send({ buffer: file.buffer, extension });
   });
 }
+function addCandidateDocument(candidateInput, { id = randomUUID(), version = 1 } = {}) {
+  const documentId = `doc-${randomUUID()}`;
+  const candidate = { ...candidateInput, id, organizationId, documentId, documentVersion: version };
+  store.put('candidate_document', { id: documentId, organizationId, candidateId: id, version, filename: candidate.filename,
+    text: candidate.text, hash: candidate.hash || createHash('sha256').update(candidate.text).digest('hex'), source: candidate.source, status: 'current' });
+  return store.put('candidate', candidate);
+}
+function updateCandidateDocument(candidate, input) {
+  const previous = store.get('candidate_document', candidate.documentId);
+  if (previous) store.put('candidate_document', { ...previous, status: 'superseded', supersededAt: new Date().toISOString() });
+  const documentId = `doc-${randomUUID()}`, version = (candidate.documentVersion || 1) + 1;
+  store.put('candidate_document', { id: documentId, organizationId, candidateId: candidate.id, version, filename: input.filename,
+    text: input.text, hash: input.hash, source: input.source, status: 'current' });
+  const updated = store.put('candidate', { ...candidate, ...input, organizationId, documentId, documentVersion: version, updatedAt: new Date().toISOString() });
+  memory.markDocumentChanged(candidate.id, documentId); return updated;
+}
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 10, fields: 0 } });
 let uploading = false;
 app.post('/api/candidates', (req, res, next) => {
@@ -73,7 +113,7 @@ app.post('/api/candidates', (req, res, next) => {
   uploading = true; res.once('close', () => { uploading = false; }); next();
 }, upload.array('files', 10), async (req, res) => {
   if (!req.files?.length) throw new ServiceError('errors.chooseCv', 400);
-  if (store.list('candidate').length + req.files.length > 25) throw new ServiceError('errors.cvLimit', 400);
+  if (store.list('candidate').filter(owned).length + req.files.length > 25) throw new ServiceError('errors.cvLimit', 400);
   const added = [], errors = [];
   for (const file of req.files) {
     const filename = path.basename(Buffer.from(file.originalname, 'latin1').toString('utf8')).slice(0, 180);
@@ -81,39 +121,66 @@ app.post('/api/candidates', (req, res, next) => {
       const extension = path.extname(filename).toLowerCase();
       if (!['.pdf', '.docx', '.txt'].includes(extension)) throw new ServiceError('errors.format', 422);
       const hash = createHash('sha256').update(file.buffer).digest('hex');
-      if (store.list('candidate').some(c => c.hash === hash)) throw new ServiceError('errors.duplicate', 409);
+      if (store.list('candidate').filter(owned).some(c => c.hash === hash)) throw new ServiceError('errors.duplicate', 409);
       const text = await extract(file, extension);
-      added.push(publicCandidate(store.put('candidate', { name: filename.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '), filename, text, hash, source: 'upload', synthetic: false })));
+      let candidate;
+      store.transaction(() => { candidate = addCandidateDocument({ name: filename.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '), filename, text, hash, source: 'upload', synthetic: false }); });
+      added.push(publicCandidate(candidate));
     } catch (error) { errors.push({ filename, ...errorPayload(error, req.language, 'errors.parse') }); }
   }
   res.status(added.length ? 201 : 422).json({ added, errors });
+});
+app.post('/api/candidates/:id/documents', upload.single('file'), async (req, res) => {
+  const candidate = store.get('candidate', req.params.id);
+  if (!owned(candidate)) throw new ServiceError('errors.cvNotFound', 404);
+  if (!req.file) throw new ServiceError('errors.chooseCv', 400);
+  const filename = path.basename(Buffer.from(req.file.originalname, 'latin1').toString('utf8')).slice(0, 180), extension = path.extname(filename).toLowerCase();
+  if (!['.pdf', '.docx', '.txt'].includes(extension)) throw new ServiceError('errors.format', 422);
+  const hash = createHash('sha256').update(req.file.buffer).digest('hex');
+  if (hash === candidate.hash) throw new ServiceError('errors.duplicate', 409);
+  const text = await extract(req.file, extension); let updated;
+  store.transaction(() => { updated = updateCandidateDocument(candidate, { name: candidate.name, filename, text, hash, source: candidate.source, synthetic: candidate.synthetic }); });
+  res.json(publicCandidate(updated));
 });
 app.post('/api/sources/zetaris/import', async (req, res) => {
   let rows;
   try { rows = await readZetaris(); } catch (error) { throw error.status ? error : new ServiceError('errors.zetarisNetwork'); }
   const rowSchema = z.object({ candidate_id: z.union([z.string().min(1), z.number()]), display_name: z.string().min(1).max(160), document_name: z.string().min(1).max(180), cv_text: z.string().min(40).max(40000) });
   const parsed = rows.map(row => rowSchema.parse(row));
-  const mapped = parsed.map(row => ({ id: `zetaris-${createHash('sha256').update(String(row.candidate_id)).digest('hex').slice(0, 24)}`, name: row.display_name, filename: row.document_name, text: row.cv_text, source: 'zetaris', synthetic: process.env.ZETARIS_SYNTHETIC === 'true' }));
-  if (store.list('candidate').length + mapped.filter(c => !store.get('candidate', c.id)).length > 25) throw new ServiceError('errors.zetarisLimit', 400);
-  store.transaction(() => { for (const item of mapped) store.put('candidate', item); });
+  const mapped = parsed.map(row => ({ id: `zetaris-${createHash('sha256').update(`${organizationId}:${row.candidate_id}`).digest('hex').slice(0, 24)}`, name: row.display_name, filename: row.document_name,
+    text: row.cv_text, hash: createHash('sha256').update(row.cv_text).digest('hex'), source: 'zetaris', synthetic: process.env.ZETARIS_SYNTHETIC === 'true' }));
+  if (store.list('candidate').filter(owned).length + mapped.filter(c => !store.get('candidate', c.id)).length > 25) throw new ServiceError('errors.zetarisLimit', 400);
+  store.transaction(() => { for (const item of mapped) { const existing = store.get('candidate', item.id); if (!existing) addCandidateDocument(item, { id: item.id }); else if (existing.hash !== item.hash) updateCandidateDocument(existing, item); } });
   res.json({ imported: mapped.length });
 });
 let analyzing = false;
 app.post('/api/vacancies/:id/analyze', async (req, res) => {
   const input = z.object({ consent: z.literal(true), note: z.string().max(4000).default(''), language: z.enum(['en', 'es', 'fr', 'de']).optional() }).parse(req.body);
   const language = input.language || req.language;
-  const savedVacancy = store.get('vacancy', req.params.id), vacancy = savedVacancy && localizeDemoVacancy(savedVacancy, language), candidates = store.list('candidate').map(c => localizeDemoCandidate(c, language));
+  const savedVacancy = store.get('vacancy', req.params.id), vacancy = owned(savedVacancy) && localizeDemoVacancy(savedVacancy, language);
+  const candidates = store.list('candidate').filter(owned).map(record => {
+    const candidate = localizeDemoCandidate(record, language);
+    if (!candidate.synthetic || candidate.text === record.text) return candidate;
+    const documentId = `${record.documentId}-${language}`;
+    if (!store.get('candidate_document', documentId)) store.put('candidate_document', { id: documentId, organizationId, candidateId: record.id, version: record.documentVersion,
+      filename: record.filename, text: candidate.text, hash: createHash('sha256').update(candidate.text).digest('hex'), source: record.source, status: 'current' });
+    return { ...candidate, documentId };
+  });
   if (!vacancy) throw new ServiceError('errors.roleNotFound', 404);
   if (!candidates.length) throw new ServiceError('errors.noCvs', 400);
   if (candidates.reduce((total, c) => total + c.text.length, 0) > 200000) throw new ServiceError('errors.totalText', 400);
   if (analyzing) throw new ServiceError('errors.analysisBusy', 409);
   analyzing = true;
   try {
-    const executions = [];
-    const result = await runAnalysis({ vacancy, candidates, note: input.note, language, complete: messages => completeJson(provider, messages, fetch, execution => executions.push(execution)) });
-    const report = store.put('report', { id: randomUUID(), vacancyId: vacancy.id, vacancyTitle: vacancy.title, ...result,
+    const executions = [], reportId = randomUUID();
+    const result = await runAnalysis({ vacancy, candidates, note: input.note, language,
+      retrieveMemory: requirements => memory.retrieve({ vacancy, requirements, candidateIds: candidates.map(candidate => candidate.id) }),
+      complete: messages => completeJson(provider, messages, fetch, execution => executions.push(execution)) });
+    const stored = memory.ingestAnalysis({ vacancy, reportId, requirements: result.requirements, candidates, reportCandidates: result.candidates });
+    const report = store.put('report', { id: reportId, organizationId, vacancyId: vacancy.id, vacancyTitle: vacancy.title, ...result,
+      hmem: result.hmem ? { ...result.hmem, stored } : { retrieved: [], usedMemoryIds: [], stored },
       provider: provider.name, model: provider.model, executions, recruiterNote: input.note,
-      sources: candidates.map(c => ({ id: c.id, name: c.name, filename: c.filename, source: c.source, text: c.text })),
+      sources: candidates.map(c => ({ id: c.id, name: c.name, filename: c.filename, source: c.source, text: c.text, documentId: c.documentId, documentVersion: c.documentVersion })),
       vacancySnapshot: vacancy });
     res.json(report);
   } finally { analyzing = false; }
@@ -121,7 +188,7 @@ app.post('/api/vacancies/:id/analyze', async (req, res) => {
 app.post('/api/reports/:id/translate', async (req, res) => {
   const input = z.object({ consent: z.literal(true), language: z.enum(['en', 'es', 'fr', 'de']) }).parse(req.body);
   const report = store.get('report', req.params.id);
-  if (!report) throw new ServiceError('errors.reportNotFound', 404);
+  if (!owned(report)) throw new ServiceError('errors.reportNotFound', 404);
   if ((report.language || 'es') === input.language || report.translations?.[input.language]) return res.json(report);
   if (analyzing) throw new ServiceError('errors.analysisBusy', 409);
   analyzing = true;
@@ -134,8 +201,75 @@ app.post('/api/reports/:id/translate', async (req, res) => {
 app.post('/api/reviews', (req, res) => {
   const input = z.object({ reportId: z.string(), candidateId: z.string(), status: z.enum(['pending', 'interview', 'hold']), note: z.string().max(2000).default('') }).parse(req.body);
   const report = store.get('report', input.reportId);
-  if (!report?.candidates.some(c => c.candidateId === input.candidateId)) throw new ServiceError('errors.reviewMismatch', 400);
-  res.json(store.put('review', { ...input, id: `review-${input.reportId}-${input.candidateId}`, updatedAt: new Date().toISOString() }));
+  if (!owned(report) || !report.candidates.some(c => c.candidateId === input.candidateId)) throw new ServiceError('errors.reviewMismatch', 400);
+  res.json(store.put('review', { ...input, organizationId, id: `review-${input.reportId}-${input.candidateId}`, updatedAt: new Date().toISOString() }));
+});
+app.get('/api/candidates/:id/memory', (req, res) => {
+  const candidate = store.get('candidate', req.params.id);
+  if (!owned(candidate)) throw new ServiceError('errors.cvNotFound', 404);
+  res.json(memory.profile(candidate.id));
+});
+app.post('/api/memory/conflicts/:id/resolve', (req, res) => {
+  const input = z.object({ strategy: z.enum(['keep_a', 'keep_b', 'keep_both']), justification: z.string().trim().min(8).max(1000) }).parse(req.body);
+  try { res.json(memory.resolveConflict(req.params.id, input.strategy, input.justification)); }
+  catch (error) { throw new ServiceError(error.message.startsWith('errors.') ? error.message : 'errors.memoryConflictNotFound', 404); }
+});
+app.post('/api/memories/:id/feedback', (req, res) => {
+  const input = z.object({ kind: z.enum(['helpful', 'not_helpful', 'wrong']) }).parse(req.body);
+  const item = memory.hmem.store.get(req.params.id); if (!item) throw new ServiceError('errors.memoryNotFound', 404);
+  memory.hmem.feedback(item.id, input.kind); res.json({ ok: true });
+});
+app.patch('/api/memories/:id', (req, res) => {
+  const input = z.object({ documentId: z.string().min(1), evidenceText: z.string().min(8).max(1500), justification: z.string().trim().min(8).max(1000) }).parse(req.body);
+  try { res.json(memory.correctMemory(req.params.id, input)); }
+  catch (error) { throw new ServiceError(error.message.startsWith('errors.') ? error.message : 'errors.memoryNotFound', 400); }
+});
+app.delete('/api/memories/:id', (req, res) => {
+  const input = z.object({ reason: z.string().trim().min(8).max(1000) }).parse(req.body);
+  try { memory.deleteMemory(req.params.id, input.reason); res.json({ deleted: true }); }
+  catch { throw new ServiceError('errors.memoryNotFound', 404); }
+});
+function scrubReports({ candidateId, documentId }) {
+  for (const report of store.list('report').filter(owned)) {
+    const sourceMatch = source => source.id === candidateId && (!documentId || source.documentId === documentId);
+    const traceMatch = item => item.candidateId === candidateId && (!documentId || item.documentId === documentId);
+    const affected = report.sources?.some(sourceMatch) || report.hmem?.retrieved?.some(traceMatch);
+    if (!affected) continue;
+    const scrubCandidates = list => list?.map(item => item.candidateId !== candidateId ? item : { ...item,
+      recommendation: 'insufficient_evidence', rationale: 'Source document deleted; this historical result is no longer verifiable.',
+      evidence: item.evidence.map(evidence => ({ ...evidence, status: 'unclear', quote: null, explanation: 'Source document deleted; evidence is no longer verifiable.' })), interviewQuestions: [] });
+    const translations = Object.fromEntries(Object.entries(report.translations || {}).map(([language, value]) => [language, { ...value, candidates: scrubCandidates(value.candidates) }]));
+    const removedMemoryIds = new Set((report.hmem?.retrieved || []).filter(traceMatch).map(item => item.memoryId));
+    const hmem = report.hmem ? { ...report.hmem, retrieved: (report.hmem.retrieved || []).filter(item => !traceMatch(item)),
+      usedMemoryIds: (report.hmem.usedMemoryIds || []).filter(id => !removedMemoryIds.has(id)) } : report.hmem;
+    const sources = report.sources.map(source => !sourceMatch(source) ? source : documentId ? { ...source, text: null, deleted: true } : {
+      id: source.id, name: 'Deleted candidate', filename: null, source: null, text: null, documentId: null, documentVersion: null, deleted: true });
+    store.put('report', { ...report, sources, candidates: scrubCandidates(report.candidates), translations, hmem, privacyRedacted: true });
+  }
+}
+function deleteCandidateData(candidate, reason) {
+  memory.deleteCandidate(candidate.id, reason);
+  store.removeWhere('candidate_document', document => owned(document) && document.candidateId === candidate.id);
+  scrubReports({ candidateId: candidate.id });
+  store.removeWhere('review', review => owned(review) && review.candidateId === candidate.id);
+  store.remove('candidate', candidate.id);
+}
+app.delete('/api/candidates/:id/documents/:documentId', (req, res) => {
+  const input = z.object({ reason: z.string().trim().min(8).max(1000) }).parse(req.body);
+  const candidate = store.get('candidate', req.params.id), document = store.get('candidate_document', req.params.documentId);
+  if (!owned(candidate) || !owned(document) || document.candidateId !== candidate.id) throw new ServiceError('errors.cvNotFound', 404);
+  let candidateDeleted = false;
+  store.transaction(() => {
+    if (candidate.documentId === document.id) { deleteCandidateData(candidate, input.reason); candidateDeleted = true; }
+    else { memory.deleteDocument(candidate.id, document.id, input.reason); store.remove('candidate_document', document.id); scrubReports({ candidateId: candidate.id, documentId: document.id }); }
+  });
+  res.json({ deleted: true, candidateDeleted });
+});
+app.delete('/api/candidates/:id', (req, res) => {
+  const input = z.object({ reason: z.string().trim().min(8).max(1000) }).parse(req.body);
+  const candidate = store.get('candidate', req.params.id); if (!owned(candidate)) throw new ServiceError('errors.cvNotFound', 404);
+  store.transaction(() => deleteCandidateData(candidate, input.reason));
+  res.json({ deleted: true });
 });
 app.use(express.static(path.join(root, 'public')));
 app.use((error, req, res, next) => {

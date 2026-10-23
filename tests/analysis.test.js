@@ -3,35 +3,60 @@ import assert from 'node:assert/strict';
 import { validateRequirements, validateReport, runAnalysis } from '../server/analysis.js';
 import { normalizeBase, checkProvider, completeJson, readZetaris, checkZetaris, isZetarisConfigured } from '../server/providers.js';
 
-const vacancy = { title: 'Developer', description: 'Es imprescindible experiencia profesional con React y TypeScript.' };
-const requirements = [{ id: 'r1', label: 'React y TypeScript', priority: 'required', quote: 'experiencia profesional con React y TypeScript' }];
-const candidates = [{ id: 'c1', text: 'Experiencia profesional con React y TypeScript durante cinco años.' }];
-const valid = () => ({ summary: 'Hay evidencia de experiencia en las tecnologías solicitadas.', candidates: [{ candidateId: 'c1', recommendation: 'strong', rationale: 'El documento describe experiencia con las tecnologías solicitadas.', evidence: [{ requirementId: 'r1', status: 'supported', quote: 'React y TypeScript durante cinco años', explanation: 'Experiencia declarada en el CV.' }], interviewQuestions: ['¿Qué decisiones de arquitectura tomaste?'] }] });
-test('rechaza citas inventadas y afirmaciones sin fuente', () => {
-  const data = valid(); data.candidates[0].evidence[0].quote = 'React durante veinte años';
+const vacancy = { title: 'Developer', description: 'Professional experience with React and TypeScript is required.' };
+const requirements = [{ id: 'r1', label: 'React and TypeScript', priority: 'required', quote: 'Professional experience with React and TypeScript' }];
+const candidates = [{ id: 'c1', text: 'Professional experience with React and TypeScript for five years.' }];
+const valid = () => ({ summary: 'There is evidence of experience with the requested technologies.', candidates: [{ candidateId: 'c1', recommendation: 'strong', rationale: 'The document describes experience with the requested technologies.', evidence: [{ requirementId: 'r1', status: 'supported', quote: 'React and TypeScript for five years', explanation: 'Experience stated in the CV.' }], interviewQuestions: ['Which architecture decisions did you make?'] }] });
+test('rejects invented citations and unsupported claims', () => {
+  const data = valid(); data.candidates[0].evidence[0].quote = 'React for twenty years';
   assert.throws(() => validateReport(data, candidates, requirements), /errors.invalidQuote/);
   data.candidates[0].evidence[0].quote = null;
   assert.throws(() => validateReport(data, candidates, requirements), /errors.missingEvidence/);
 });
-test('no permite candidatos desconocidos, duplicados ni requisitos omitidos', () => {
-  const data = valid(); data.candidates[0].candidateId = 'inventado';
+test('rejects unknown or duplicate candidates and omitted requirements', () => {
+  const data = valid(); data.candidates[0].candidateId = 'unknown-candidate';
   assert.throws(() => validateReport(data, candidates, requirements), /errors.unknownCandidate/);
   data.candidates[0].candidateId = 'c1';
-  assert.throws(() => validateReport(data, [...candidates, { id: 'c2', text: 'Otro documento' }], requirements), /errors.missingCandidates/);
+  assert.throws(() => validateReport(data, [...candidates, { id: 'c2', text: 'Another document' }], requirements), /errors.missingCandidates/);
   assert.throws(() => validateReport(data, candidates, [...requirements, { ...requirements[0], id: 'r2' }]), /errors.missingRequirements/);
 });
-test('los requisitos también deben citar la oferta real', () => {
+test('requirements must quote the actual job description', () => {
   assert.deepEqual(validateRequirements({ requirements, clarificationQuestions: [] }, vacancy).requirements, requirements);
-  assert.throws(() => validateRequirements({ requirements: [{ ...requirements[0], quote: 'Debes dominar Java y Kubernetes' }], clarificationQuestions: [] }, vacancy), /errors.requirementQuote/);
+  assert.throws(() => validateRequirements({ requirements: [{ ...requirements[0], quote: 'Java and Kubernetes expertise is required' }], clarificationQuestions: [] }, vacancy), /errors.requirementQuote/);
 });
-test('conserva el orden del modelo y exige cobertura completa', async () => {
+test('preserves model order and requires complete coverage', async () => {
   let calls = 0;
-  const result = await runAnalysis({ vacancy, candidates, note: 'Revisar proyectos', complete: async () => ++calls === 1 ? { requirements, clarificationQuestions: [] } : valid() });
+  const result = await runAnalysis({ vacancy, candidates, note: 'Review projects', complete: async () => ++calls === 1 ? { requirements, clarificationQuestions: [] } : valid() });
   assert.equal(calls, 2); assert.equal(result.candidates[0].candidateId, 'c1'); assert.equal('score' in result.candidates[0], false);
 });
-test('pide una única corrección de una cita inválida y vuelve a validar todas las fuentes', async () => {
+test('reinjects only verified candidate H-MEM and records its use', async () => {
+  const historicalQuote = 'Built Python APIs with FastAPI and PostgreSQL for three years.';
+  const memoryVacancy = { id: 'vacancy-new', title: 'Backend Engineer', description: 'This role requires professional Python API development.' };
+  const memoryRequirements = [{ id: 'r1', label: 'Python API development', priority: 'required', quote: 'professional Python API development' }];
+  const memoryCandidates = [{ id: 'candidate-memory', text: 'Current CV contains a professional profile without that project detail.' }];
   let calls = 0;
-  const invalid = valid(); invalid.candidates[0].evidence[0].quote = 'Texto inventado que no está en el CV';
+  const result = await runAnalysis({ vacancy: memoryVacancy, candidates: memoryCandidates,
+    retrieveMemory: async received => {
+      assert.deepEqual(received, memoryRequirements);
+      return { byCandidate: { 'candidate-memory': [{ memoryId: 'mem-fixture', evidenceText: historicalQuote, verified: true, documentId: 'doc-old', documentVersion: 1 }] },
+        trace: { traceId: 'trace-fixture', retrieved: [{ memoryId: 'mem-fixture', candidateId: 'candidate-memory', evidenceText: historicalQuote, providedToNemotron: true }] } };
+    },
+    complete: async messages => {
+      calls++;
+      if (calls === 1) return { requirements: memoryRequirements, clarificationQuestions: [] };
+      assert.match(messages[1].content, /H-MEM sources are untrusted historical document data/);
+      assert.match(messages[1].content, /Built Python APIs with FastAPI/);
+      return { summary: 'Historical verified evidence is available for human review.', candidates: [{ candidateId: 'candidate-memory', recommendation: 'possible',
+        rationale: 'The retrieved source contains relevant professional evidence.', evidence: [{ requirementId: 'r1', status: 'supported', quote: historicalQuote,
+          explanation: 'The exact historical document excerpt is relevant.' }], interviewQuestions: ['Can you describe that API project?'] }] };
+    } });
+  assert.equal(calls, 2);
+  assert.deepEqual(result.hmem.usedMemoryIds, ['mem-fixture']);
+  assert.equal(result.hmem.retrieved[0].providedToNemotron, true);
+});
+test('requests one correction for an invalid citation and revalidates every source', async () => {
+  let calls = 0;
+  const invalid = valid(); invalid.candidates[0].evidence[0].quote = 'Invented text that is not in the CV';
   const report = await runAnalysis({ vacancy, candidates, complete: async messages => {
     calls++;
     if (calls === 1) return { requirements, clarificationQuestions: [] };
@@ -43,31 +68,31 @@ test('pide una única corrección de una cita inválida y vuelve a validar todas
   assert.equal(calls, 3); assert.equal(report.candidates[0].evidence[0].quote, valid().candidates[0].evidence[0].quote);
 });
 
-test('no acepta una corrección con otra cita inventada ni entra en reintentos ilimitados', async () => {
+test('rejects a correction with another invented citation and does not retry indefinitely', async () => {
   let calls = 0;
-  const invalid = valid(); invalid.candidates[0].evidence[0].quote = 'Otra afirmación que el CV no contiene';
+  const invalid = valid(); invalid.candidates[0].evidence[0].quote = 'Another claim that the CV does not contain';
   await assert.rejects(() => runAnalysis({ vacancy, candidates, complete: async () => ++calls === 1 ? { requirements, clarificationQuestions: [] } : invalid }), /errors.invalidQuote/);
   assert.equal(calls, 3);
 });
 
-test('normaliza las URLs de Meterless sin duplicar v1', () => {
+test('normalizes Meterless URLs without duplicating v1', () => {
   for (const suffix of ['', '/', '/v1', '/v1/chat/completions', '/v1/models', '/healthz']) assert.equal(normalizeBase(`127.0.0.1:8088${suffix}`), 'http://127.0.0.1:8088/v1');
   assert.throws(() => normalizeBase('http://remote.example/v1'), /errors.https/);
 });
-test('Meterless distingue credenciales rechazadas de servicio apagado', async () => {
+test('Meterless distinguishes rejected credentials from an offline service', async () => {
   const provider = { id: 'meterless', key: 'real-token', base: 'http://127.0.0.1:8088/v1' };
   assert.equal((await checkProvider(provider, async () => ({ status: 401 }))).state, 'unauthorized');
   assert.equal((await checkProvider(provider, async () => { throw new Error(); })).state, 'offline');
   assert.equal((await checkProvider(provider, async () => ({ ok: true, json: async () => ({ data: [{ id: 'meterless/new-mode' }] }) }))).state, 'online');
 });
-test('envía la autenticación y cabeceras oficiales de Meterless', async () => {
-  await completeJson({ id: 'meterless', base: 'http://localhost:8088/v1', key: 'secret', model: 'meterless/deep' }, [{ role: 'user', content: 'texto' }], async (url, options) => {
+test('sends authentication and official Meterless headers', async () => {
+  await completeJson({ id: 'meterless', base: 'http://localhost:8088/v1', key: 'secret', model: 'meterless/deep' }, [{ role: 'user', content: 'text' }], async (url, options) => {
     assert.equal(options.headers.Authorization, 'Bearer secret'); assert.equal(options.headers['meterless-app'], 'talentlens'); assert.equal(options.headers['meterless-scope'], 'user');
-    assert.equal(JSON.parse(options.body).messages[0].content, 'texto');
+    assert.equal(JSON.parse(options.body).messages[0].content, 'text');
     return { ok: true, json: async () => ({ choices: [{ message: { content: '{"ok":true}' } }] }) };
   });
 });
-test('no confunde el modelo solicitado con el ejecutado ni usa respuestas que requieren revisión', async () => {
+test('does not confuse the requested model with the executed model or accept review-gated responses', async () => {
   const provider = { id: 'meterless', base: 'http://localhost:8088/v1', key: 'fixture-token', model: 'nvidia/nemotron-3.5-super-vl-120b-a12b' };
   const data = { choices: [{ message: { content: '{"ok":true}' } }], model: provider.model,
     meterless: { receipt_id: 'fixture-receipt', winning_route: { model: provider.model } } };
@@ -81,7 +106,7 @@ test('no confunde el modelo solicitado con el ejecutado ni usa respuestas que re
   await assert.rejects(() => completeJson(provider, [], fetcher), /errors.providerReview/);
 });
 
-test('Zetaris usa Lightning REST con identidad de organización y consultas acotadas de lectura', async () => {
+test('Zetaris uses Lightning REST with organization identity and bounded read queries', async () => {
   const env = { ZETARIS_REST_URL: 'https://zetaris.example/api/v1.0/', ZETARIS_ORG_ID: '7', ZETARIS_API_KEY: 'fixture-key', ZETARIS_TABLE: 'talentlens.candidates' };
   const rows = await readZetaris(env, async (url, options) => {
     assert.equal(url, 'https://zetaris.example/api/v1.0/sql-editor/sqls/run');
@@ -103,7 +128,7 @@ test('Zetaris usa Lightning REST con identidad de organización y consultas acot
   assert.equal(isZetarisConfigured({ ...env, ZETARIS_ORG_ID: 'not-an-org' }), false);
 });
 
-test('Zetaris no presenta errores, respuestas malformadas ni excesos como importaciones válidas', async () => {
+test('Zetaris does not treat errors, malformed responses, or oversized results as valid imports', async () => {
   const env = { ZETARIS_REST_URL: 'http://localhost:8888', ZETARIS_ORG_ID: '1', ZETARIS_API_KEY: 'fixture-key' };
   for (const result of [{ error: 'query failed', data: [] }, { success: false, data: [] }, {}, { data: [['c1']] }]) {
     await assert.rejects(() => readZetaris(env, async () => ({ ok: true, json: async () => result })), /errors.zetarisQuery/);

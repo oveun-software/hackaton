@@ -32,6 +32,16 @@ export class Store {
       .run(kind, record.id, JSON.stringify(record));
     return record;
   }
+  remove(kind, id) {
+    return this.db.prepare('DELETE FROM records WHERE kind=? AND id=?').run(kind, id).changes > 0;
+  }
+  removeWhere(kind, predicate) {
+    const removed = [];
+    for (const item of this.list(kind)) {
+      if (predicate(item) && this.remove(kind, item.id)) removed.push(item);
+    }
+    return removed;
+  }
   transaction(fn) {
     this.db.exec('BEGIN IMMEDIATE');
     try { const result = fn(); this.db.exec('COMMIT'); return result; }

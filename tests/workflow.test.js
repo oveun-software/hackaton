@@ -8,7 +8,7 @@ import path from 'node:path';
 import { zipSync, strToU8 } from 'fflate';
 import { translate } from '../public/i18n.js';
 
-test('flujo completo: carga, vacante, consentimiento, IA, evidencias y revisión persistente', async t => {
+test('complete workflow: upload, role, consent, AI evidence, and persistent review', async t => {
   const directory = await mkdtemp(path.join(tmpdir(), 'talentlens-test-'));
   const seenCalls = [];
   const mock = createServer(async (req, res) => {
@@ -19,10 +19,10 @@ test('flujo completo: carga, vacante, consentimiento, IA, evidencias y revisión
     assert.equal(req.headers.authorization, 'Bearer fixture-token');
     const data = request.messages[1].content;
     const answer = request.messages[0].content.startsWith('You translate recruiting reports')
-      ? { ...JSON.parse(data), summary: 'Une analyse traduite pour examiner les expériences professionnelles.' }
+      ? { ...JSON.parse(data), summary: 'A translated analysis for reviewing professional experience.' }
       : seenCalls.length === 1
-      ? { requirements: [{ id: 'r1', label: 'React y TypeScript', priority: 'required', quote: 'React y TypeScript' }], clarificationQuestions: [] }
-      : { summary: 'El documento contiene una experiencia profesional relevante que se debe contrastar en entrevista.', candidates: JSON.parse(data.split('DATA: ')[1]).candidates.map(c => ({ candidateId: c.id, recommendation: 'possible', rationale: 'El CV declara experiencia profesional con las tecnologías de la oferta.', evidence: [{ requirementId: 'r1', status: 'supported', quote: 'React y TypeScript', explanation: 'La experiencia está descrita en el documento.' }], interviewQuestions: ['¿Qué aportaste a ese proyecto?'] })) };
+      ? { requirements: [{ id: 'r1', label: 'React and TypeScript', priority: 'required', quote: 'React and TypeScript' }], clarificationQuestions: [] }
+      : { summary: 'The document contains relevant professional experience that should be discussed in an interview.', candidates: JSON.parse(data.split('DATA: ')[1]).candidates.map(c => ({ candidateId: c.id, recommendation: 'possible', rationale: 'The CV states professional experience with the technologies in the role.', evidence: [{ requirementId: 'r1', status: 'supported', quote: 'React and TypeScript', explanation: 'The experience is described in the document.' }], interviewQuestions: ['What did you contribute to that project?'] })) };
     res.end(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(answer) } }] }));
   });
   await new Promise(resolve => mock.listen(0, '127.0.0.1', resolve));
@@ -32,27 +32,28 @@ test('flujo completo: carga, vacante, consentimiento, IA, evidencias y revisión
   t.after(() => { if (serverErrors.replace(/\(node:\d+\) ExperimentalWarning: SQLite[^\n]*\n[^\n]*\n/g, '').trim()) console.error(serverErrors); });
   t.after(async () => { child.kill(); await new Promise(resolve => child.exitCode !== null ? resolve() : child.once('exit', resolve)); await new Promise(resolve => mock.close(resolve)); await rm(directory, { recursive: true, force: true }); });
   const base = await new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('El servidor no arrancó')), 10000);
+    const timeout = setTimeout(() => reject(new Error('The server did not start')), 10000);
     child.stdout.on('data', chunk => { const match = chunk.toString().match(/http:\/\/127\.0\.0\.1:\d+/); if (match) { clearTimeout(timeout); resolve(match[0]); } });
-    child.once('exit', code => { clearTimeout(timeout); reject(new Error(`Servidor cerrado: ${code}`)); });
+    child.once('exit', code => { clearTimeout(timeout); reject(new Error(`Server exited: ${code}`)); });
   });
   const call = async (url, body, headers = {}) => fetch(`${base}${url}`, { method: 'POST', headers: { 'X-TalentLens-Client': 'workspace', ...(body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), ...headers }, body: body instanceof FormData ? body : JSON.stringify(body) });
   assert.equal((await fetch(base)).status, 200);
+  assert.equal((await fetch(`${base}/api/state`, { headers: { 'X-TalentLens-Organization': 'other-organization' } })).status, 403);
   assert.equal((await call('/api/demo', {}, { Origin: 'https://untrusted.example' })).status, 403);
-  const description = 'Es imprescindible experiencia profesional con React y TypeScript para herramientas B2B.';
-  const vacancyResponse = await call('/api/vacancies', { title: 'Frontend Developer', company: 'Ficticia', location: 'Remoto', description });
+  const description = 'Professional experience with React and TypeScript is required for B2B tools.';
+  const vacancyResponse = await call('/api/vacancies', { title: 'Frontend Developer', company: 'Fictional Corp', location: 'Remote', description });
   assert.equal(vacancyResponse.status, 201); const vacancy = await vacancyResponse.json();
-  const docx = zipSync({ '[Content_Types].xml': strToU8('<Types/>'), 'word/document.xml': strToU8('<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Perfil ficticio. Experiencia profesional con React y TypeScript en productos B2B durante cinco años.</w:t></w:r></w:p></w:body></w:document>') });
+  const docx = zipSync({ '[Content_Types].xml': strToU8('<Types/>'), 'word/document.xml': strToU8('<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Fictional profile. Professional experience with React and TypeScript in B2B products for five years.</w:t></w:r></w:p></w:body></w:document>') });
   const pdfObjects = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>', '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'];
-  const stream = 'BT /F1 12 Tf 50 700 Td (Perfil ficticio. Experiencia profesional con React y TypeScript durante cinco anos.) Tj ET';
+  const stream = 'BT /F1 12 Tf 50 700 Td (Fictional profile. Professional experience with React and TypeScript for five years.) Tj ET';
   pdfObjects.push(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
   let pdf = '%PDF-1.4\n'; const offsets = [0];
   pdfObjects.forEach((object, i) => { offsets.push(Buffer.byteLength(pdf)); pdf += `${i + 1} 0 obj\n${object}\nendobj\n`; });
   const xref = Buffer.byteLength(pdf); pdf += `xref\n0 6\n0000000000 65535 f \n${offsets.slice(1).map(offset => `${String(offset).padStart(10, '0')} 00000 n \n`).join('')}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
   const files = new FormData();
-  files.append('files', new Blob(['Perfil ficticio. Experiencia profesional con React y TypeScript durante cinco años.']), 'perfil.txt');
-  files.append('files', new Blob([docx]), 'perfil.docx');
-  files.append('files', new Blob([pdf]), 'perfil.pdf');
+  files.append('files', new Blob(['Fictional profile. Professional experience with React and TypeScript for five years.']), 'profile.txt');
+  files.append('files', new Blob([docx]), 'profile.docx');
+  files.append('files', new Blob([pdf]), 'profile.pdf');
   const upload = await call('/api/candidates', files); assert.equal(upload.status, 201);
   const uploaded = await upload.json(); assert.equal(uploaded.added.length, 3); assert.equal(uploaded.errors.length, 0);
   const invalid = new FormData(); invalid.append('files', new Blob(['Not a PDF']), 'fake.pdf');
@@ -65,9 +66,11 @@ test('flujo completo: carga, vacante, consentimiento, IA, evidencias y revisión
   dtd.append('files', new Blob([zipSync({ 'word/document.xml': strToU8('<!DOCTYPE document [<!ENTITY x "unsafe">]><document><t>&x;</t></document>') })]), 'dtd.docx');
   assert.equal((await call('/api/candidates', dtd)).status, 422);
   assert.equal((await call(`/api/vacancies/${vacancy.id}/analyze`, { consent: false })).status, 400); assert.equal(seenCalls.length, 0);
-  const response = await call(`/api/vacancies/${vacancy.id}/analyze`, { consent: true, note: 'Revisar proyectos.' });
+  const response = await call(`/api/vacancies/${vacancy.id}/analyze`, { consent: true, note: 'Review projects.' });
   assert.equal(response.status, 200); const report = await response.json();
   assert.equal(report.candidates.length, 3); assert.equal(report.sources.length, 3); assert.equal(seenCalls.length, 2);
+  assert.equal(report.hmem.stored.created.length, 3);
+  assert.deepEqual(report.hmem.usedMemoryIds, []);
   assert.equal(report.language, 'en');
   assert.equal((await call(`/api/reports/${report.id}/translate`, { consent: false, language: 'fr' })).status, 400);
   const translation = await call(`/api/reports/${report.id}/translate`, { consent: true, language: 'fr' });
@@ -79,4 +82,13 @@ test('flujo completo: carga, vacante, consentimiento, IA, evidencias y revisión
   const review = await call('/api/reviews', { reportId: report.id, candidateId: report.candidates[0].candidateId, status: 'interview' }); assert.equal(review.status, 200);
   const state = await (await fetch(`${base}/api/state`)).json(); assert.equal(state.reports.length, 1); assert.equal(state.reviews[0].status, 'interview');
   assert.equal(JSON.stringify(state).includes('fixture-token'), false);
+  const deletedCandidateId = report.candidates[0].candidateId;
+  const deletion = await fetch(`${base}/api/candidates/${deletedCandidateId}`, { method: 'DELETE', headers: { 'X-TalentLens-Client': 'workspace', 'Content-Type': 'application/json' }, body: JSON.stringify({ reason: 'candidate privacy deletion request' }) });
+  assert.equal(deletion.status, 200);
+  const redacted = await (await fetch(`${base}/api/state`)).json();
+  assert.equal(redacted.candidates.some(candidate => candidate.id === deletedCandidateId), false);
+  const redactedReport = redacted.reports[0], redactedSource = redactedReport.sources.find(source => source.id === deletedCandidateId);
+  assert.equal(redactedSource.text, null); assert.equal(redactedSource.name, 'Deleted candidate');
+  assert.equal(redactedReport.candidates.find(candidate => candidate.candidateId === deletedCandidateId).evidence[0].quote, null);
+  assert.equal((redactedReport.hmem.retrieved || []).some(item => item.candidateId === deletedCandidateId), false);
 });
