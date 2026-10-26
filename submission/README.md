@@ -17,7 +17,7 @@ The project is **not submitted or marked complete**. No video is included, as re
 | Video | Intentionally not produced |
 | HackOS draft | Not saved: current member account cannot create/manage submissions. Maria Rodriguez is the leader |
 | Final submission | Pending user review and a video. Do not finalize |
-| Public repository | Required by the rules. Check current GitHub visibility before delivery |
+| Public repository | Public since 26 October 2026, with owner authorization; GitHub visibility verified |
 
 ## Running the demonstration
 
@@ -36,6 +36,5 @@ The complete fictional inputs, outputs, H-MEM trace and execution IDs are in [ve
 ## Remaining delivery actions
 
 - The leader must create/save the portal draft using the prepared application text.
-- Confirm public repository visibility after owner review of source and history.
 - Record and attach the 1-4 minute video in a separate task.
 - Final submission remains pending explicit user approval.
