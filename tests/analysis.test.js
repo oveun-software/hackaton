@@ -2,7 +2,7 @@ import { reviewFixture } from './review-fixture.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateRequirements, validateReport, runAnalysis } from '../server/analysis.js';
-import { normalizeBase, checkProvider, completeJson, readZetaris, checkZetaris, isZetarisConfigured } from '../server/providers.js';
+import { normalizeBase, checkProvider, assertProviderReady, completeJson, readZetaris, checkZetaris, isZetarisConfigured } from '../server/providers.js';
 
 const vacancy = { title: 'Developer', description: 'Professional experience with React and TypeScript is required.' };
 const requirements = [{ id: 'r1', label: 'React and TypeScript', priority: 'required', quote: 'Professional experience with React and TypeScript' }];
@@ -88,7 +88,17 @@ test('Meterless distinguishes rejected credentials from an offline service', asy
   const provider = { id: 'meterless', key: 'real-token', base: 'http://127.0.0.1:8088/v1' };
   assert.equal((await checkProvider(provider, async () => ({ status: 401 }))).state, 'unauthorized');
   assert.equal((await checkProvider(provider, async () => { throw new Error(); })).state, 'offline');
-  assert.equal((await checkProvider(provider, async () => ({ ok: true, json: async () => ({ data: [{ id: 'meterless/new-mode' }] }) }))).state, 'online');
+  const onlineProvider = { ...provider, model: 'meterless/new-mode' };
+  const online = await checkProvider(onlineProvider, async () => ({ ok: true, json: async () => ({ data: [{ id: 'meterless/new-mode' }] }) }));
+  assert.equal(online.state, 'online'); assert.equal(online.modelAvailable, true);
+});
+test('provider preflight rejects unavailable services and missing models before inference', async () => {
+  const provider = { id: 'meterless', key: 'real-token', base: 'http://127.0.0.1:8088/v1', model: 'nvidia/selected-model' };
+  await assert.rejects(() => assertProviderReady(provider, async () => { throw new Error('offline'); }), /errors.providerOffline/);
+  await assert.rejects(() => assertProviderReady(provider, async () => ({ status: 401 })), /errors.providerAuth/);
+  await assert.rejects(() => assertProviderReady(provider, async () => ({ ok: true, json: async () => ({ data: [{ id: 'meterless/deep' }] }) })), /errors.modelUnavailable/);
+  const ready = await assertProviderReady(provider, async () => ({ ok: true, json: async () => ({ data: [{ id: 'meterless/deep' }, { id: provider.model }] }) }));
+  assert.equal(ready.modelAvailable, true);
 });
 test('sends authentication and official Meterless headers', async () => {
   await completeJson({ id: 'meterless', base: 'http://localhost:8088/v1', key: 'secret', model: 'meterless/deep' }, [{ role: 'user', content: 'text' }], async (url, options) => {

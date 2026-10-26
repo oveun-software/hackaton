@@ -26,7 +26,7 @@ The three steps show the original evidence, a documented clarification and anoth
 - A second Nemotron review checking unsupported claims, negations, contradictions and evidence gaps; unresolved rows include a concrete question.
 - Attributed clarification sources, reanalysis and an explicit comparison with the prior report. Candidate statements remain labelled as statements, not independently verified facts.
 - Memory with source type, date, provenance and human conflict resolution. Repeating an analysis cannot reactivate a disputed memory.
-- **36 automated tests and 13/13 official H-MEM checks.** A real model evaluation matched **32/32 authored evidence expectations across 16 fictional cases**, with zero unsupported positive assessments in that set. This is a small diagnostic evaluation, not a general accuracy or fairness guarantee. The critical review made no evidence-state/citation changes in that evaluation run; no incremental quality gain is claimed.
+- **38 automated tests and 13/13 official H-MEM checks.** A real model evaluation matched **32/32 authored evidence expectations across 16 fictional cases**, with zero unsupported positive assessments in that set. This is a small diagnostic evaluation, not a general accuracy or fairness guarantee. The critical review made no evidence-state/citation changes in that evaluation run; no incremental quality gain is claimed.
 
 See [evidence review](docs/EVIDENCE-REVIEW.md), [evaluation results](evaluation/results.json), [evaluation methodology](evaluation/README.md), and the [guided fictional-CV pilot](evaluation/RECRUITER-PILOT.md).
 
@@ -41,20 +41,55 @@ See [evidence review](docs/EVIDENCE-REVIEW.md), [evaluation results](evaluation/
 
 All inputs are fictional and committed, along with [individual CV files](examples/pilot/README.md). These paired files export the saved evaluation, with no invented model outputs. Run `npm run test:recordings` after `npm ci` to check their integrity; `npm run evaluate` generates fresh results through your own configured Nightshift/Nemotron. [Full explanation and English reading aid for the Spanish case](examples/judges/README.md).
 
-## Quick start
+## Live application: download and configure
 
-Requires **Node.js 22.16 or later** and npm. Node 22 is recommended.
+The live workspace requires **Node.js 22.16 or later** and npm. Node 22 is recommended. A fresh Nemotron analysis also requires the Nightshift desktop runtime to remain open. Docker is **not** required for local CV uploads, H-MEM or Nightshift; it is only required when you use the optional local Zetaris import.
 
-```powershell
-cd hackaton
-npm.cmd ci
-npm.cmd run setup
-npm.cmd start
-```
+1. Clone and install the exact dependencies:
+
+   ```powershell
+   git clone https://github.com/oveun-software/hackaton.git
+   cd hackaton
+   npm.cmd ci
+   ```
+
+2. Install the current official [Nightshift Windows build](https://meterless.ai/windows.html), start it and add your own NVIDIA API key in **Nightshift → Providers**. Enable `nvidia/nemotron-3.5-lightning-30b-a3b` for the TalentLens application profile.
+
+3. Import this computer's Nightshift runtime token into the private `.env` file:
+
+   ```powershell
+   npm.cmd run setup -- --refresh-token
+   ```
+
+   Run this command again whenever Nightshift rotates or replaces its runtime token. It never prints the token.
+
+4. Prove that the runtime, credentials, selected model and one small inference all work before opening the application:
+
+   ```powershell
+   npm.cmd run doctor -- --infer
+   ```
+
+   Continue only when `ai.state` is `online`, `ai.modelAvailable` is `true` and `ai.inference` is `passed`. Zetaris is reported separately and is optional for a workflow based on uploaded files. Add `--require-zetaris` when you want this command to fail unless the complete Zetaris path is also online.
+
+5. Start TalentLens:
+
+   ```powershell
+   npm.cmd start
+   ```
 
 Open [TalentLens](http://127.0.0.1:4317). On Windows, you can also double-click `START-TALENTLENS.cmd`. Stop the server with Ctrl+C. The server binds to the local computer only. Node 22 may display an experimental warning for its built-in SQLite module.
 
-Without API credentials, you can create roles, upload/view CVs and load three clearly fictional sample profiles. Sample content contains no fabricated AI results.
+Without live credentials, you can still create roles, upload and inspect CVs, load three clearly fictional sample profiles and use the recorded walkthrough. Generating a new report requires the live readiness check above.
+
+## Use the live application
+
+1. Open **CV library** and upload PDF, DOCX or TXT files, or choose **Use sample CVs**.
+2. Open **Open roles**, create a role with a clear description or select the sample role.
+3. Open **Connections** and choose **Test active connection**. A token labelled “configured” has not yet proved that Nightshift is running.
+4. Return to the role, review the CV count, accept the explicit data-transfer consent and choose **Analyse with Nemotron**.
+5. Review every recommendation against its source quotation and H-MEM trace, record the human next step and use **New CV version** when a candidate updates a CV.
+
+The `?` button in the top bar shows this workflow inside the application. Every CV currently in the library is included in a new analysis; remove unrelated fictional records before demonstrating a different scenario.
 
 ## Languages
 
@@ -79,7 +114,7 @@ In **Connections**, test the active provider. Then open a role, consent to sendi
 
 TalentLens implements the [official OpenAI-compatible Nightshift provider contract](https://github.com/Meterless/Meterless/blob/main/docs/agent-ready/add-meterless-provider.md): URL normalization, real bearer authentication, `meterless-app: talentlens`, `meterless-scope: user`, routing model IDs and a 180-second request timeout.
 
-Install and start [Nightshift](https://meterless.ai/windows.html), save your own NVIDIA key in its Providers settings, then run `npm run setup` to import the runtime token from this computer. Keep Nightshift running while using TalentLens. Nightshift 1.2.1 advertises concrete model IDs alongside routing modes:
+Install and start [Nightshift](https://meterless.ai/windows.html), save your own NVIDIA key in its Providers settings, then run `npm.cmd run setup -- --refresh-token` to import the runtime token from this computer. Keep Nightshift running while using TalentLens. Install the current build shown on the official page rather than assuming the build used for a recorded verification is still the latest. Nightshift advertises concrete model IDs alongside routing modes:
 
 ```dotenv
 AI_PROVIDER=meterless
@@ -88,11 +123,30 @@ METERLESS_RUNTIME_TOKEN=the-real-token-from-your-runtime
 METERLESS_MODEL=nvidia/nemotron-3.5-lightning-30b-a3b
 ```
 
-Nightshift stores its token at `<stateDir>/proxy-token`. The placeholder `rt-local` is rejected. Use a model or route listed by your runtime. Connection checks authenticate against `/v1/models`, distinguish unauthorized/offline/online states and send no CVs. `npm run doctor` also checks that the selected model is advertised. `npm run doctor -- --infer` adds one small JSON inference without CVs and reports the actual model from Nightshift's response.
+Nightshift stores its token at `<stateDir>/proxy-token`. The placeholder `rt-local` is rejected. Use a model or route listed by your runtime. Connection checks authenticate against `/v1/models`, distinguish unauthorized/offline/online states, verify the selected model and send no CVs. TalentLens performs the same preflight before an analysis or translation, so an offline runtime, rejected token or missing model fails before any CV content is submitted. `npm.cmd run doctor -- --infer` adds one small JSON inference without CVs and reports the actual model from Nightshift's response.
 
-**Nightshift 1.2.1 routing caveat:** an application's saved routing profile can override a concrete requested model. In Nightshift's compute sources, enable the intended Nemotron and disable NVIDIA models your account cannot run. Preserve privacy and verification settings. TalentLens refuses a response if Nightshift does not confirm the selected concrete NVIDIA model, and saves actual model/receipt IDs with successful reports. A successful model-catalog check alone does not prove inference or routing.
+**Nightshift routing caveat:** an application's saved routing profile can override a concrete requested model. In Nightshift's compute sources, enable the intended Nemotron and disable NVIDIA models your account cannot run. Preserve privacy and verification settings. TalentLens refuses a response if Nightshift does not confirm the selected concrete NVIDIA model, and saves actual model/receipt IDs with successful reports. A successful model-catalog check alone does not prove inference or routing.
 
-The verified configuration uses the **fast** application profile in Nightshift with only the selected Nemotron enabled. This profile change preserves privacy and verification settings. TalentLens requests a structured, side-effect-free result tool, so its own three-stage recruiting workflow does not trigger Nightshift's extra code-planning generation when CVs mention programming languages. Streaming avoids the runtime's 45-second wait for buffered provider headers. The adapter accepts Nightshift 1.2.1's complete tool-call deltas as well as incremental OpenAI deltas, bounds the stream to 4 MB, discards reasoning, and refuses incomplete or review-gated responses.
+The verified configuration uses the **fast** application profile in Nightshift with only the selected Nemotron enabled. This profile change preserves privacy and verification settings. TalentLens requests a structured, side-effect-free result tool, so its own three-stage recruiting workflow does not trigger Nightshift's extra code-planning generation when CVs mention programming languages. Streaming avoids the runtime's 45-second wait for buffered provider headers. The adapter accepts the complete tool-call deltas produced by the verified 1.2.1 build as well as incremental OpenAI deltas, bounds the stream to 4 MB, discards reasoning, and refuses incomplete or review-gated responses.
+
+### Nightshift troubleshooting on Windows
+
+Run these commands from PowerShell without copying or printing the token:
+
+```powershell
+& "$env:LOCALAPPDATA\Nightshift\cli\ns.cmd" status --json
+& "$env:LOCALAPPDATA\Nightshift\cli\ns.cmd" discover --json
+npm.cmd run setup -- --refresh-token
+npm.cmd run doctor -- --infer
+```
+
+| Symptom | Meaning | Action |
+| --- | --- | --- |
+| Connections says Nightshift is unavailable | Nothing is listening at `127.0.0.1:8088` | Start the Nightshift desktop app, wait a few seconds and test again. Docker does not start Nightshift. |
+| Credentials are rejected | `.env` contains a missing or stale runtime token | Keep Nightshift open, run the refresh-token setup command, restart TalentLens and test again. |
+| Provider is online but the model is unavailable | `METERLESS_MODEL` is not present in `/v1/models` | Enable the model in Nightshift or select an advertised concrete model, then rerun the doctor. |
+| A catalog check passes but inference fails | The NVIDIA key, quota or Nightshift route cannot complete a request | Inspect Nightshift Providers and enabled models, then use the doctor inference result as the gate. |
+| Zetaris is unavailable but uploaded CVs work | The optional local data service or Docker engine is stopped | Continue with uploaded CVs, or start Docker Desktop and the Zetaris stack before using **Import from Zetaris**. |
 
 **Live verification passed on 22 October 2026:** three fictional CVs were retrieved from Zetaris and analysed through Nightshift by `nvidia/nemotron-3.5-lightning-30b-a3b`; both actual model IDs and receipt IDs were confirmed. Every candidate and requirement was covered and every source quotation passed validation. The successful run used two model calls.
 
@@ -110,7 +164,7 @@ CV updates create new document versions and place older facts into pending verif
 
 ## Connect Zetaris
 
-The event's current [Zetaris setup repository](https://github.com/zetaris/getting-started) uses a local Docker installation with Lightning JDBC and REST access. Obtain the platform bundle, matching configuration and registry credentials from [Zetaris Cloud](https://cloud.enterprise.zetaris.com), then follow its [local installation guide](https://github.com/zetaris/getting-started/blob/main/docs/install/updated_zetaris_installation_guide.md). The platform distribution and evaluation entitlement are separate from the open-source recipes. On Windows, the guide uses WSL2 with Docker Desktop integration.
+The event's current [Zetaris setup repository](https://github.com/zetaris/getting-started) uses a local Docker installation with Lightning JDBC and REST access. This is an optional import path: Docker is not involved in Nightshift, local file uploads or H-MEM. Obtain the platform bundle, matching configuration and registry credentials from [Zetaris Cloud](https://cloud.enterprise.zetaris.com), then follow its [local installation guide](https://github.com/zetaris/getting-started/blob/main/docs/install/updated_zetaris_installation_guide.md). The platform distribution and evaluation entitlement are separate from the open-source recipes. On Windows, the guide uses WSL2 with Docker Desktop integration. Before troubleshooting Zetaris logs, confirm that Docker Desktop's Linux engine is running with `docker version` and `docker ps`.
 
 TalentLens uses the bundle's **Lightning REST API**, following Zetaris's [official REST channel implementation](https://github.com/zetaris/getting-started/blob/main/scripts/zetaris_sql.py). Configure a dedicated read-only API key and an authorised candidate view with these columns:
 
@@ -157,7 +211,7 @@ flowchart LR
   Q --> A
 ```
 
-Analysis has three model stages: requirement extraction, candidate comparison and critical review. An unchanged role can reuse previously validated requirements. The app validates output structure, coverage and exact source quotations, preserving the model’s recommendation order. If a stage fails schema or citation validation, the model gets one correction attempt; the full result must pass the same validator. No evidence is repaired or silently discarded by application code. There are at most six model calls for a new role and no automatic retry of provider/network failures. Reports retain the job description, CV text and attributed clarification sources they used. Report translation has one bounded correction for structural failures and still preserves statuses, ordering and original quotations. Deleting a source redacts the affected historical narrative and translations. Source changes invalidate analyses already running, so a late response cannot restore deleted CV data. These checks provide traceability; they do not establish the truth of a CV or guarantee a correct, unbiased recommendation.
+Analysis has three model stages: requirement extraction, candidate comparison and critical review. An unchanged role can reuse previously validated requirements. The app validates output structure, coverage and exact source quotations, preserving the model’s recommendation order. Requirement extraction and comparison receive one model-authored correction for schema or citation failures; the more demanding critical review receives up to two targeted corrections for missing source attribution or follow-up questions. Every full result must pass the same validator. No evidence is repaired or silently discarded by application code. There are at most seven model calls for a new role and no automatic retry of provider/network failures. Reports retain the job description, CV text and attributed clarification sources they used. Report translation has one bounded correction for structural failures and still preserves statuses, ordering and original quotations. Deleting a source redacts the affected historical narrative and translations. Source changes invalidate analyses already running, so a late response cannot restore deleted CV data. These checks provide traceability; they do not establish the truth of a CV or guarantee a correct, unbiased recommendation.
 
 Roles, versioned document text, source snapshots, reports, translations, H-MEM records/traces/ledger and human review states persist in `data/talentlens.sqlite`. The application automatically migrates the previous database filename without discarding records. Original upload binaries are not retained.
 

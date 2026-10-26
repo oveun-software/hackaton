@@ -15,6 +15,14 @@ if not exist node_modules (
     exit /b 1
   )
 )
+powershell.exe -NoProfile -Command "if (Get-NetTCPConnection -LocalPort 8088 -State Listen -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }"
+if errorlevel 1 (
+  echo.
+  echo NOTICE: Nightshift is not listening on port 8088.
+  echo Start the Nightshift desktop app before requesting a fresh AI analysis.
+  echo You can still upload CVs and use the recorded demo. Docker is not required for Nightshift.
+  echo.
+)
 echo Open http://127.0.0.1:4317 in your browser.
 echo Press Ctrl+C to stop TalentLens.
 call npm.cmd start

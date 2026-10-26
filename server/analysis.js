@@ -79,16 +79,23 @@ function validateModelResult(raw, validate) {
     throw failure;
   }
 }
-async function completeValidated(messages, complete, validate, quotationErrors) {
-  const raw = await complete(messages);
-  try { return validateModelResult(raw, validate); }
-  catch (error) {
-    if (!quotationErrors.includes(error.message) && error.message !== 'errors.modelStructure') throw error;
-    // One bounded correction by the model. Never repair, invent or silently
-    // discard evidence in application code; the same validator must pass.
-    const corrected = await complete([...messages, { role: 'assistant', content: JSON.stringify(raw) },
-      { role: 'user', content: `The result failed validation (${error.message}). ${error.validationIssues ? `Fix these schema constraints: ${JSON.stringify(error.validationIssues)}.` : ''} Return the ENTIRE JSON result again. Every non-null quote must be at least 8 characters, copied as one exact contiguous substring of the corresponding original source. Never add ellipses or join separate fragments. Use a longer complete source sentence if necessary. If a CV does not contain supporting evidence, use unclear or missing with quote null. Preserve all IDs and complete coverage. Do not invent or translate quotations.` }]);
-    return validateModelResult(corrected, validate);
+function correctionPrompt(error) {
+  const reviewRules = error.message === 'errors.reviewCoverage'
+    ? ' For EVERY evidence row include sourceId: use the exact source document ID when quote is non-null, otherwise null. For EVERY unclear or missing row include one actionable followUpQuestion; supported rows may use null. Return the entire top-level review object, including summary, findings and report.'
+    : '';
+  return `The result failed validation (${error.message}). ${error.validationIssues ? `Fix these constraints: ${JSON.stringify(error.validationIssues)}.` : ''}${reviewRules} Return the ENTIRE JSON result again. Every non-null quote must be at least 8 characters, copied as one exact contiguous substring of the corresponding original source. Never add ellipses or join separate fragments. Use a longer complete source sentence if necessary. If a CV does not contain supporting evidence, use unclear or missing with quote null. Preserve all IDs and complete coverage. Do not invent or translate quotations.`;
+}
+async function completeValidated(messages, complete, validate, quotationErrors, maxCorrections = 1) {
+  const conversation = [...messages];
+  for (let attempt = 0; ; attempt++) {
+    const raw = await complete(conversation);
+    try { return validateModelResult(raw, validate); }
+    catch (error) {
+      if ((!quotationErrors.includes(error.message) && error.message !== 'errors.modelStructure') || attempt >= maxCorrections) throw error;
+      // Corrections remain model-authored. Application code never repairs,
+      // invents or drops evidence, and every attempt passes the same validator.
+      conversation.push({ role: 'assistant', content: JSON.stringify(raw) }, { role: 'user', content: correctionPrompt(error) });
+    }
   }
 }
 export async function runAnalysis({ vacancy, candidates, note, language = 'en', complete, retrieveMemory, previousReport, onStage = () => {} }) {
@@ -136,12 +143,17 @@ ORIGINAL DATA: ${JSON.stringify(data)}\nDRAFT: ${JSON.stringify(draft)}` }
   ], complete, raw => {
     const checked = reviewSchema.parse(raw);
     checked.report = validateReport(checked.report, candidatesWithMemory, parsed.requirements);
-    for (const finding of checked.findings) if (!candidates.some(c => c.id === finding.candidateId) || !parsed.requirements.some(r => r.id === finding.requirementId)) throw new Error('errors.reviewCoverage');
+    const coverageIssues = [];
+    for (const finding of checked.findings) if (!candidates.some(c => c.id === finding.candidateId) || !parsed.requirements.some(r => r.id === finding.requirementId)) coverageIssues.push({ candidateId: finding.candidateId, requirementId: finding.requirementId, problem: 'unknown finding ID' });
     for (const candidate of checked.report.candidates) for (const evidence of candidate.evidence) {
-      if ((evidence.quote && !evidence.sourceId) || (evidence.status !== 'supported' && !evidence.followUpQuestion)) throw new Error('errors.reviewCoverage');
+      if (evidence.quote && !evidence.sourceId) coverageIssues.push({ candidateId: candidate.candidateId, requirementId: evidence.requirementId, problem: 'quote requires sourceId' });
+      if (evidence.status !== 'supported' && !evidence.followUpQuestion) coverageIssues.push({ candidateId: candidate.candidateId, requirementId: evidence.requirementId, problem: 'unclear or missing requires followUpQuestion' });
+    }
+    if (coverageIssues.length) {
+      const error = new Error('errors.reviewCoverage'); error.validationIssues = coverageIssues; throw error;
     }
     return checked;
-  }, ['errors.invalidQuote', 'errors.missingEvidence', 'errors.reviewCoverage']);
+  }, ['errors.invalidQuote', 'errors.missingEvidence', 'errors.reviewCoverage'], 2);
   const report = review.report;
   const matchedMemoryIds = [...new Set(report.candidates.flatMap(candidate => {
     const sources = memory.byCandidate?.[candidate.candidateId] || [];

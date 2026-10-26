@@ -10,6 +10,10 @@ import { reviewFixture } from './review-fixture.js';
 test('clarifications change evidence, persist with attribution and disappear from reports on source deletion', async t => {
   const directory = await mkdtemp(path.join(tmpdir(), 'talentlens-clarification-'));
   const mock = createServer(async (req, res) => {
+    if (req.url === '/v1/models') {
+      res.setHeader('Content-Type', 'application/json');
+      return res.end(JSON.stringify({ data: [{ id: 'meterless/deep' }] }));
+    }
     let body = ''; for await (const chunk of req) body += chunk;
     const request = JSON.parse(body), prompt = request.messages[1].content;
     let answer;

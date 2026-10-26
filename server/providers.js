@@ -30,16 +30,25 @@ function headers(provider) {
     ...(provider.id === 'meterless' ? { 'meterless-app': 'talentlens', 'meterless-scope': 'user' } : {}) };
 }
 export async function checkProvider(provider, fetcher = fetch) {
-  if (!provider.key || provider.key === 'rt-local') return { state: 'unconfigured', models: [] };
+  const result = (state, models = []) => ({ state, models, model: provider.model, modelAvailable: models.includes(provider.model) });
+  if (!provider.key || provider.key === 'rt-local') return result('unconfigured');
   try {
     const response = await fetcher(`${provider.base}/models`, { headers: headers(provider), signal: AbortSignal.timeout(5000), redirect: 'error' });
-    if ([401, 403].includes(response.status)) return { state: 'unauthorized', models: [] };
-    if (!response.ok) return { state: 'offline', models: [] };
+    if ([401, 403].includes(response.status)) return result('unauthorized');
+    if (!response.ok) return result('offline');
     const data = await response.json();
     const models = (data.data || []).map(m => m.id).filter(id => typeof id === 'string');
-    if (provider.id === 'meterless' && !models.some(id => id.startsWith('meterless/'))) return { state: 'offline', models: [] };
-    return { state: 'online', models };
-  } catch { return { state: 'offline', models: [] }; }
+    if (provider.id === 'meterless' && !models.some(id => id.startsWith('meterless/'))) return result('offline');
+    return result('online', models);
+  } catch { return result('offline'); }
+}
+export async function assertProviderReady(provider, fetcher = fetch) {
+  const readiness = await checkProvider(provider, fetcher);
+  if (readiness.state === 'unconfigured') throw new ServiceError('errors.keyMissing', 503);
+  if (readiness.state === 'unauthorized') throw new ServiceError('errors.providerAuth', 503);
+  if (readiness.state !== 'online') throw new ServiceError('errors.providerOffline', 503);
+  if (!readiness.modelAvailable) throw new ServiceError('errors.modelUnavailable', 503);
+  return readiness;
 }
 export async function completeJson(provider, messages, fetcher = fetch, onExecution = () => {}) {
   if (!provider.key || provider.key === 'rt-local') throw new ServiceError('errors.keyMissing', 503);

@@ -7,7 +7,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { Store } from './store.js';
 import { runAnalysis } from './analysis.js';
-import { getProvider, completeJson, checkProvider, readZetaris, isZetarisConfigured, ServiceError } from './providers.js';
+import { getProvider, completeJson, checkProvider, assertProviderReady, readZetaris, isZetarisConfigured, ServiceError } from './providers.js';
 import { demoCandidates, demoVacancy, localizeDemoCandidate, localizeDemoVacancy } from './demo.js';
 import { errorPayload, resolveLanguage } from './localization.js';
 import { translate } from '../public/i18n.js';
@@ -201,6 +201,7 @@ app.post('/api/vacancies/:id/analyze', async (req, res) => {
   if (!candidates.length) throw new ServiceError('errors.noCvs', 400);
   if (candidates.reduce((total, c) => total + c.evidenceSources.reduce((n, s) => n + s.text.length, 0), 0) > 200000) throw new ServiceError('errors.totalText', 400);
   if (analyzing) throw new ServiceError('errors.analysisBusy', 409);
+  await assertProviderReady(provider);
   analyzing = true;
   analysisProgress = { stage: 'extract', startedAt: new Date().toISOString() };
   try {
@@ -246,6 +247,7 @@ app.post('/api/reports/:id/translate', async (req, res) => {
   if (!owned(report)) throw new ServiceError('errors.reportNotFound', 404);
   if ((report.language || 'es') === input.language || report.translations?.[input.language]) return res.json(report);
   if (analyzing) throw new ServiceError('errors.analysisBusy', 409);
+  await assertProviderReady(provider);
   analyzing = true;
   try {
     const translation = await translateReport(report, input.language, messages => completeJson(provider, messages));

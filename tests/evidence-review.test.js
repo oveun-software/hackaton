@@ -20,6 +20,23 @@ test('second model pass can correct a literal but unsupported claim and expose t
   assert.equal(report.review.changes[0].before, 'supported'); assert.equal(report.review.changes[0].after, 'unclear');
   assert.equal(report.review.findings[0].issue, 'unsupported_claim');
 });
+test('critical review gets a targeted bounded retry for missing source attribution', async () => {
+  const incomplete = { summary: 'The review checked the fictional draft against its source.', findings: [], report: structuredClone(draft) };
+  delete incomplete.report.candidates[0].evidence[0].sourceId;
+  const corrected = structuredClone(incomplete); corrected.report.candidates[0].evidence[0].sourceId = 'cv';
+  let calls = 0;
+  const report = await runAnalysis({ vacancy, candidates: [candidate], complete: async messages => {
+    calls++;
+    if (calls === 1) return { requirements, clarificationQuestions: [] };
+    if (calls === 2) return draft;
+    if (calls < 5) {
+      if (calls === 4) assert.match(messages.at(-1).content, /quote requires sourceId/);
+      return incomplete;
+    }
+    return corrected;
+  } });
+  assert.equal(calls, 5); assert.equal(report.candidates[0].evidence[0].sourceId, 'cv');
+});
 test('source attribution cannot borrow a literal quote from another source or candidate', () => {
   const withSources = { ...candidate, evidenceSources: [{ id: 'cv', text: candidate.text }, { id: 'note', text: 'A different authorised statement from an interview.' }] };
   const bad = structuredClone(draft); bad.candidates[0].evidence[0].sourceId = 'note';

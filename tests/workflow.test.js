@@ -44,6 +44,8 @@ test('complete workflow: upload, role, consent, AI evidence, and persistent revi
   });
   const call = async (url, body, headers = {}) => fetch(`${base}${url}`, { method: 'POST', headers: { 'X-TalentLens-Client': 'workspace', ...(body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), ...headers }, body: body instanceof FormData ? body : JSON.stringify(body) });
   assert.equal((await fetch(base)).status, 200);
+  const providerReadiness = await (await call('/api/integrations/check', {})).json();
+  assert.equal(providerReadiness.state, 'online'); assert.equal(providerReadiness.modelAvailable, true); assert.equal(providerReadiness.model, 'meterless/deep');
   assert.equal((await fetch(`${base}/api/state`, { headers: { 'X-TalentLens-Organization': 'other-organization' } })).status, 403);
   assert.equal((await call('/api/demo', {}, { Origin: 'https://untrusted.example' })).status, 403);
   const description = 'Professional experience with React and TypeScript is required for B2B tools.';
