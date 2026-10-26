@@ -1,0 +1,7 @@
+TALENTLENS — FICTIONAL CV FOR A CONTROLLED TEST
+Candidate code: fe-negation
+Role family: Frontend engineer
+
+FICTIONAL EVALUATION PROFILE. I have no professional TypeScript experience. Developed React interfaces using JavaScript for two years.
+
+Synthetic test material. No real person, contact details or hiring outcome.

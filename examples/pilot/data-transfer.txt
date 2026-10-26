@@ -1,0 +1,7 @@
+TALENTLENS — FICTIONAL CV FOR A CONTROLLED TEST
+Candidate code: data-transfer
+Role family: Data analyst
+
+FICTIONAL EVALUATION PROFILE. Queried document collections in MongoDB with JavaScript. Maintained spreadsheet imports. No SQL or Python work is stated.
+
+Synthetic test material. No real person, contact details or hiring outcome.

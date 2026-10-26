@@ -15,4 +15,5 @@ jobs:
       - run: npm run secrets:check
       - run: npm run check
       - run: npm test
+      - run: npm run test:recordings
       - run: npm run test:hmem:conformance

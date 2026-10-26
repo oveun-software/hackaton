@@ -1,3 +1,4 @@
+import { reviewFixture } from './review-fixture.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
@@ -23,11 +24,11 @@ test('complete workflow: upload, role, consent, AI evidence, and persistent revi
     if (gate && (translating ? 'translation' : data.startsWith('Extract only') ? 'requirements' : 'comparison') === gate.stage) {
       gate.started(); await gate.released;
     }
-    const answer = request.messages[0].content.startsWith('You translate recruiting reports')
-      ? { ...JSON.parse(data), summary: 'A translated analysis for reviewing professional experience.' }
+    const answer = data.startsWith('Perform an independent') ? reviewFixture(request.messages) : request.messages[0].content.startsWith('You translate recruiting reports')
+      ? JSON.parse(data)
       : data.startsWith('Extract only')
       ? { requirements: [{ id: 'r1', label: 'React and TypeScript', priority: 'required', quote: 'React and TypeScript' }], clarificationQuestions: [] }
-      : { summary: 'PRIVATE_NARRATIVE: The document contains relevant professional experience that should be discussed in an interview.', candidates: JSON.parse(data.split('DATA: ')[1]).candidates.map(c => ({ candidateId: c.id, recommendation: 'possible', rationale: 'PRIVATE_NARRATIVE: The CV states professional experience with the technologies in the role.', evidence: [{ requirementId: 'r1', status: 'supported', quote: 'React and TypeScript', explanation: 'The experience is described in the document.' }], interviewQuestions: ['What did you contribute to that project?'] })) };
+      : { summary: 'PRIVATE_NARRATIVE: The document contains relevant professional experience that should be discussed in an interview.', candidates: JSON.parse(data.split('DATA: ')[1]).candidates.map(c => ({ candidateId: c.id, recommendation: 'possible', rationale: 'PRIVATE_NARRATIVE: The CV states professional experience with the technologies in the role.', evidence: [{ requirementId: 'r1', status: 'supported', quote: 'React and TypeScript', sourceId: c.sources[0].id, explanation: 'The experience is described in the document.' }], interviewQuestions: ['What did you contribute to that project?'] })) };
     res.end(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(answer) } }] }));
   });
   await new Promise(resolve => mock.listen(0, '127.0.0.1', resolve));
@@ -73,9 +74,9 @@ test('complete workflow: upload, role, consent, AI evidence, and persistent revi
   assert.equal((await call(`/api/vacancies/${vacancy.id}/analyze`, { consent: false })).status, 400); assert.equal(seenCalls.length, 0);
   const response = await call(`/api/vacancies/${vacancy.id}/analyze`, { consent: true, note: 'Review projects.' });
   assert.equal(response.status, 200); const report = await response.json();
-  assert.equal(report.candidates.length, 3); assert.equal(report.sources.length, 3); assert.equal(seenCalls.length, 2);
+  assert.equal(report.candidates.length, 3); assert.equal(report.sources.length, 3); assert.equal(seenCalls.length, 3);
   assert.equal(report.hmem.stored.created.length, 3);
-  assert.deepEqual(report.hmem.usedMemoryIds, []);
+  assert.deepEqual(report.hmem.matchedMemoryIds, []);
   assert.equal(report.language, 'en');
   assert.equal((await call(`/api/reports/${report.id}/translate`, { consent: false, language: 'fr' })).status, 400);
   const translation = await call(`/api/reports/${report.id}/translate`, { consent: true, language: 'fr' });
@@ -83,7 +84,7 @@ test('complete workflow: upload, role, consent, AI evidence, and persistent revi
   const translatedReport = await translation.json(); assert.equal(translatedReport.translations.fr.language, 'fr');
   assert.deepEqual(translatedReport.sources, report.sources);
   assert.equal(translatedReport.translations.fr.candidates[0].evidence[0].quote, report.candidates[0].evidence[0].quote);
-  await call(`/api/reports/${report.id}/translate`, { consent: true, language: 'fr' }); assert.equal(seenCalls.length, 3);
+  await call(`/api/reports/${report.id}/translate`, { consent: true, language: 'fr' }); assert.equal(seenCalls.length, 4);
   const review = await call('/api/reviews', { reportId: report.id, candidateId: report.candidates[0].candidateId, status: 'interview' }); assert.equal(review.status, 200);
   const state = await (await fetch(`${base}/api/state`)).json(); assert.equal(state.reports.length, 1); assert.equal(state.reviews[0].status, 'interview');
   assert.equal(JSON.stringify(state).includes('fixture-token'), false);

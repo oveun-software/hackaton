@@ -51,6 +51,27 @@ test('A: professional memory survives a process restart and a different vacancy'
   } finally { store?.close(); rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }); }
 });
 
+test('attributed clarification memory preserves its provenance across roles and restart', () => {
+  const directory = fixtureDirectory(); let store;
+  try {
+    store = new Store(directory);
+    const candidate = document(store, 'org-a', 'candidate-a', 1, quote.python);
+    const source = store.get('candidate_document', candidate.documentId);
+    store.put('candidate_document', { ...source, kind: 'clarification', source: 'candidate_response', filename: 'Fictional interview', recordedAt: '2026-10-26T12:00:00Z', attribution: 'recruiter_recorded_statement', question: 'Which Python APIs did you build?' });
+    ingest(new TalentMemoryService(store, { organizationId: 'org-a' }), candidate, 'Python APIs', quote.python);
+    store.close(); store = new Store(directory);
+    const recalled = new TalentMemoryService(store, { organizationId: 'org-a' }).retrieve({ vacancy: { id: 'vacancy-b', title: 'Python engineer', description: 'Python API experience required' }, requirements: [{ id: 'r1', label: 'Python APIs', priority: 'required' }], candidateIds: ['candidate-a'] });
+    for (const record of [recalled.byCandidate['candidate-a'][0], recalled.trace.retrieved[0]]) {
+      assert.equal(record.sourceKind, 'clarification');
+      assert.equal(record.sourceType, 'candidate_response');
+      assert.equal(record.sourceLabel, 'Fictional interview');
+      assert.equal(record.attribution, 'recruiter_recorded_statement');
+      assert.equal(record.question, 'Which Python APIs did you build?');
+      assert.equal(record.recordedAt, '2026-10-26T12:00:00Z');
+    }
+  } finally { store?.close(); rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }); }
+});
+
 test('B: contextual retrieval is candidate and organization scoped with verified sources', () => {
   const directory = fixtureDirectory();
   let store;
@@ -86,6 +107,15 @@ test('C: newer cumulative experience supersedes, while an incompatible claim que
     assert.equal(profile.memories.find(item => item.documentVersion === 3).validityState, 'conflicted');
     const result = service.retrieve({ vacancy: { id: 'sap', title: 'SAP consultant', description: 'Professional SAP experience.' }, requirements: [{ id: 'r', label: 'SAP experience', quote: 'SAP experience' }], candidateIds: ['candidate-a'] });
     assert.equal(result.trace.retrieved.length, 0);
+    // Re-running the same source must not resolve the open dispute implicitly.
+    ingest(service, v3, 'SAP experience', quote.sap1, 'vacancy-c');
+    assert.equal(service.profile('candidate-a').memories.find(item => item.documentVersion === 3).validityState, 'conflicted');
+    assert.equal(service.hmem.conflicts.queue().length, 1);
+    const repeated = service.retrieve({ vacancy: { id: 'sap', title: 'SAP consultant', description: 'Professional SAP experience.' }, requirements: [{ id: 'r', label: 'SAP experience', quote: 'SAP experience' }], candidateIds: ['candidate-a'] });
+    assert.equal(repeated.trace.retrieved.length, 0);
+    service.resolveConflict(service.hmem.conflicts.queue()[0].id, 'keep_b', 'Reviewed the original dated documents with the fictional candidate.');
+    assert.equal(service.hmem.conflicts.queue().length, 0);
+    assert.equal(service.profile('candidate-a').memories.find(item => item.documentVersion === 3).validityState, 'current');
     store.close(); store = null;
   } finally { store?.close(); rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }); }
 });

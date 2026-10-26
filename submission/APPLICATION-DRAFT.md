@@ -1,85 +1,91 @@
 # TalentLens application draft
 
-**Status: prepared for review, not submitted. Video intentionally excluded.**
+**Prepared for review, not submitted. Video intentionally excluded.**
 
-The signed-in HackOS account is a team member. On 26 October, the Submission Hub stated: “Only the team leader can create and manage submissions.” Maria Rodriguez must create/save the team's draft. The form itself is not accessible to members, so the sections below are ready-to-paste content, not a claim that the portal fields have been filled. Match them to the leader's actual form and its character limits.
+The current HackOS account is a member. On 26 October the Submission Hub stated that only the team leader can create/manage submissions. Maria Rodriguez must review and transfer this content. These are ready-to-paste sections, not a claim that inaccessible portal fields have been filled. Adapt them to the leader's actual form and character limits.
 
-## Project title
+## Title and short description
 
-TalentLens
+**TalentLens**
 
-## Short description
-
-An AI recruiting workspace that connects job requirements to CV evidence, explains candidate recommendations and remembers verified professional facts across hiring processes.
+An AI recruiting workspace that connects each job requirement to CV evidence, asks the next useful question and shows what changes when a recruiter adds context.
 
 ## Problem and target users
 
-Recruiters and small hiring teams must compare CVs against nuanced role requirements, explain their shortlist and identify what to ask next. Relevant experience is scattered across documents, and earlier reviews lose context when a new vacancy opens. TalentLens brings the job description, original CV evidence, unresolved questions and recruiter-controlled next steps into one workspace.
+Recruiters and small hiring teams must compare nuanced requirements with documents, explain their shortlist and identify what to ask next. Prior conversations lose context when another vacancy opens. A generic compatibility percentage does not show whether a claim is supported, ambiguous or absent. TalentLens brings those distinctions, sources and human-controlled next steps into one workspace.
 
 ## Solution
 
-TalentLens imports an authorised candidate view from Zetaris or accepts text-based PDF, DOCX and TXT CVs. After explicit consent, NVIDIA Nemotron reads the job description, extracts requirements and compares every supplied CV. It proposes qualitative recommendations with literal source quotations, evidence gaps and interview questions. The application validates identifiers, candidate and requirement coverage and exact quotations before saving a report. It preserves the model's ordering and implements no separate candidate scoring or automatic hiring/rejection logic. Recruiters inspect the documents and choose the next step.
+TalentLens imports an authorised Zetaris view or text-based PDF, DOCX and TXT CVs. After explicit consent, Nemotron extracts atomic requirements, compares every supplied candidate and critically reviews the draft against original sources. A clickable matrix exposes exact quotes, explanations and concrete follow-up questions.
 
-The interface supports English, Spanish, French and German, including its illustrations, errors and exports. Report translation preserves decisions, source quotations and evidence statuses.
+A recruiter records an authorised answer or observation as a separate attributed source, preserving the CV. Reanalysis shows changed assessments and citations. H-MEM retains source-backed context for later vacancies, with document versions, dispute review and deletion. An attributed statement is not independently verified truth. The model proposes; a human chooses the next step. There is no local candidate scoring engine or automated hiring/rejection.
+
+English, Spanish, French and German cover controls, errors, illustrations, report narratives and exports. Translations preserve source quotations, statuses and ordering.
 
 ## Agent workflow and architecture
 
-1. Zetaris federates two fictional CSV sources into a joined candidate view. TalentLens uses Lightning REST with a SELECT-only account.
-2. Nemotron extracts requirements from the job description through Meterless Nightshift.
-3. Meterless H-MEM retrieves relevant earlier professional evidence, scoped to the configured organisation and current candidates. The app verifies each source before adding memory to the comparison prompt.
-4. Nemotron compares all current CVs with the role and verified prior context, then returns structured recommendations and questions.
-5. The app validates the result and persists reports and supported literal evidence in SQLite. H-MEM retains document versions, retrieval traces and Trust Ledger history.
-6. A recruiter reviews citations, resolves memory conflicts and records an interview, hold or pending state. Deletion and document updates invalidate requests already in flight.
+1. Zetaris joins separate fictional profile/document sources into a candidate view; TalentLens reads it through Lightning REST with a SELECT-only user.
+2. Nemotron extracts independent required/preferred criteria through Nightshift.
+3. H-MEM retrieves relevant earlier context scoped to the organisation and current candidates. Source verification and conflict exclusion happen before prompt construction.
+4. Nemotron drafts the comparison; a separate Nemotron call critically reviews claims, negations, contradictions and gaps.
+5. Application code validates IDs, full coverage and literal quotes against the identified source. A failed stage has one bounded correction, up to six calls for a new role.
+6. The recruiter opens evidence, records a clarification and reruns. Stable requirements allow a meaningful before/after comparison.
+7. SQLite persists reports, attributed sources and H-MEM/Trust Ledger state. Deletion and source changes invalidate in-flight requests.
 
-Stack: Node.js 22+, Express 5, built-in SQLite, browser-native JavaScript/CSS, bounded child-process document extraction, Zetaris Lightning REST, Meterless Nightshift, NVIDIA Nemotron and a persistent implementation of Meterless H-MEM.
+Stack: Node.js 22+, Express 5, built-in SQLite, native JavaScript/CSS, bounded child-process document extraction, Zetaris Lightning REST, Meterless Nightshift, NVIDIA Nemotron and a persistent Meterless H-MEM implementation.
 
-## Sponsor contribution and what is distinctive
+## Sponsor contributions
 
-**Zetaris:** provides the data layer, joining separate candidate and document sources into a bounded, read-only candidate view. The demo demonstrates a real REST import, with source provenance retained in reports.
+**Zetaris:** real data layer joining profile and CV sources; bounded read-only REST import with provenance.
 
-**Meterless Nightshift:** serves as the primary authenticated AI provider. TalentLens streams a structured result tool and records the actual executed model plus receipt IDs, rather than treating a requested model name or an online catalog as proof of inference.
+**Nightshift:** primary authenticated provider, streamed structured result tool, actual executed model checks and retained receipt IDs.
 
-**Meterless H-MEM Engine:** remembers source-backed professional facts across restarts and different vacancies. Hybrid retrieval follows the official contract. Candidate/document/version lineage, source verification, conflict review and deletion keep memory inspectable. The official conformance runner passes 13/13 checks at pinned specification revision `1742dec56a66e58eef9dda2d2b865823758ca8cd`.
+**H-MEM Engine:** source-backed professional context across restarts and vacancies, hybrid retrieval, document/version lineage, conflict exclusion and human resolution. Official conformance passes 13/13 checks at revision `1742dec56a66e58eef9dda2d2b865823758ca8cd`.
 
-**NVIDIA Nemotron:** performs requirement interpretation, semantic CV comparison and evidence-led recommendations. The verified model is `nvidia/nemotron-3.5-lightning-30b-a3b`, routed through Nightshift. Application code validates the output and its citations. H-MEM adds verified earlier context without implementing a parallel hiring score.
+**NVIDIA Nemotron:** requirement interpretation, semantic comparison, targeted questions and separate critical review. The verified model is `nvidia/nemotron-3.5-lightning-30b-a3b`. Application code validates output rather than inventing a parallel hiring score.
 
-## Verification and evidence
+## Verification and measured limits
 
-- `npm test`: 29 automated tests, including source/candidate deletion during inference, translation invalidation, document replacement, evidence validation, memory persistence, source verification and organisation isolation. External services are mocked in this suite.
-- `npm run test:hmem:conformance`: 13 official checks. Missing official files download automatically from a pinned revision and must match SHA-256 hashes.
-- `npm run verify:live`: actual application API, real Zetaris, Nightshift and Nemotron. It verifies the exact three public fictional CVs, runs one role, restarts the app against an isolated database, runs another role and requires verified earlier memory in the comparison input. It checks actual model IDs and receipts. See the package status for the latest run outcome.
-- Historical successful three-CV live output: `examples/zetaris/verified-analysis.json` (22 October 2026). This is recorded evidence, not a substitute for a current live run.
-- Full live workflow passed on 26 October 2026: two roles, three fictional CVs, a process restart and one verified previous memory retrieved and used. Five Nightshift receipts confirm Nemotron Lightning across both reports, including one bounded correction. Full evidence: `examples/zetaris/verified-hmem-workflow.json`.
-- Product screenshot and ten-slide English presentation accompany this draft.
+- **36 application tests** with mocked external transport: coverage and exact citations, critical review, translation integrity, clarification lifecycle, attribution across restart, conflicts, privacy deletion, source replacement and in-flight invalidation.
+- **13 official H-MEM checks**, pinned and SHA-256 verified in local and CI runs.
+- **16 fictional profiles, 32 criterion/candidate assessments:** real Nemotron output matched all authored expectations; zero unsupported positives in this set. Covers interest versus experience, negation, contradiction, adjacent skills, leadership versus participation, Spanish evidence and one CV instruction attack. The critical pass changed zero cells, so no incremental quality gain is claimed. Full outputs, model receipts and dataset hash are in `evaluation/results.json`.
+- **Live clarification/restart workflow on 26 October:** three reports plus a current-CV-only comparison, ten actual Nemotron Lightning calls. Sam's TypeScript evidence changes from unclear to supported after an attributed answer. After restart, a later role retrieves and cites that answer; the paired no-memory result remains unclear. One stochastic comparison illustrates source access, not average causal benefit. Evidence: `examples/zetaris/verified-review-workflow.json`.
+- **Guided fictional-CV pilot implemented:** two timed manual/assisted rounds with random task/order assignment, actual answers and local JSON export. No real recruiter participants or productivity gains are asserted. Source-location accuracy and question quality require human observation.
 
-## Novelty, existing work and development tools
+The authored evaluation is small and is not an independent benchmark, fairness certification or hiring-outcome study.
 
-TalentLens is new application code inspired by OVEUN's pre-existing Cora recruiting concept. It reuses no Cora product code, accounts, databases, indexes, candidate documents or services. The UI, extraction pipeline, provider adapters and memory integration are independent. Development used Codex desktop. Cursor is installed with the official Codex extension, but we do not claim a Cursor-built product award based on installation alone.
+## Judge demonstration
 
-Proposed track: **Wildcard / Tinkerer**, subject to the leader confirming the exact portal option. Do not claim a different track or a development-tool award without evidence.
+Run `npm run demo` from a clone with Node.js 22.16+. No sponsor credentials, dependency installation or API requests are needed for the recorded viewer. Explore before/after clarification and retained context, inspect a source, then try the guided CV review. Saved outputs are explicitly labelled recorded. Fresh inference is separately reproducible with the individual setup instructions and `npm run verify:review`.
+
+## Novelty, provenance and tools
+
+TalentLens is new code inspired by OVEUN's pre-existing Cora concept. It reuses no Cora code, accounts, databases, indexes, documents or services. Development used Codex desktop. Cursor is installed with its official Codex extension, but installation alone is not claimed as a Cursor-built product award.
+
+Proposed track: **Wildcard / Tinkerer**, subject to the leader confirming the exact portal option.
 
 ## Current limits and future work
 
-This is a local single-user prototype, with one configured organisation per process and no production authentication. It supports up to 25 CVs and 200,000 characters per analysis. Scanned documents require OCR before upload. Literal quotation validation establishes traceability, not the truth of a CV or guaranteed fairness. Next steps are OCR, production identity and access control, broader prompt-injection and bias evaluation, and larger consented evaluation datasets. No measured productivity gain or real hiring outcome is claimed.
+Local single-user prototype, one configured organisation per process, no production authentication. Up to 25 CVs and 200,000 source characters per analysis; scanned documents need OCR. Literal citations establish traceability, not truth or guaranteed fairness. Next: real recruiter observations, broader quality/bias evaluation, production access control and OCR. No measured productivity or real hiring outcome is claimed.
 
-## Links and files
+## Links and materials
 
-- Repository: https://github.com/oveun-software/hackaton
-- Setup: https://github.com/oveun-software/hackaton/blob/main/README.md
-- Team access and individual accounts: https://github.com/oveun-software/hackaton/blob/main/docs/TEAM-SETUP.md
-- Slide deck: https://github.com/oveun-software/hackaton/blob/main/submission/TalentLens-Deck.pptx
-- PDF deck: https://github.com/oveun-software/hackaton/blob/main/submission/TalentLens-Deck.pdf
-- Sponsor and provenance notes: https://github.com/oveun-software/hackaton/blob/main/docs/SUBMISSION.md
-- Demo video: **leave blank**. No video has been produced in this task. Never add a placeholder URL to satisfy validation.
-- Hosted app: none. Judges can run the local app using the README. Do not enter localhost as a publicly accessible demo URL.
+- Repository and setup: https://github.com/oveun-software/hackaton
+- Team accounts: https://github.com/oveun-software/hackaton/blob/main/docs/TEAM-SETUP.md
+- PowerPoint: https://github.com/oveun-software/hackaton/blob/main/submission/TalentLens-Deck.pptx
+- PDF: https://github.com/oveun-software/hackaton/blob/main/submission/TalentLens-Deck.pdf
+- Evaluation: https://github.com/oveun-software/hackaton/tree/main/evaluation
+- Sponsor/provenance notes: https://github.com/oveun-software/hackaton/blob/main/docs/SUBMISSION.md
+- Video: **leave blank**. No video or placeholder URL has been created.
+- Hosted app: none. The account-free recorded viewer runs locally; do not enter localhost as a public demo URL.
 
 ## Leader's draft-saving procedure
 
-1. Open https://hackathon.genai.works/submissions using the team leader's own account.
-2. Confirm the roster: Ariana García, Maria Rodriguez and Diego Rodríguez Domínguez. The rules state that the roster locks when the first submission is created.
-3. Create a draft only if the portal explicitly offers that state. Copy the fields above and attach/link the slide deck. Review the exact track name and form limits.
-4. Keep the video field empty. If video is mandatory even to save a draft, retain this file and stop before final submission.
-5. **Do not press Submit, Finalize, Complete, Mark completed or any equivalent action.** Do not accept new legal terms on someone else's behalf.
-6. Keep the candidacy pending until the user authorises final delivery. The published deadline is 27 October 2026 at 23:45 UTC, which is 28 October at 00:45 in mainland Spain.
+1. Open https://hackathon.genai.works/submissions using the leader's own account.
+2. Confirm the roster: Ariana García, Maria Rodriguez and Diego Rodríguez Domínguez. The rules say the roster locks when the first submission is created.
+3. Create a draft only if the portal explicitly offers that state. Copy/adapt the sections and attach/link the slides.
+4. Keep video blank. If mandatory even for a draft, retain this file and stop before final submission.
+5. **Do not press Submit, Finalize, Complete, Mark completed or equivalent.** Do not accept new legal terms for someone else.
+6. Keep the candidature pending until the user authorises delivery. Published deadline: 27 October 2026, 23:45 UTC (28 October, 00:45 in mainland Spain).
 
-Source: [Official Rules, updated 23 October](https://hackathon.genai.works/resources?id=01a08ff1-54cc-709a-bfe7-6b34452b676b) and [Technical Execution Guide](https://hackathon.genai.works/resources?id=01a08ff1-54b1-7670-9441-a1e73ff43a6e). Check current organiser notices before final submission.
+Sources: [Official Rules updated 23 October](https://hackathon.genai.works/resources?id=01a08ff1-54cc-709a-bfe7-6b34452b676b), [Technical Execution Guide](https://hackathon.genai.works/resources?id=01a08ff1-54b1-7670-9441-a1e73ff43a6e). Check current notices before final submission.

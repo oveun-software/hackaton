@@ -1,0 +1,7 @@
+TALENTLENS — FICTIONAL CV FOR A CONTROLLED TEST
+Candidate code: data-sql
+Role family: Data analyst
+
+FICTIONAL EVALUATION PROFILE. Wrote SQL joins and window queries in PostgreSQL for weekly reports. I have not used Python for data processing.
+
+Synthetic test material. No real person, contact details or hiring outcome.

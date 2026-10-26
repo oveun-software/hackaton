@@ -1,0 +1,7 @@
+TALENTLENS — FICTIONAL CV FOR A CONTROLLED TEST
+Candidate code: fe-explicit
+Role family: Frontend engineer
+
+FICTIONAL EVALUATION PROFILE. Built TypeScript applications for paying clients for two years. Developed React interfaces for a customer portal.
+
+Synthetic test material. No real person, contact details or hiring outcome.

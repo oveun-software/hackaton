@@ -75,6 +75,8 @@ Deleting a candidate removes their source documents, H-MEM memories, conflict/in
 
 ## API surfaces
 
+- `POST /api/candidates/:id/clarifications` — record an attributed, authorised answer for a role.
+- `GET /api/analysis/progress` — actual stage of the current local analysis.
 - `POST /api/candidates/:id/documents` — upload a new CV version.
 - `DELETE /api/candidates/:id/documents/:documentId` — delete a CV version and all derived memories/traces; deleting the current CV also removes its candidate profile.
 - `GET /api/candidates/:id/memory` — facts, source status, conflicts and audit history.
@@ -99,15 +101,13 @@ On 26 October 2026 the result was **13/13 official checks passed**, including a 
 
 `npm run verify:live` exercises two real application analyses with the three exact fictional Zetaris inputs, a process restart and H-MEM recall through Nightshift/Nemotron. It uses an isolated temporary database and checks actual model IDs and execution receipts. Its latest outcome is recorded in [the submission package](../submission/README.md). The offline `demo:hmem` command does not call a model.
 
-## Three-minute jury demo
+## Jury demonstration
 
-1. **0:00–0:35 — Establish the boundary.** Open Connections. Show Nightshift/Nemotron and the separate H-MEM card. Explain: Nemotron reasons; H-MEM remembers only source-backed facts.
-2. **0:35–1:15 — First process.** Load the three fictional CVs, analyse the sample role and open one candidate's “Verified memory”. Show the exact quote, document version, source verification and Trust Ledger history.
-3. **1:15–1:55 — Cross-process recall.** Restart TalentLens, create a different role (for example “Data Engineer” requiring Python, SQL and APIs), and analyse again. In the H-MEM panel show retrieved count, earlier-process count, per-memory relevance and which memories Nemotron actually used.
-4. **1:55–2:35 — Change safety.** Choose “New CV version” for a fictional candidate. Explain that old facts become pending immediately. Analyse the updated CV; show supersession for cumulative experience or the open human-review conflict for incompatible claims.
-5. **2:35–3:00 — Audit and proof.** Resolve a fictional conflict with a justification, then show the change history. Finish in a terminal with `npm.cmd run test:hmem:conformance` (13/13) and `npm.cmd test`.
+Use `npm run demo` for an account-free, explicitly recorded walkthrough. The viewer loads real model outputs and makes no inference calls. Show the matrix, an evidence gap, an attributed clarification, the changed report, and another role recalling that source after restart. The live workflow can take several minutes, so do not claim that a shortened recorded walkthrough measures inference speed.
 
-For a credential-free terminal rehearsal, run `npm.cmd run demo:hmem`. It creates three fictional source documents, restarts the SQLite-backed service, performs a different-role retrieval and prints the trace and ledger count. It uses the real H-MEM implementation, not a profile-table shortcut.
+Use `npm run verify:review` to reproduce the full live sequence and its paired no-memory condition. Source type, date and attribution accompany recalled context. A final quote matching memory is reported as a match, not proof of causal model use. See [evidence review](EVIDENCE-REVIEW.md) and [evaluation](../evaluation/README.md).
+
+For an offline terminal demonstration of only the Engine, run `npm run demo:hmem`. It exercises the real persistent implementation with fictional documents and makes no model calls.
 
 ## Known limitations
 

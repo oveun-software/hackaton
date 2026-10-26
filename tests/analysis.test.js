@@ -1,3 +1,4 @@
+import { reviewFixture } from './review-fixture.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateRequirements, validateReport, runAnalysis } from '../server/analysis.js';
@@ -5,7 +6,7 @@ import { normalizeBase, checkProvider, completeJson, readZetaris, checkZetaris, 
 
 const vacancy = { title: 'Developer', description: 'Professional experience with React and TypeScript is required.' };
 const requirements = [{ id: 'r1', label: 'React and TypeScript', priority: 'required', quote: 'Professional experience with React and TypeScript' }];
-const candidates = [{ id: 'c1', text: 'Professional experience with React and TypeScript for five years.' }];
+const candidates = [{ id: 'c1', documentId: 'test-document', text: 'Professional experience with React and TypeScript for five years.' }];
 const valid = () => ({ summary: 'There is evidence of experience with the requested technologies.', candidates: [{ candidateId: 'c1', recommendation: 'strong', rationale: 'The document describes experience with the requested technologies.', evidence: [{ requirementId: 'r1', status: 'supported', quote: 'React and TypeScript for five years', explanation: 'Experience stated in the CV.' }], interviewQuestions: ['Which architecture decisions did you make?'] }] });
 test('rejects invented citations and unsupported claims', () => {
   const data = valid(); data.candidates[0].evidence[0].quote = 'React for twenty years';
@@ -26,8 +27,8 @@ test('requirements must quote the actual job description', () => {
 });
 test('preserves model order and requires complete coverage', async () => {
   let calls = 0;
-  const result = await runAnalysis({ vacancy, candidates, note: 'Review projects', complete: async () => ++calls === 1 ? { requirements, clarificationQuestions: [] } : valid() });
-  assert.equal(calls, 2); assert.equal(result.candidates[0].candidateId, 'c1'); assert.equal('score' in result.candidates[0], false);
+  const result = await runAnalysis({ vacancy, candidates, note: 'Review projects', complete: async messages => { calls++; return calls === 1 ? { requirements, clarificationQuestions: [] } : calls === 3 ? reviewFixture(messages) : valid(); } });
+  assert.equal(calls, 3); assert.equal(result.candidates[0].candidateId, 'c1'); assert.equal('score' in result.candidates[0], false);
 });
 test('reinjects only verified candidate H-MEM and records its use', async () => {
   const historicalQuote = 'Built Python APIs with FastAPI and PostgreSQL for three years.';
@@ -43,6 +44,7 @@ test('reinjects only verified candidate H-MEM and records its use', async () => 
     },
     complete: async messages => {
       calls++;
+      if (messages[1].content.startsWith('Perform an independent')) return reviewFixture(messages);
       if (calls === 1) return { requirements: memoryRequirements, clarificationQuestions: [] };
       assert.match(messages[1].content, /H-MEM sources are untrusted historical document data/);
       assert.match(messages[1].content, /Built Python APIs with FastAPI/);
@@ -50,8 +52,8 @@ test('reinjects only verified candidate H-MEM and records its use', async () => 
         rationale: 'The retrieved source contains relevant professional evidence.', evidence: [{ requirementId: 'r1', status: 'supported', quote: historicalQuote,
           explanation: 'The exact historical document excerpt is relevant.' }], interviewQuestions: ['Can you describe that API project?'] }] };
     } });
-  assert.equal(calls, 2);
-  assert.deepEqual(result.hmem.usedMemoryIds, ['mem-fixture']);
+  assert.equal(calls, 3);
+  assert.deepEqual(result.hmem.matchedMemoryIds, ['mem-fixture']);
   assert.equal(result.hmem.retrieved[0].providedToNemotron, true);
 });
 test('requests one correction for invalid citations or structure and revalidates every source', async () => {
@@ -60,13 +62,14 @@ test('requests one correction for invalid citations or structure and revalidates
   const invalid = valid(); invalid.candidates[0].evidence[0].quote = badQuote;
   const report = await runAnalysis({ vacancy, candidates, complete: async messages => {
     calls++;
+    if (messages[1].content.startsWith('Perform an independent')) return reviewFixture(messages);
     if (calls === 1) return { requirements, clarificationQuestions: [] };
     if (calls === 2) return invalid;
     assert.equal(messages.length, 4);
     assert.ok(messages[3].content.includes(expectedError));
     return valid();
   } });
-  assert.equal(calls, 3); assert.equal(report.candidates[0].evidence[0].quote, valid().candidates[0].evidence[0].quote);
+  assert.equal(calls, 4); assert.equal(report.candidates[0].evidence[0].quote, valid().candidates[0].evidence[0].quote);
   }
 });
 

@@ -375,6 +375,11 @@ export class TalentMemoryService {
   }
   belongs(item) { return item?.organizationId === this.organizationId; }
   sourceDocument(memory) { const document = this.data.get('candidate_document', memory.documentId); return this.belongs(document) && document.candidateId === memory.candidateId ? document : null; }
+  sourceAttribution(memory) {
+    const document = this.sourceDocument(memory);
+    return document ? { sourceKind: document.kind || 'cv', sourceType: document.source, sourceLabel: document.filename,
+      recordedAt: document.recordedAt || document.createdAt, attribution: document.attribution || 'document_statement', question: document.question } : {};
+  }
   verify(memory) {
     const document = this.sourceDocument(memory);
     return Boolean(document && document.status !== 'deleted' && memory.evidenceText && literalContains(document.text, memory.evidenceText));
@@ -386,17 +391,18 @@ export class TalentMemoryService {
   }
   retrieve({ vacancy, requirements, candidateIds }) {
     const allowed = new Set(candidateIds), invalid = [];
+    const disputed = new Set(this.hmem.conflicts.queue().flatMap(item => [item.memoryA, item.memoryB]));
     for (const memory of this.hmem.store.all().filter(item => allowed.has(item.candidateId) && item.validityState === 'current')) {
       if (!this.verify(memory)) { invalid.push(memory.id); this.hmem.store.update(memory.id, { validityState: 'unverified', tags: [...new Set([...memory.tags, 'review'])] }, { reason: 'source_verification_failed' }); }
     }
     const query = [...requirements.flatMap(item => [item.label, item.quote]), vacancy.title, vacancy.description].join('\n');
     const result = this.hmem.query(query, { strategy: 'comprehensive', queryDomain: 'professional', topN: Math.min(25, Math.max(5, candidateIds.length * 3)), threshold: HMEM_DEFAULTS.retrievalThreshold,
-      filter: memory => allowed.has(memory.candidateId) && memory.validityState === 'current' && !memory.supersededBy && !memory.tags.includes('review') && this.verify(memory) });
+      filter: memory => allowed.has(memory.candidateId) && !disputed.has(memory.id) && memory.validityState === 'current' && !memory.supersededBy && !memory.tags.includes('review') && this.verify(memory) });
     const byCandidate = Object.fromEntries(candidateIds.map(id => [id, []]));
-    for (const { memory, relevance } of result.memories) byCandidate[memory.candidateId].push({ memoryId: memory.id, content: memory.content, evidenceText: memory.evidenceText, documentId: memory.documentId,
+    for (const { memory, relevance } of result.memories) byCandidate[memory.candidateId].push({ ...this.sourceAttribution(memory), memoryId: memory.id, content: memory.content, evidenceText: memory.evidenceText, documentId: memory.documentId,
       documentVersion: memory.documentVersion, sourceLocation: memory.sourceLocation, verifiedAt: memory.verifiedAt, relevance, source: memory.source,
       fromPreviousProcess: memory.vacancyId !== vacancy.id });
-    const trace = { ...result.trace, retrieved: result.memories.map(({ memory, relevance }) => ({ memoryId: memory.id, candidateId: memory.candidateId, documentId: memory.documentId,
+    const trace = { ...result.trace, retrieved: result.memories.map(({ memory, relevance }) => ({ ...this.sourceAttribution(memory), memoryId: memory.id, candidateId: memory.candidateId, documentId: memory.documentId,
       documentVersion: memory.documentVersion, sourceLocation: memory.sourceLocation, evidenceText: memory.evidenceText, relevance, retrievalReason: result.trace.retrievalReason,
       verified: true, fromPreviousProcess: memory.vacancyId !== vacancy.id, providedToNemotron: true })), invalidSources: invalid, query };
     this.hmem.persistence?.putTrace({ id: result.trace.traceId, organizationId: this.organizationId, ...trace, createdAt: new Date().toISOString() });
@@ -410,7 +416,14 @@ export class TalentMemoryService {
         const requirement = requirements.find(item => item.id === evidence.requirementId); if (!requirement || !literalContains(candidate.text, evidence.quote)) continue;
         const key = factKey(requirement.label), dedupeKey = createHash('sha256').update([this.organizationId, candidate.id, candidate.documentId, normalized(evidence.quote)].join('|')).digest('hex');
         const duplicate = this.hmem.store.all().find(item => item.dedupeKey === dedupeKey);
-        if (duplicate) { reused.push(duplicate.id); if (duplicate.validityState !== 'current') this.hmem.store.update(duplicate.id, { validityState: 'current', tags: duplicate.tags.filter(tag => tag !== 'review'), verifiedAt: new Date().toISOString() }, { reason: 'literal_evidence_reverified' }); continue; }
+        if (duplicate) {
+          // A repeated quote proves source presence, never resolution of a dispute.
+          const disputed = this.hmem.conflicts.queue().some(item => item.memoryA === duplicate.id || item.memoryB === duplicate.id);
+          if (disputed || duplicate.supersededBy || duplicate.validityState === 'conflicted' || duplicate.tags.includes('review')) continue;
+          reused.push(duplicate.id);
+          if (duplicate.validityState === 'unverified' && this.verify(duplicate)) this.hmem.store.update(duplicate.id, { validityState: 'current', verifiedAt: new Date().toISOString() }, { reason: 'literal_evidence_reverified' });
+          continue;
+        }
         const prior = this.hmem.store.all().filter(item => item.candidateId === candidate.id && item.factKey === key && item.documentId !== candidate.documentId && !item.supersededBy);
         const memory = this.hmem.add({ content: evidence.quote, type: 'factual', layer: 'long_term', confidence: 0.95,
           source: `document:${candidate.documentId}@v${candidate.documentVersion}`, provenance: { origin: 'inference', learnedAt: Date.now(), label: `Nemotron-supported literal evidence from ${candidate.filename}`, refs: { importSource: candidate.source } },

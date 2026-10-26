@@ -73,7 +73,7 @@ try {
     assert.equal(report.candidates.length, 3);
     assert.ok(report.executions.length >= 2);
     assert.ok(report.executions.every(item => item.actualModel === provider.model && item.receiptId), 'Actual Nemotron model and Nightshift receipt required');
-    console.log(JSON.stringify({ role: report.vacancyTitle, executions: report.executions, retrievedMemories: report.hmem.retrieved.length, usedMemoryIds: report.hmem.usedMemoryIds.length }));
+    console.log(JSON.stringify({ role: report.vacancyTitle, executions: report.executions, retrievedMemories: report.hmem.retrieved.length, matchedMemoryIds: report.hmem.matchedMemoryIds.length }));
   }
   const output = new URL('../data/live-verification-hmem.json', import.meta.url);
   await mkdir(new URL('../data/', import.meta.url), { recursive: true });

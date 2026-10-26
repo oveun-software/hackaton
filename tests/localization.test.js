@@ -1,3 +1,4 @@
+import { reviewFixture } from './review-fixture.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -52,12 +53,12 @@ test('exports localize headings and statuses while preserving document quotes', 
     assert.ok(markdown.includes('TalentLens'));
   }
 });
-test('both model calls receive the selected output language and preserve source quotations', async () => {
+test('all model calls receive the selected output language and preserve source quotations', async () => {
   for (const [language, config] of Object.entries(languages)) {
     let calls = 0;
-    const result = await runAnalysis({ vacancy: { title: 'Frontend', description: 'Experience with React is essential for this role.' }, candidates: [{ id: 'c1', text: report.sources[0].text }], language,
-      complete: async messages => { calls++; assert.ok(messages[0].content.includes(config.modelName)); assert.match(messages[0].content, /Never translate quotations/); return calls === 1 ? { requirements: report.requirements, clarificationQuestions: [] } : { summary: report.summary, candidates: report.candidates }; } });
-    assert.equal(result.language, language); assert.equal(calls, 2);
+    const result = await runAnalysis({ vacancy: { title: 'Frontend', description: 'Experience with React is essential for this role.' }, candidates: [{ id: 'c1', documentId: 'test-document', text: report.sources[0].text }], language,
+      complete: async messages => { calls++; assert.ok(messages[0].content.includes(config.modelName)); assert.match(messages[0].content, /Never translate quotations/); return messages[1].content.startsWith('Perform an independent') ? reviewFixture(messages) : calls === 1 ? { requirements: report.requirements, clarificationQuestions: [] } : { summary: report.summary, candidates: report.candidates }; } });
+    assert.equal(result.language, language); assert.equal(calls, 3);
   }
 });
 test('database rebranding preserves existing documents and reports', () => {

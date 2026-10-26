@@ -1,3 +1,4 @@
+import { evidenceMessages } from './evidence-i18n.js';
 export const languages = {
   en: { name: 'English', locale: 'en-GB', flag: 'gb', modelName: 'English' },
   es: { name: 'Castellano', locale: 'es-ES', flag: 'es', modelName: 'Spanish' },
@@ -6,6 +7,7 @@ export const languages = {
 };
 // Each row is English, Spanish, French and German. All interface and API copy uses this catalog.
 const rows = {
+  ...evidenceMessages,
   'errors.modelStructure': ['The model returned an invalid result after one correction. Try a new analysis.', 'El modelo ha devuelto un resultado inválido tras una corrección. Prueba otro análisis.', 'Le modèle a renvoyé un résultat invalide après une correction. Relancez une analyse.', 'Das Modell hat nach einer Korrektur ein ungültiges Ergebnis geliefert. Starten Sie eine neue Analyse.'],
   'errors.contextChanged': ['The CVs or evidence changed during this request. Run it again with the current sources.', 'Los CVs o las evidencias han cambiado durante la petición. Repítela con las fuentes actuales.', 'Les CV ou les preuves ont changé pendant la demande. Relancez-la avec les sources actuelles.', 'Die Lebensläufe oder Belege wurden während der Anfrage geändert. Wiederholen Sie sie mit den aktuellen Quellen.'],
   'privacy.reportRedacted': ['Source deleted. Generated commentary has been removed. Run a new analysis with the remaining CVs.', 'Fuente eliminada. Se han retirado los comentarios generados. Ejecuta otro análisis con los CVs restantes.', 'Source supprimée. Les commentaires générés ont été retirés. Relancez une analyse avec les CV restants.', 'Quelle gelöscht. Generierte Kommentare wurden entfernt. Starten Sie eine neue Analyse mit den übrigen Lebensläufen.'],
@@ -100,7 +102,7 @@ const rows = {
   sourceUnverified: ['Source not verifiable', 'Fuente no verificable', 'Source non vérifiable', 'Quelle nicht verifizierbar'],
   memoryHistory: ['Change history', 'Historial de cambios', 'Historique des modifications', 'Änderungsverlauf'],
   memoryConflicts: ['Open contradictions', 'Contradicciones abiertas', 'Contradictions ouvertes', 'Offene Widersprüche'],
-  noMemories: ['No verified professional facts yet. Run an analysis to create evidence-backed memory.', 'Aún no hay hechos profesionales verificados. Ejecuta un análisis para crear memoria respaldada por evidencias.', 'Aucun fait professionnel vérifié. Lancez une analyse pour créer une mémoire étayée.', 'Noch keine verifizierten beruflichen Fakten. Starten Sie eine Analyse.'],
+  noMemories: ['No source-backed professional evidence yet. Run an analysis to create memory.', 'Aún no hay evidencias profesionales con fuente. Ejecuta un análisis para crear memoria.', 'Aucune preuve professionnelle avec source. Lancez une analyse pour créer une mémoire.', 'Noch keine beruflichen Belege mit Quelle. Starten Sie eine Analyse, um Kontext zu speichern.'],
   hmemTitle: ['Meterless H-MEM', 'Meterless H-MEM', 'Meterless H-MEM', 'Meterless H-MEM'],
   hmemBody: ['Persistent, source-verifiable professional memory with hybrid retrieval and audit.', 'Memoria profesional persistente, verificable en origen, con recuperación híbrida y auditoría.', 'Mémoire professionnelle persistante et vérifiable, avec recherche hybride et audit.', 'Persistenter, quellprüfbarer beruflicher Speicher mit hybrider Suche und Audit.'],
   hmemRecovered: ['{count} memories retrieved', '{count} recuerdos recuperados', '{count} souvenirs récupérés', '{count} Erinnerungen abgerufen'],
@@ -133,7 +135,7 @@ const rows = {
   insufficient_evidence: ['Insufficient evidence', 'Evidencia insuficiente', 'Preuves insuffisantes', 'Unzureichende Belege'],
   viewSourceCv: ['View the CV used', 'Consultar el CV utilizado', 'Consulter le CV utilisé', 'Verwendeten Lebenslauf ansehen'],
   reviewEvidence: ['Review {count} evidence items', 'Revisar las {count} evidencias', 'Examiner les {count} éléments de preuve', '{count} Belege prüfen'],
-  supported: ['Supported', 'Acreditado', 'Étayé', 'Belegt'],
+  supported: ['Supported', 'Con evidencia', 'Étayé', 'Belegt'],
   unclear: ['To clarify', 'Por aclarar', 'À clarifier', 'Zu klären'],
   missing: ['No evidence found', 'Sin evidencia', 'Aucune preuve trouvée', 'Kein Beleg gefunden'],
   interviewQuestions: ['Interview questions', 'Preguntas para la entrevista', 'Questions pour l’entretien', 'Fragen fürs Gespräch'],
@@ -155,7 +157,7 @@ const rows = {
   selectedRole: ['SELECTED ROLE', 'VACANTE SELECCIONADA', 'POSTE SÉLECTIONNÉ', 'AUSGEWÄHLTE STELLE'],
   teamContext: ['Additional team context', 'Contexto adicional del equipo', 'Contexte supplémentaire de l’équipe', 'Zusätzlicher Kontext des Teams'],
   contextPlaceholder: ['Questions or context worth keeping in mind…', 'Dudas o contexto que conviene tener presente…', 'Questions ou éléments de contexte à garder à l’esprit…', 'Fragen oder Hinweise, die berücksichtigt werden sollen…'],
-  consentAnalysis: ['I agree to send this role, notes and {count} CVs to {provider} for this analysis.', 'Autorizo enviar esta oferta, las notas y los {count} CVs a {provider} para este análisis.', 'J’autorise l’envoi de cette offre, des notes et de {count} CV à {provider} pour cette analyse.', 'Ich stimme zu, diese Stelle, Notizen und {count} Lebensläufe für diese Analyse an {provider} zu senden.'],
+  consentAnalysis: ['I agree to send this role, {count} CVs, attributed clarifications and relevant earlier context to {provider} for this analysis.', 'Autorizo enviar esta oferta, {count} CVs, las aclaraciones atribuidas y el contexto anterior pertinente a {provider} para este análisis.', 'J’autorise l’envoi de cette offre, de {count} CV, des clarifications attribuées et du contexte antérieur pertinent à {provider} pour cette analyse.', 'Ich stimme zu, diese Stelle, {count} Lebensläufe, zugeordnete Klärungen und relevanten früheren Kontext für diese Analyse an {provider} zu senden.'],
   analyze: ['Analyse with Nemotron', 'Analizar con Nemotron', 'Analyser avec Nemotron', 'Mit Nemotron analysieren'],
   analyzing: ['Reviewing the profiles…', 'Analizando los perfiles…', 'Analyse des profils…', 'Profile werden analysiert…'],
   connectFirst: ['Connect an AI provider to start your analysis.', 'Conecta un proveedor de IA para empezar el análisis.', 'Connectez un fournisseur d’IA pour lancer l’analyse.', 'Verbinden Sie einen KI-Anbieter, um die Analyse zu starten.'],

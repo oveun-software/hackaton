@@ -30,3 +30,9 @@ Do not put personal keys in README examples, issues, PR descriptions, screenshot
 ## Delivery status
 
 Passing local service checks is separate from the hackathon's functional requirements. A working Meterless Engine feature, real data retrieval from Zetaris, an evidence-led workflow, and final submission materials must all be demonstrated. See [submission notes](SUBMISSION.md) for the verified status.
+
+## Review the new workflow before connecting services
+
+Run `npm run demo` from a clone with Node.js 22.16+ installed. No dependency installation or sponsor credentials are needed. At http://127.0.0.1:4319, inspect the recorded before/after clarification and retained-context reports, then try the guided manual/assisted CV review. These are clearly identified saved real outputs and fictional inputs.
+
+For fresh inference, finish the individual setup above. `npm run evaluate` runs the 16 authored fictional cases; `npm run verify:review` exercises Zetaris, clarification, restart and memory comparison in an isolated temporary database. `npm run demo:publish-recording` validates and translates those saved outputs before refreshing the static viewer. Do not run recording publication at the same time as live verification: both use the same intermediate file. None of these commands submits the candidature.

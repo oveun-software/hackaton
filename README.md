@@ -1,8 +1,24 @@
 # TalentLens
 
-**Find talent. See why.** TalentLens is a multilingual CV discovery workspace that connects job requirements with documented candidate experience. NVIDIA Nemotron interprets the role and CVs and proposes candidates with source citations. A recruiter verifies the evidence and decides the next step.
+**Find talent. See why.** TalentLens connects each job requirement to inspectable evidence, identifies the next question to clarify and shows what changes when a recruiter records a new source. NVIDIA Nemotron interprets the role, drafts a comparison and critically reviews its claims. The recruiter decides the next step.
 
 The application has no keyword compatibility engine, local candidate scoring, percentages or automatic hiring/rejection decisions.
+
+## Explore without accounts or API keys
+
+With Node.js 22.16+ installed, run `npm run demo` and open **http://127.0.0.1:4319**. No dependency installation, `.env`, Docker or sponsor account is needed for this static viewer. It shows **recorded real Nemotron executions with fictional profiles**, in English, Spanish, French and German. It makes no inference calls.
+
+The three steps show the original evidence, a documented clarification and another role retrieving earlier context after restart. Open any matrix cell to inspect the quotation and source. The live application also links to this viewer. Choose **Try a guided CV review** for two timed rounds (manual and assisted), four fictional profiles per round, recorded answers and a downloadable session result. [All 16 fictional CV files](examples/pilot/README.md) are included. No recruiter sessions or productivity gains have been fabricated.
+
+## Evidence review and quality checks
+
+- Atomic requirements, a comparison matrix and direct access to source text with the quoted passage highlighted.
+- A second Nemotron review checking unsupported claims, negations, contradictions and evidence gaps; unresolved rows include a concrete question.
+- Attributed clarification sources, reanalysis and an explicit comparison with the prior report. Candidate statements remain labelled as statements, not independently verified facts.
+- Memory with source type, date, provenance and human conflict resolution. Repeating an analysis cannot reactivate a disputed memory.
+- **36 automated tests and 13/13 official H-MEM checks.** A real model evaluation matched **32/32 authored evidence expectations across 16 fictional cases**, with zero unsupported positive assessments in that set. This is a small diagnostic evaluation, not a general accuracy or fairness guarantee. The critical review made no evidence-state/citation changes in that evaluation run; no incremental quality gain is claimed.
+
+See [evidence review](docs/EVIDENCE-REVIEW.md), [evaluation results](evaluation/results.json), [evaluation methodology](evaluation/README.md), and the [guided fictional-CV pilot](evaluation/RECRUITER-PILOT.md).
 
 ## Quick start
 
@@ -55,7 +71,7 @@ Nightshift stores its token at `<stateDir>/proxy-token`. The placeholder `rt-loc
 
 **Nightshift 1.2.1 routing caveat:** an application's saved routing profile can override a concrete requested model. In Nightshift's compute sources, enable the intended Nemotron and disable NVIDIA models your account cannot run. Preserve privacy and verification settings. TalentLens refuses a response if Nightshift does not confirm the selected concrete NVIDIA model, and saves actual model/receipt IDs with successful reports. A successful model-catalog check alone does not prove inference or routing.
 
-The verified configuration uses the **fast** application profile in Nightshift with only the selected Nemotron enabled. This profile change preserves privacy and verification settings. TalentLens requests a structured, side-effect-free result tool, so its own two-stage recruiting workflow does not trigger Nightshift's extra code-planning generation when CVs mention programming languages. Streaming avoids the runtime's 45-second wait for buffered provider headers. The adapter accepts Nightshift 1.2.1's complete tool-call deltas as well as incremental OpenAI deltas, bounds the stream to 4 MB, discards reasoning, and refuses incomplete or review-gated responses.
+The verified configuration uses the **fast** application profile in Nightshift with only the selected Nemotron enabled. This profile change preserves privacy and verification settings. TalentLens requests a structured, side-effect-free result tool, so its own three-stage recruiting workflow does not trigger Nightshift's extra code-planning generation when CVs mention programming languages. Streaming avoids the runtime's 45-second wait for buffered provider headers. The adapter accepts Nightshift 1.2.1's complete tool-call deltas as well as incremental OpenAI deltas, bounds the stream to 4 MB, discards reasoning, and refuses incomplete or review-gated responses.
 
 **Live verification passed on 22 October 2026:** three fictional CVs were retrieved from Zetaris and analysed through Nightshift by `nvidia/nemotron-3.5-lightning-30b-a3b`; both actual model IDs and receipt IDs were confirmed. Every candidate and requirement was covered and every source quotation passed validation. The successful run used two model calls.
 
@@ -63,11 +79,13 @@ NVIDIA currently advertises this hosted inference catalog as [free for developme
 
 After setting up the fictional Zetaris sources, `npm run verify:live` exercises the actual application API and Zetaris → Nightshift → Nemotron path. It checks every imported field against the three public fictional fixtures **before** inference, runs a role, restarts the app with the same isolated database and runs a different role. It requires verified earlier H-MEM evidence in the second comparison input, validates citations and actual model/receipt IDs, and writes successful evidence to ignored `data/live-verification-hmem.json`. The temporary database is separate from your normal workspace. Additional or changed database records stop the check without sending CVs. This command makes real provider requests and requires available quota; CI uses mocks instead. `npm run verify:live:single` retains the earlier one-role connector check. See [the submission package](submission/README.md) for the latest real-run outcome.
 
+**Latest evidence review verification, 26 October:** `npm run verify:review` completed the before/after clarification workflow, restart, another role and a paired no-memory comparison. Ten model calls confirmed Nemotron Lightning and retained receipts. Sam’s TypeScript evidence changed from unclear to supported after an attributed answer. After restart, that source was available through H-MEM; the paired current-CV-only condition remained unclear. This is one stochastic comparison, not a general causal claim. [Recorded results](examples/zetaris/verified-review-workflow.json).
+
 ## Meterless H-MEM
 
 TalentLens implements the official Meterless H-MEM contract as a persistent SQLite-backed evidence graph. After Nemotron extracts a role's requirements, H-MEM performs the canonical hybrid retrieval across earlier hiring processes, limited to the configured organization and authorised candidates. Only current memories whose original literal quote is still verifiable are passed to Nemotron. Validated current-document evidence becomes deduplicated long-term memory with candidate, document and version lineage plus Trust Ledger audit.
 
-CV updates create new document versions and place older facts into pending verification before reuse. Cumulative facts can supersede earlier versions; incompatible claims are excluded and queued for human resolution. Candidate/fact deletion, source invalidation, feedback, retrieval traces and a compact UI are included. See [H-MEM integration and three-minute demo](docs/HMEM-INTEGRATION.md).
+CV updates create new document versions and place older facts into pending verification before reuse. Cumulative facts can supersede earlier versions; incompatible claims are excluded and queued for human resolution. Candidate/fact deletion, source invalidation, feedback, retrieval traces and a compact UI are included. See [H-MEM integration and recorded demo](docs/HMEM-INTEGRATION.md).
 
 ## Connect Zetaris
 
@@ -110,12 +128,15 @@ flowchart LR
   N --> M[H-MEM: hybrid verified recall]
   M --> A
   C --> A
-  A --> V[Validate IDs, coverage and literal citations]
+  A --> R[Nemotron: critical review]
+  R --> V[Validate IDs, coverage and literal citations]
   V --> L[(H-MEM + Trust Ledger)]
   V --> H[Human review and interview questions]
+  H --> Q[Attributed clarification]
+  Q --> A
 ```
 
-Analysis has two stages: requirement extraction and candidate comparison. The app validates output structure, coverage and exact source quotations, preserving the model’s recommendation order. If a stage fails schema or citation validation, the model gets one correction attempt; the full result must pass the same validator. No evidence is repaired or silently discarded by application code. There are at most four model calls and no automatic retry of provider/network failures. Reports retain the job description and CV text they used. Deleting a source redacts the affected historical narrative and translations. Source changes invalidate analyses already running, so a late response cannot restore deleted CV data. These checks provide traceability; they do not establish the truth of a CV or guarantee a correct, unbiased recommendation.
+Analysis has three model stages: requirement extraction, candidate comparison and critical review. An unchanged role can reuse previously validated requirements. The app validates output structure, coverage and exact source quotations, preserving the model’s recommendation order. If a stage fails schema or citation validation, the model gets one correction attempt; the full result must pass the same validator. No evidence is repaired or silently discarded by application code. There are at most six model calls for a new role and no automatic retry of provider/network failures. Reports retain the job description, CV text and attributed clarification sources they used. Report translation has one bounded correction for structural failures and still preserves statuses, ordering and original quotations. Deleting a source redacts the affected historical narrative and translations. Source changes invalidate analyses already running, so a late response cannot restore deleted CV data. These checks provide traceability; they do not establish the truth of a CV or guarantee a correct, unbiased recommendation.
 
 Roles, versioned document text, source snapshots, reports, translations, H-MEM records/traces/ledger and human review states persist in `data/talentlens.sqlite`. The application automatically migrates the previous database filename without discarding records. Original upload binaries are not retained.
 

@@ -1,0 +1,7 @@
+TALENTLENS — FICTIONAL CV FOR A CONTROLLED TEST
+Candidate code: data-spreadsheet
+Role family: Data analyst
+
+FICTIONAL EVALUATION PROFILE. Created pivot tables in Excel. Plan to learn SQL next summer. Processed invoice data using Python and pandas.
+
+Synthetic test material. No real person, contact details or hiring outcome.

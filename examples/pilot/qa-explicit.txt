@@ -1,0 +1,7 @@
+TALENTLENS — FICTIONAL CV FOR A CONTROLLED TEST
+Candidate code: qa-explicit
+Role family: Quality engineer
+
+FICTIONAL EVALUATION PROFILE. Wrote automated regression tests with Playwright and pytest for production releases. Audited web accessibility using WCAG and keyboard navigation checks.
+
+Synthetic test material. No real person, contact details or hiring outcome.

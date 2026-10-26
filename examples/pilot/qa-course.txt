@@ -1,0 +1,7 @@
+TALENTLENS — FICTIONAL CV FOR A CONTROLLED TEST
+Candidate code: qa-course
+Role family: Quality engineer
+
+FICTIONAL EVALUATION PROFILE. Enrolled in a future course on automated software testing. Created visual mockups in Figma; no accessibility audit work is stated.
+
+Synthetic test material. No real person, contact details or hiring outcome.

@@ -23,3 +23,9 @@ File-source syntax follows [Zetaris's CSV recipe](https://github.com/zetaris/get
 ## Recorded verification with H-MEM
 
 The [26 October workflow](verified-hmem-workflow.json) contains two real application reports using these exact fictional sources. The app restarted between roles, then H-MEM retrieved and supplied a verified earlier fact to Nemotron. The second report cited that memory. All five model executions include the actual Nemotron Lightning model and Nightshift receipt IDs. Every final source quotation passed validation. This is a saved verification artifact, not a live response. Reproduce it with `npm run verify:live` after following the setup below.
+
+## Evidence review and clarification recording
+
+The [latest evidence-review workflow](verified-review-workflow.json), recorded on 26 October, adds an attributed fictional TypeScript interview answer to Sam Torres, shows the before/after report change, restarts the app and retrieves that source in a new role. A paired current-CV-only run remains unclear; the run with the earlier source records support. Ten actual Nemotron Lightning calls have Nightshift receipts. This one stochastic comparison demonstrates source access, not average causal benefit. Reproduce it with `npm run verify:review`. The earlier five-call workflow above remains a historical artifact from the earlier pipeline.
+
+`npm run demo` opens these reports without services or API credentials. Original quotations stay untouched; narrative translations are included in Spanish, French and German.
