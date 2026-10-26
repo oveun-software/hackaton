@@ -1,0 +1,3 @@
+Frontend engineer
+
+Professional TypeScript development experience is required. Experience building React interfaces is preferred.

@@ -6,7 +6,17 @@ The application has no keyword compatibility engine, local candidate scoring, pe
 
 ## Explore without accounts or API keys
 
-With Node.js 22.16+ installed, run `npm run demo` and open **http://127.0.0.1:4319**. No dependency installation, `.env`, Docker or sponsor account is needed for this static viewer. It shows **recorded real Nemotron executions with fictional profiles**, in English, Spanish, French and German. It makes no inference calls.
+**Judges: start with the [step-by-step walkthrough](docs/JUDGES.md) and [paired sample inputs/outputs](examples/judges/README.md). No demo login is required.**
+
+With Git and Node.js 22.16+ installed:
+
+```sh
+git clone https://github.com/oveun-software/hackaton.git
+cd hackaton
+npm run demo
+```
+
+Open **http://127.0.0.1:4319/showcase.html?lang=en**. On Windows PowerShell, use `npm.cmd` if script execution is restricted. No dependency installation, `.env`, Docker or sponsor account is needed for this static viewer. It shows **recorded real Nemotron executions with fictional profiles**, in English, Spanish, French and German. It makes no inference calls. This is the sample/fallback mode; generating a new analysis requires the live services described below.
 
 The three steps show the original evidence, a documented clarification and another role retrieving earlier context after restart. Open any matrix cell to inspect the quotation and source. The live application also links to this viewer. Choose **Try a guided CV review** for two timed rounds (manual and assisted), four fictional profiles per round, recorded answers and a downloadable session result. [All 16 fictional CV files](examples/pilot/README.md) are included. No recruiter sessions or productivity gains have been fabricated.
 
@@ -19,6 +29,17 @@ The three steps show the original evidence, a documented clarification and anoth
 - **36 automated tests and 13/13 official H-MEM checks.** A real model evaluation matched **32/32 authored evidence expectations across 16 fictional cases**, with zero unsupported positive assessments in that set. This is a small diagnostic evaluation, not a general accuracy or fairness guarantee. The critical review made no evidence-state/citation changes in that evaluation run; no incremental quality gain is claimed.
 
 See [evidence review](docs/EVIDENCE-REVIEW.md), [evaluation results](evaluation/results.json), [evaluation methodology](evaluation/README.md), and the [guided fictional-CV pilot](evaluation/RECRUITER-PILOT.md).
+
+### Sample inputs and matching outputs
+
+| Context | Input | Real output |
+| --- | --- | --- |
+| Frontend engineer: experience, interest, negation and a CV instruction attack | [English job + four CVs](examples/judges/frontend/input.json) | [Report + model/receipt records](examples/judges/frontend/output.json) |
+| Quality engineer: manual/automated testing and conflicting sources | [English job + four CVs](examples/judges/quality/input.json) | [Report + model/receipt records](examples/judges/quality/output.json) |
+| Data analyst: SQL, spreadsheets and adjacent technologies | [English job + four CVs](examples/judges/data/input.json) | [Report + model/receipt records](examples/judges/data/output.json) |
+| Engineering lead: responsibility and multilingual evidence | [English job + four CVs, one intentionally Spanish](examples/judges/leadership/input.json) | [English report + original quotes](examples/judges/leadership/output.json) |
+
+All inputs are fictional and committed, along with [individual CV files](examples/pilot/README.md). These paired files export the saved evaluation, with no invented model outputs. Run `npm run test:recordings` after `npm ci` to check their integrity; `npm run evaluate` generates fresh results through your own configured Nightshift/Nemotron. [Full explanation and English reading aid for the Spanish case](examples/judges/README.md).
 
 ## Quick start
 

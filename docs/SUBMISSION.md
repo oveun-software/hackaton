@@ -26,6 +26,8 @@ Nemotron performs semantic interpretation and recommendation. A separate call cr
 
 Run `npm run demo` using only Node.js, without API keys or accounts. This mode makes no AI requests and is labelled as saved execution. Fresh inference uses `npm run evaluate` and `npm run verify:review` with each developer's configured services.
 
+For judges, the [clean-clone walkthrough](JUDGES.md) distinguishes the offline viewer, automated checks and new inference. [Four paired scenarios](../examples/judges/README.md) expose exact English role/CV inputs, real outputs, citations and model receipts; the first three are entirely English, and the fourth adds a deliberate Spanish-source test. `npm run test:recordings` checks these exports against the authoritative evaluation. No demo user or shared account is needed for the local app.
+
 ## Provenance and track
 
 TalentLens is new application code inspired by OVEUN's pre-existing Cora recruiting concept. No Cora product code, accounts, databases, indexes, documents or services are reused. Development used Codex desktop. The proposed track is **Wildcard / Tinkerer**, reflecting the existing concept. No track or development-tool award is claimed as selected in the portal.

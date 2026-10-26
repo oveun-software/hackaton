@@ -30,6 +30,13 @@ assert.equal(evaluation.datasetSha256, createHash('sha256').update(JSON.stringif
 let cells = 0;
 for (const group of evaluationGroups) {
   const result = evaluation.groups.find(item => item.id === group.id); assert.ok(result); executions(result.executions);
+  const judgeInput = await read(`examples/judges/${group.id}/input.json`);
+  assert.deepEqual(judgeInput, { synthetic: true, language: 'en', vacancy: { id: group.id, title: group.title, description: group.description }, candidates: groupCandidates(group) });
+  const { translations: _translations, ...originalReport } = result.report;
+  assert.deepEqual(await read(`examples/judges/${group.id}/output.json`), {
+    synthetic: true, mode: 'recorded-live-output', evaluatedAt: evaluation.evaluatedAt, model: evaluation.model,
+    datasetSha256: evaluation.datasetSha256, limitation: evaluation.limitation, ...result, report: originalReport
+  }, 'Judge examples must preserve the exact recorded results and execution proof');
   validateReport(result.report, groupCandidates(group), result.report.requirements);
   assert.equal(result.cells.length, group.candidates.length * group.criteria.length);
   for (const cell of result.cells) {
@@ -45,4 +52,4 @@ for (const group of tasks.groups) {
   const result = pilot.groups.find(g => g.id === group.id);
   assert.deepEqual(result, evaluation.groups.find(g => g.id === group.id)); translations(result.report);
 }
-console.log('Recorded workflow, exact source citations, dataset hash, 32 authored assessments and all 15 report translations verified offline.');
+console.log('Recorded workflow, four paired judge examples, exact source citations, dataset hash, 32 authored assessments and all 15 report translations verified offline.');

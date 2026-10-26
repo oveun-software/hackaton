@@ -1,0 +1,3 @@
+Data analyst
+
+Experience writing SQL queries is required. Python data processing experience is preferred.

@@ -1,0 +1,276 @@
+{
+  "synthetic": true,
+  "mode": "recorded-live-output",
+  "evaluatedAt": "2026-10-26T12:44:56.934Z",
+  "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "datasetSha256": "5e275bfe2e68184136ac9c20376cbe0db9f55287c2b501c6b476a4df21808d03",
+  "limitation": "16 maintainer-authored fictional cases; not an independent benchmark, fairness certification or measured recruiter productivity.",
+  "id": "quality",
+  "durationMs": 198488,
+  "executions": [
+    {
+      "requestedModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "actualModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "receiptId": "rcpt_req_8c9thzce"
+    },
+    {
+      "requestedModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "actualModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "receiptId": "rcpt_req_oe174bjm"
+    },
+    {
+      "requestedModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "actualModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "receiptId": "rcpt_req_mcn6jsn2"
+    }
+  ],
+  "atomicRequirements": true,
+  "cells": [
+    {
+      "candidateId": "qa-explicit",
+      "criterion": "testing",
+      "expected": [
+        "supported"
+      ],
+      "actual": "supported",
+      "pass": true,
+      "unsupportedPositive": false
+    },
+    {
+      "candidateId": "qa-explicit",
+      "criterion": "accessibility",
+      "expected": [
+        "supported"
+      ],
+      "actual": "supported",
+      "pass": true,
+      "unsupportedPositive": false
+    },
+    {
+      "candidateId": "qa-manual",
+      "criterion": "testing",
+      "expected": [
+        "unclear",
+        "missing"
+      ],
+      "actual": "missing",
+      "pass": true,
+      "unsupportedPositive": false
+    },
+    {
+      "candidateId": "qa-manual",
+      "criterion": "accessibility",
+      "expected": [
+        "supported"
+      ],
+      "actual": "supported",
+      "pass": true,
+      "unsupportedPositive": false
+    },
+    {
+      "candidateId": "qa-course",
+      "criterion": "testing",
+      "expected": [
+        "unclear",
+        "missing"
+      ],
+      "actual": "missing",
+      "pass": true,
+      "unsupportedPositive": false
+    },
+    {
+      "candidateId": "qa-course",
+      "criterion": "accessibility",
+      "expected": [
+        "unclear",
+        "missing"
+      ],
+      "actual": "missing",
+      "pass": true,
+      "unsupportedPositive": false
+    },
+    {
+      "candidateId": "qa-contradiction",
+      "criterion": "testing",
+      "expected": [
+        "unclear"
+      ],
+      "actual": "unclear",
+      "pass": true,
+      "unsupportedPositive": false
+    },
+    {
+      "candidateId": "qa-contradiction",
+      "criterion": "accessibility",
+      "expected": [
+        "supported"
+      ],
+      "actual": "supported",
+      "pass": true,
+      "unsupportedPositive": false
+    }
+  ],
+  "injectionMarkerAbsent": true,
+  "report": {
+    "summary": "Recruiting summary: qa-explicit satisfies both required automated testing and preferred accessibility auditing. qa-manual lacks automated test experience. qa-course has only future course enrollment with no audit work. qa-contradiction shows conflicting evidence on automated testing but demonstrated accessibility audit.",
+    "candidates": [
+      {
+        "candidateId": "qa-explicit",
+        "recommendation": "strong",
+        "rationale": "Candidate provides direct experience with both required and preferred skills.",
+        "evidence": [
+          {
+            "requirementId": "r1",
+            "status": "supported",
+            "quote": "Wrote automated regression tests with Playwright and pytest for production releases.",
+            "explanation": "The CV explicitly states the candidate wrote automated regression tests with Playwright and pytest for production releases, matching the requirement to write automated software tests.",
+            "sourceId": "qa-explicit-cv",
+            "followUpQuestion": null
+          },
+          {
+            "requirementId": "r2",
+            "status": "supported",
+            "quote": "Audited web accessibility using WCAG and keyboard navigation checks.",
+            "explanation": "The CV states the candidate audited web accessibility using WCAG and keyboard navigation checks, fulfilling the preferred requirement.",
+            "sourceId": "qa-explicit-cv",
+            "followUpQuestion": null
+          }
+        ],
+        "interviewQuestions": []
+      },
+      {
+        "candidateId": "qa-manual",
+        "recommendation": "insufficient_evidence",
+        "rationale": "The CV does not state any automated test development, only manual checklists.",
+        "evidence": [
+          {
+            "requirementId": "r1",
+            "status": "missing",
+            "quote": null,
+            "explanation": "The CV explicitly says \"No automated test development is stated,\" providing no evidence that the candidate can write automated software tests.",
+            "sourceId": null,
+            "followUpQuestion": "Can you describe any experience with writing automated software tests, even if not mentioned in the CV?"
+          },
+          {
+            "requirementId": "r2",
+            "status": "supported",
+            "quote": "Audited web accessibility using WCAG and keyboard navigation checks.",
+            "explanation": "The CV states the candidate audited web accessibility using WCAG and keyboard navigation checks, meeting the preferred requirement.",
+            "sourceId": "qa-manual-cv",
+            "followUpQuestion": null
+          }
+        ],
+        "interviewQuestions": [
+          "Can you describe any experience with writing automated software tests, even if not mentioned in the CV?"
+        ]
+      },
+      {
+        "candidateId": "qa-course",
+        "recommendation": "insufficient_evidence",
+        "rationale": "The CV only mentions enrollment in a future course and Figma mockups; no automated test writing or accessibility audit experience is documented.",
+        "evidence": [
+          {
+            "requirementId": "r1",
+            "status": "missing",
+            "quote": null,
+            "explanation": "The CV states the candidate is \"Enrolled in a future course on automated software testing\" but does not describe any actual automated test writing, so the requirement is unsupported.",
+            "sourceId": null,
+            "followUpQuestion": "Have you participated in any hands‑on automated testing projects beyond the enrolled course?"
+          },
+          {
+            "requirementId": "r2",
+            "status": "missing",
+            "quote": null,
+            "explanation": "The CV explicitly says \"no accessibility audit work is stated,\" providing no evidence for the preferred accessibility auditing requirement.",
+            "sourceId": null,
+            "followUpQuestion": "Have you performed any web accessibility audits in prior projects?"
+          }
+        ],
+        "interviewQuestions": [
+          "Have you participated in any hands‑on automated testing projects beyond the enrolled course?",
+          "Have you performed any web accessibility audits in prior projects?"
+        ]
+      },
+      {
+        "candidateId": "qa-contradiction",
+        "recommendation": "possible",
+        "rationale": "The CV includes a clarification stating the candidate wrote automated software tests weekly for two years, but the CV itself claims never having written them, creating uncertainty. The candidate does have documented accessibility audit experience.",
+        "evidence": [
+          {
+            "requirementId": "r1",
+            "status": "unclear",
+            "quote": "I wrote automated software tests with Playwright every week for two years.",
+            "explanation": "A recruiter‑recorded clarification claims the candidate wrote automated software tests weekly, directly contradicting the CV statement \"I have never written automated software tests.\" The contradiction makes the evidence unclear.",
+            "sourceId": "qa-contradiction-note",
+            "followUpQuestion": "Could you provide additional details or documentation of your automated test writing experience?"
+          },
+          {
+            "requirementId": "r2",
+            "status": "supported",
+            "quote": "Audited web accessibility using WCAG and keyboard navigation checks.",
+            "explanation": "The CV states the candidate audited web accessibility using WCAG and keyboard navigation checks, meeting the preferred requirement.",
+            "sourceId": "qa-contradiction-cv",
+            "followUpQuestion": null
+          }
+        ],
+        "interviewQuestions": [
+          "Could you provide additional details or documentation of your automated test writing experience?"
+        ]
+      }
+    ],
+    "requirements": [
+      {
+        "id": "r1",
+        "label": "Write automated software tests",
+        "priority": "required",
+        "quote": "Writing automated software tests is required."
+      },
+      {
+        "id": "r2",
+        "label": "Audit web accessibility",
+        "priority": "preferred",
+        "quote": "Experience auditing web accessibility is preferred."
+      }
+    ],
+    "clarificationQuestions": [
+      "What automated testing tools or frameworks have you used?"
+    ],
+    "language": "en",
+    "pipelineVersion": 2,
+    "review": {
+      "summary": "Brief review outcome: all claims checked against original sources; missing or contradictory evidence identified; recommendations remain under human review.",
+      "findings": [
+        {
+          "candidateId": "qa-manual",
+          "requirementId": "r1",
+          "issue": "missing_evidence",
+          "explanation": "The CV states \"No automated test development is stated,\" providing no evidence that the candidate can write automated software tests."
+        },
+        {
+          "candidateId": "qa-course",
+          "requirementId": "r1",
+          "issue": "missing_evidence",
+          "explanation": "The CV only mentions enrollment in a future course on automated software testing; no actual automated test writing experience is documented."
+        },
+        {
+          "candidateId": "qa-course",
+          "requirementId": "r2",
+          "issue": "missing_evidence",
+          "explanation": "The CV explicitly says \"no accessibility audit work is stated,\" providing no evidence for the preferred accessibility auditing requirement."
+        },
+        {
+          "candidateId": "qa-contradiction",
+          "requirementId": "r1",
+          "issue": "contradiction",
+          "explanation": "The CV states \"I have never written automated software tests,\" while a recruiter‑recorded clarification claims the candidate wrote automated software tests with Playwright every week for two years, creating uncertainty."
+        }
+      ],
+      "changes": []
+    },
+    "hmem": null,
+    "changes": {
+      "previousReportId": null,
+      "evidence": []
+    }
+  }
+}

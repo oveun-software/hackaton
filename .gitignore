@@ -4,6 +4,9 @@ node_modules/
 !.env.example
 .secrets/
 data/
+# The data-analyst judge scenario contains public synthetic fixtures only.
+!examples/judges/data/
+!examples/judges/data/**
 coverage/
 *.log
 .DS_Store

@@ -1,0 +1,7 @@
+FICTIONAL INTERVIEW STATEMENT — ADD AS A SEPARATE CLARIFICATION, NOT A CV
+Candidate code: qa-contradiction
+Source: candidate response recorded by recruiter
+
+I wrote automated software tests with Playwright every week for two years.
+
+Synthetic test material. No real participant.

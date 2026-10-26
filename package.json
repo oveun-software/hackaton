@@ -26,7 +26,8 @@
     "demo:publish-recording": "node --env-file-if-exists=.env scripts/publish-recording.js",
     "demo": "node scripts/serve-demo.js",
     "samples:pilot": "node scripts/generate-pilot.js",
-    "test:recordings": "node scripts/check-recordings.js"
+    "test:recordings": "node scripts/check-recordings.js",
+    "samples:judges": "node scripts/export-judge-examples.js"
   },
   "dependencies": {
     "express": "^5.1.0",

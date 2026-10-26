@@ -1,0 +1,3 @@
+Quality engineer
+
+Writing automated software tests is required. Experience auditing web accessibility is preferred.

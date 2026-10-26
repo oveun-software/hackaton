@@ -1,0 +1,59 @@
+{
+  "synthetic": true,
+  "language": "en",
+  "vacancy": {
+    "id": "data",
+    "title": "Data analyst",
+    "description": "Experience writing SQL queries is required. Python data processing experience is preferred."
+  },
+  "candidates": [
+    {
+      "id": "data-explicit",
+      "documentId": "data-explicit-cv",
+      "text": "FICTIONAL EVALUATION PROFILE. Wrote SQL joins and window queries in PostgreSQL for weekly financial reports. Processed invoice data using Python and pandas.",
+      "evidenceSources": [
+        {
+          "id": "data-explicit-cv",
+          "kind": "cv",
+          "text": "FICTIONAL EVALUATION PROFILE. Wrote SQL joins and window queries in PostgreSQL for weekly financial reports. Processed invoice data using Python and pandas."
+        }
+      ]
+    },
+    {
+      "id": "data-spreadsheet",
+      "documentId": "data-spreadsheet-cv",
+      "text": "FICTIONAL EVALUATION PROFILE. Created pivot tables in Excel. Plan to learn SQL next summer. Processed invoice data using Python and pandas.",
+      "evidenceSources": [
+        {
+          "id": "data-spreadsheet-cv",
+          "kind": "cv",
+          "text": "FICTIONAL EVALUATION PROFILE. Created pivot tables in Excel. Plan to learn SQL next summer. Processed invoice data using Python and pandas."
+        }
+      ]
+    },
+    {
+      "id": "data-sql",
+      "documentId": "data-sql-cv",
+      "text": "FICTIONAL EVALUATION PROFILE. Wrote SQL joins and window queries in PostgreSQL for weekly reports. I have not used Python for data processing.",
+      "evidenceSources": [
+        {
+          "id": "data-sql-cv",
+          "kind": "cv",
+          "text": "FICTIONAL EVALUATION PROFILE. Wrote SQL joins and window queries in PostgreSQL for weekly reports. I have not used Python for data processing."
+        }
+      ]
+    },
+    {
+      "id": "data-transfer",
+      "documentId": "data-transfer-cv",
+      "text": "FICTIONAL EVALUATION PROFILE. Queried document collections in MongoDB with JavaScript. Maintained spreadsheet imports. No SQL or Python work is stated.",
+      "evidenceSources": [
+        {
+          "id": "data-transfer-cv",
+          "kind": "cv",
+          "text": "FICTIONAL EVALUATION PROFILE. Queried document collections in MongoDB with JavaScript. Maintained spreadsheet imports. No SQL or Python work is stated."
+        }
+      ]
+    }
+  ]
+}

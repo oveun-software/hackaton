@@ -1,0 +1,59 @@
+{
+  "synthetic": true,
+  "language": "en",
+  "vacancy": {
+    "id": "leadership",
+    "title": "Engineering team lead",
+    "description": "Experience directly managing an engineering team is required. Experience facilitating Scrum ceremonies is preferred."
+  },
+  "candidates": [
+    {
+      "id": "lead-explicit",
+      "documentId": "lead-explicit-cv",
+      "text": "FICTIONAL EVALUATION PROFILE. Directly managed six software engineers, including performance reviews and development plans. Facilitated Scrum planning and retrospectives every sprint.",
+      "evidenceSources": [
+        {
+          "id": "lead-explicit-cv",
+          "kind": "cv",
+          "text": "FICTIONAL EVALUATION PROFILE. Directly managed six software engineers, including performance reviews and development plans. Facilitated Scrum planning and retrospectives every sprint."
+        }
+      ]
+    },
+    {
+      "id": "lead-participant",
+      "documentId": "lead-participant-cv",
+      "text": "FICTIONAL EVALUATION PROFILE. Worked as a software engineer reporting to a team lead. Attended Scrum ceremonies as a participant without facilitating them.",
+      "evidenceSources": [
+        {
+          "id": "lead-participant-cv",
+          "kind": "cv",
+          "text": "FICTIONAL EVALUATION PROFILE. Worked as a software engineer reporting to a team lead. Attended Scrum ceremonies as a participant without facilitating them."
+        }
+      ]
+    },
+    {
+      "id": "lead-facilitator",
+      "documentId": "lead-facilitator-cv",
+      "text": "FICTIONAL EVALUATION PROFILE. Facilitated Scrum planning and retrospectives every sprint. I have never directly managed an engineering team.",
+      "evidenceSources": [
+        {
+          "id": "lead-facilitator-cv",
+          "kind": "cv",
+          "text": "FICTIONAL EVALUATION PROFILE. Facilitated Scrum planning and retrospectives every sprint. I have never directly managed an engineering team."
+        }
+      ]
+    },
+    {
+      "id": "lead-spanish",
+      "documentId": "lead-spanish-cv",
+      "text": "FICTIONAL EVALUATION PROFILE. Dirigí directamente a un equipo de seis ingenieros, con evaluaciones de desempeño y planes de desarrollo. Facilité las reuniones de planificación y retrospectiva de Scrum durante dos años.",
+      "evidenceSources": [
+        {
+          "id": "lead-spanish-cv",
+          "kind": "cv",
+          "text": "FICTIONAL EVALUATION PROFILE. Dirigí directamente a un equipo de seis ingenieros, con evaluaciones de desempeño y planes de desarrollo. Facilité las reuniones de planificación y retrospectiva de Scrum durante dos años."
+        }
+      ]
+    }
+  ]
+}

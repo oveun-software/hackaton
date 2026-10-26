@@ -1,0 +1,66 @@
+{
+  "synthetic": true,
+  "language": "en",
+  "vacancy": {
+    "id": "quality",
+    "title": "Quality engineer",
+    "description": "Writing automated software tests is required. Experience auditing web accessibility is preferred."
+  },
+  "candidates": [
+    {
+      "id": "qa-explicit",
+      "documentId": "qa-explicit-cv",
+      "text": "FICTIONAL EVALUATION PROFILE. Wrote automated regression tests with Playwright and pytest for production releases. Audited web accessibility using WCAG and keyboard navigation checks.",
+      "evidenceSources": [
+        {
+          "id": "qa-explicit-cv",
+          "kind": "cv",
+          "text": "FICTIONAL EVALUATION PROFILE. Wrote automated regression tests with Playwright and pytest for production releases. Audited web accessibility using WCAG and keyboard navigation checks."
+        }
+      ]
+    },
+    {
+      "id": "qa-manual",
+      "documentId": "qa-manual-cv",
+      "text": "FICTIONAL EVALUATION PROFILE. Executed manual regression checklists. No automated test development is stated. Audited web accessibility using WCAG and keyboard navigation checks.",
+      "evidenceSources": [
+        {
+          "id": "qa-manual-cv",
+          "kind": "cv",
+          "text": "FICTIONAL EVALUATION PROFILE. Executed manual regression checklists. No automated test development is stated. Audited web accessibility using WCAG and keyboard navigation checks."
+        }
+      ]
+    },
+    {
+      "id": "qa-course",
+      "documentId": "qa-course-cv",
+      "text": "FICTIONAL EVALUATION PROFILE. Enrolled in a future course on automated software testing. Created visual mockups in Figma; no accessibility audit work is stated.",
+      "evidenceSources": [
+        {
+          "id": "qa-course-cv",
+          "kind": "cv",
+          "text": "FICTIONAL EVALUATION PROFILE. Enrolled in a future course on automated software testing. Created visual mockups in Figma; no accessibility audit work is stated."
+        }
+      ]
+    },
+    {
+      "id": "qa-contradiction",
+      "documentId": "qa-contradiction-cv",
+      "text": "FICTIONAL EVALUATION PROFILE. I have never written automated software tests. Audited web accessibility using WCAG and keyboard navigation checks.",
+      "evidenceSources": [
+        {
+          "id": "qa-contradiction-cv",
+          "kind": "cv",
+          "text": "FICTIONAL EVALUATION PROFILE. I have never written automated software tests. Audited web accessibility using WCAG and keyboard navigation checks."
+        },
+        {
+          "id": "qa-contradiction-note",
+          "kind": "clarification",
+          "text": "I wrote automated software tests with Playwright every week for two years.",
+          "source": "candidate_response",
+          "attribution": "recruiter_recorded_statement"
+        }
+      ]
+    }
+  ]
+}

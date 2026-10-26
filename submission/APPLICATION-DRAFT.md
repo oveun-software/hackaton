@@ -58,6 +58,8 @@ The authored evaluation is small and is not an independent benchmark, fairness c
 
 Run `npm run demo` from a clone with Node.js 22.16+. No sponsor credentials, dependency installation or API requests are needed for the recorded viewer. Explore before/after clarification and retained context, inspect a source, then try the guided CV review. Saved outputs are explicitly labelled recorded. Fresh inference is separately reproducible with the individual setup instructions and `npm run verify:review`.
 
+Judge walkthrough: https://github.com/oveun-software/hackaton/blob/main/docs/JUDGES.md . Four paired job/CV inputs and real outputs, including three entirely English scenarios: https://github.com/oveun-software/hackaton/tree/main/examples/judges . TalentLens runs locally without a demo login; sponsor credentials are needed only for new live inference.
+
 ## Novelty, provenance and tools
 
 TalentLens is new code inspired by OVEUN's pre-existing Cora concept. It reuses no Cora code, accounts, databases, indexes, documents or services. Development used Codex desktop. Cursor is installed with its official Codex extension, but installation alone is not claimed as a Cursor-built product award.

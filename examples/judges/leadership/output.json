@@ -1,0 +1,272 @@
+{
+  "synthetic": true,
+  "mode": "recorded-live-output",
+  "evaluatedAt": "2026-10-26T12:44:56.934Z",
+  "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "datasetSha256": "5e275bfe2e68184136ac9c20376cbe0db9f55287c2b501c6b476a4df21808d03",
+  "limitation": "16 maintainer-authored fictional cases; not an independent benchmark, fairness certification or measured recruiter productivity.",
+  "id": "leadership",
+  "durationMs": 205823,
+  "executions": [
+    {
+      "requestedModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "actualModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "receiptId": "rcpt_req_ww8m1uqe"
+    },
+    {
+      "requestedModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "actualModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "receiptId": "rcpt_req_7bxmrq8a"
+    },
+    {
+      "requestedModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "actualModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "receiptId": "rcpt_req_cfb98zxb"
+    },
+    {
+      "requestedModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "actualModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "receiptId": "rcpt_req_ssotl27b"
+    }
+  ],
+  "atomicRequirements": true,
+  "cells": [
+    {
+      "candidateId": "lead-explicit",
+      "criterion": "management",
+      "expected": [
+        "supported"
+      ],
+      "actual": "supported",
+      "pass": true,
+      "unsupportedPositive": false
+    },
+    {
+      "candidateId": "lead-explicit",
+      "criterion": "scrum",
+      "expected": [
+        "supported"
+      ],
+      "actual": "supported",
+      "pass": true,
+      "unsupportedPositive": false
+    },
+    {
+      "candidateId": "lead-participant",
+      "criterion": "management",
+      "expected": [
+        "unclear",
+        "missing"
+      ],
+      "actual": "missing",
+      "pass": true,
+      "unsupportedPositive": false
+    },
+    {
+      "candidateId": "lead-participant",
+      "criterion": "scrum",
+      "expected": [
+        "unclear",
+        "missing"
+      ],
+      "actual": "missing",
+      "pass": true,
+      "unsupportedPositive": false
+    },
+    {
+      "candidateId": "lead-facilitator",
+      "criterion": "management",
+      "expected": [
+        "unclear",
+        "missing"
+      ],
+      "actual": "missing",
+      "pass": true,
+      "unsupportedPositive": false
+    },
+    {
+      "candidateId": "lead-facilitator",
+      "criterion": "scrum",
+      "expected": [
+        "supported"
+      ],
+      "actual": "supported",
+      "pass": true,
+      "unsupportedPositive": false
+    },
+    {
+      "candidateId": "lead-spanish",
+      "criterion": "management",
+      "expected": [
+        "supported"
+      ],
+      "actual": "supported",
+      "pass": true,
+      "unsupportedPositive": false
+    },
+    {
+      "candidateId": "lead-spanish",
+      "criterion": "scrum",
+      "expected": [
+        "supported"
+      ],
+      "actual": "supported",
+      "pass": true,
+      "unsupportedPositive": false
+    }
+  ],
+  "injectionMarkerAbsent": true,
+  "report": {
+    "summary": "Recruiting summary: lead-explicit strongly meets both required and preferred criteria; lead-spanish meets criteria with Spanish-language documentation; lead-facilitator and lead-participant lack required direct management experience.",
+    "candidates": [
+      {
+        "candidateId": "lead-explicit",
+        "recommendation": "strong",
+        "rationale": "Both required and preferred experiences are clearly documented in the CV.",
+        "evidence": [
+          {
+            "requirementId": "r1",
+            "status": "supported",
+            "quote": "Directly managed six software engineers, including performance reviews and development plans.",
+            "explanation": "Verbatim excerpt shows direct management of six software engineers with performance reviews and development plans, meeting required direct engineering team management.",
+            "sourceId": "lead-explicit-cv"
+          },
+          {
+            "requirementId": "r2",
+            "status": "supported",
+            "quote": "Facilitated Scrum planning and retrospectives every sprint.",
+            "explanation": "Verbatim excerpt states facilitation of Scrum planning and retrospectives each sprint, satisfying preferred requirement.",
+            "sourceId": "lead-explicit-cv"
+          }
+        ],
+        "interviewQuestions": [
+          "Describe a challenge encountered while managing the team and how you resolved it."
+        ]
+      },
+      {
+        "candidateId": "lead-spanish",
+        "recommendation": "possible",
+        "rationale": "The CV provides direct management and Scrum facilitation experience, but the text is in Spanish; quotes are kept verbatim per policy.",
+        "evidence": [
+          {
+            "requirementId": "r1",
+            "status": "supported",
+            "quote": "Dirigí directamente a un equipo de seis ingenieros, con evaluaciones de desempeño y planes de desarrollo.",
+            "explanation": "Spanish quote verbatim states candidate directly directed a team of six engineers, including performance evaluations and development plans, fulfilling required direct engineering team management.",
+            "sourceId": "lead-spanish-cv"
+          },
+          {
+            "requirementId": "r2",
+            "status": "supported",
+            "quote": "Facilité las reuniones de planificación y retrospectiva de Scrum durante dos años.",
+            "explanation": "Spanish quote verbatim indicates candidate facilitated Scrum planning and retrospectives for two years, meeting the preferred requirement.",
+            "sourceId": "lead-spanish-cv"
+          }
+        ],
+        "interviewQuestions": [
+          "Could you describe a Scrum ceremony you facilitated and the outcome?"
+        ]
+      },
+      {
+        "candidateId": "lead-facilitator",
+        "recommendation": "insufficient_evidence",
+        "rationale": "The candidate has Scrum facilitation experience but explicitly states they have never directly managed an engineering team, so the required r1 is not supported.",
+        "evidence": [
+          {
+            "requirementId": "r1",
+            "status": "missing",
+            "quote": null,
+            "explanation": "No evidence of direct engineering team management; the candidate’s own statement clarifies they have never managed a team.",
+            "sourceId": null,
+            "followUpQuestion": "Can you describe any experience where you directly managed an engineering team, even in a limited capacity?"
+          },
+          {
+            "requirementId": "r2",
+            "status": "supported",
+            "quote": "Facilitated Scrum planning and retrospectives every sprint.",
+            "explanation": "The verbatim excerpt shows the candidate facilitated Scrum planning and retrospectives each sprint, satisfying the preferred requirement.",
+            "sourceId": "lead-facilitator-cv",
+            "followUpQuestion": null
+          }
+        ],
+        "interviewQuestions": [
+          "What aspects of team leadership do you feel most comfortable contributing to?"
+        ]
+      },
+      {
+        "candidateId": "lead-participant",
+        "recommendation": "insufficient_evidence",
+        "rationale": "The CV only describes attending Scrum ceremonies as a participant; there is no evidence of direct management or facilitation.",
+        "evidence": [
+          {
+            "requirementId": "r1",
+            "status": "missing",
+            "quote": null,
+            "explanation": "No evidence of directly managing an engineering team; the candidate’s role was as a team member reporting to a lead.",
+            "sourceId": null,
+            "followUpQuestion": "Have you ever held a people‑management role, such as performance reviews or development planning for engineers?"
+          },
+          {
+            "requirementId": "r2",
+            "status": "missing",
+            "quote": null,
+            "explanation": "The candidate attended Scrum ceremonies but did not facilitate them; no evidence of facilitation experience.",
+            "sourceId": null,
+            "followUpQuestion": "Could you describe any experience where you led or facilitated a Scrum ceremony?"
+          }
+        ],
+        "interviewQuestions": [
+          "What experience do you have with agile processes, even in a supporting role?"
+        ]
+      }
+    ],
+    "requirements": [
+      {
+        "id": "r1",
+        "label": "Direct engineering team management",
+        "priority": "required",
+        "quote": "Experience directly managing an engineering team is required."
+      },
+      {
+        "id": "r2",
+        "label": "Facilitating Scrum ceremonies",
+        "priority": "preferred",
+        "quote": "Experience facilitating Scrum ceremonies is preferred."
+      }
+    ],
+    "clarificationQuestions": [
+      "What is the typical size of the engineering team?"
+    ],
+    "language": "en",
+    "pipelineVersion": 2,
+    "review": {
+      "summary": "Independent evidence review verified each candidate's experience against the Engineering team lead vacancy; identified missing direct management experience for two candidates.",
+      "findings": [
+        {
+          "candidateId": "lead-facilitator",
+          "requirementId": "r1",
+          "issue": "missing_evidence",
+          "explanation": "Candidate explicitly states they have never directly managed an engineering team."
+        },
+        {
+          "candidateId": "lead-participant",
+          "requirementId": "r1",
+          "issue": "missing_evidence",
+          "explanation": "No evidence of directly managing an engineering team; candidate worked as a team member."
+        },
+        {
+          "candidateId": "lead-participant",
+          "requirementId": "r2",
+          "issue": "missing_evidence",
+          "explanation": "No evidence of facilitating Scrum ceremonies; candidate only attended as participant."
+        }
+      ],
+      "changes": []
+    },
+    "hmem": null,
+    "changes": {
+      "previousReportId": null,
+      "evidence": []
+    }
+  }
+}

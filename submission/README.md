@@ -9,6 +9,7 @@ The project is **not submitted or marked complete**. No video is included, as re
 | PDF deck | [TalentLens-Deck.pdf](TalentLens-Deck.pdf), ten matching pages |
 | Product captures | [matrix](assets/evidence-matrix.png), [source](assets/evidence-source.png) |
 | Account-free recorded viewer | `npm run demo`, then http://127.0.0.1:4319 |
+| Judge walkthrough and paired examples | [Clean-clone steps](../docs/JUDGES.md), [four input/output pairs](../examples/judges/README.md); three primary scenarios entirely in English |
 | Guided manual/assisted review | http://127.0.0.1:4319/pilot.html; actual timing, answers and JSON download |
 | Sixteen fictional CV files | [test pack](../examples/pilot/README.md) |
 | Real quality evaluation | [method](../evaluation/README.md), [32 assessments and receipts](../evaluation/results.json) |
