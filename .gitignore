@@ -1,9 +1,13 @@
 node_modules/
+__pycache__/
 .env
 .env.*
 !.env.example
 .secrets/
 data/
+# Local Kaggle resume files and generated Zetaris CSVs stay outside Git.
+data/kaggle-resume-dataset/
+data/kaggle-zetaris/
 coverage/
 *.log
 .DS_Store

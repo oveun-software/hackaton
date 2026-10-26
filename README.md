@@ -65,6 +65,37 @@ After setting up the fictional Zetaris sources, `npm run verify:live` exercises 
 
 ## Connect Zetaris
 
+### Import a Kaggle resume dataset
+
+For a local test with up to 25 synthetic resumes, download the dataset with `kagglehub` into the ignored project folder and pass that folder to the importer:
+
+Install `kagglehub` once if it is not available in your Python installation:
+
+```powershell
+py -3 -m pip install kagglehub
+```
+
+Then download the dataset from the project root:
+
+```powershell
+npm.cmd run download:kaggle
+```
+
+The command runs [download-kaggle-resumes.py](scripts/download-kaggle-resumes.py) and stores the files under `data/kaggle-resume-dataset/`, which is ignored by Git.
+
+The dataset and local destination are configurable without editing the script:
+
+```powershell
+npm.cmd run download:kaggle -- --dataset="owner/another-dataset" --output="data\another-dataset"
+npm.cmd run import:kaggle -- --input="data\another-dataset" --limit=25
+```
+
+```powershell
+npm.cmd run import:kaggle -- --input="C:\Users\diego\Documents\Proyectos\hackaton\data\kaggle-resume-dataset" --limit=25
+```
+
+The command extracts PDF, DOCX and TXT files using the same bounded extractor as application uploads and writes `data/kaggle-zetaris/profiles.csv` and `data/kaggle-zetaris/documents.csv`. Copy those two files into the Zetaris customer-data volume, create the view with [create.sql](examples/zetaris/create.sql), and import from **Connections → Import from Zetaris**. The generated files stay under `data/`, which is ignored by Git.
+
 The event's current [Zetaris setup repository](https://github.com/zetaris/getting-started) uses a local Docker installation with Lightning JDBC and REST access. Obtain the platform bundle, matching configuration and registry credentials from [Zetaris Cloud](https://cloud.enterprise.zetaris.com), then follow its [local installation guide](https://github.com/zetaris/getting-started/blob/main/docs/install/updated_zetaris_installation_guide.md). The platform distribution and evaluation entitlement are separate from the open-source recipes. On Windows, the guide uses WSL2 with Docker Desktop integration.
 
 TalentLens uses the bundle's **Lightning REST API**, following Zetaris's [official REST channel implementation](https://github.com/zetaris/getting-started/blob/main/scripts/zetaris_sql.py). Configure a dedicated read-only API key and an authorised candidate view with these columns:

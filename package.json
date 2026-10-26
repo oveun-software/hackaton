@@ -9,6 +9,8 @@
   },
   "scripts": {
     "samples:zetaris": "node scripts/generate-zetaris-samples.js",
+    "download:kaggle": "py -3 scripts/download-kaggle-resumes.py",
+    "import:kaggle": "node scripts/import-kaggle-resumes.js",
     "setup": "node scripts/setup-local.js",
     "doctor": "node --env-file-if-exists=.env scripts/doctor.js",
     "secrets:check": "node scripts/check-secrets.js",
