@@ -11,6 +11,7 @@ import { translate } from '../public/i18n.js';
 test('complete workflow: upload, role, consent, AI evidence, and persistent review', async t => {
   const directory = await mkdtemp(path.join(tmpdir(), 'talentlens-test-'));
   const seenCalls = [];
+  let gate;
   const mock = createServer(async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     if (req.url === '/v1/models') return res.end(JSON.stringify({ data: [{ id: 'meterless/deep' }] }));
@@ -18,11 +19,15 @@ test('complete workflow: upload, role, consent, AI evidence, and persistent revi
     const request = JSON.parse(body); seenCalls.push(request);
     assert.equal(req.headers.authorization, 'Bearer fixture-token');
     const data = request.messages[1].content;
+    const translating = request.messages[0].content.startsWith('You translate recruiting reports');
+    if (gate && (translating ? 'translation' : data.startsWith('Extract only') ? 'requirements' : 'comparison') === gate.stage) {
+      gate.started(); await gate.released;
+    }
     const answer = request.messages[0].content.startsWith('You translate recruiting reports')
       ? { ...JSON.parse(data), summary: 'A translated analysis for reviewing professional experience.' }
-      : seenCalls.length === 1
+      : data.startsWith('Extract only')
       ? { requirements: [{ id: 'r1', label: 'React and TypeScript', priority: 'required', quote: 'React and TypeScript' }], clarificationQuestions: [] }
-      : { summary: 'The document contains relevant professional experience that should be discussed in an interview.', candidates: JSON.parse(data.split('DATA: ')[1]).candidates.map(c => ({ candidateId: c.id, recommendation: 'possible', rationale: 'The CV states professional experience with the technologies in the role.', evidence: [{ requirementId: 'r1', status: 'supported', quote: 'React and TypeScript', explanation: 'The experience is described in the document.' }], interviewQuestions: ['What did you contribute to that project?'] })) };
+      : { summary: 'PRIVATE_NARRATIVE: The document contains relevant professional experience that should be discussed in an interview.', candidates: JSON.parse(data.split('DATA: ')[1]).candidates.map(c => ({ candidateId: c.id, recommendation: 'possible', rationale: 'PRIVATE_NARRATIVE: The CV states professional experience with the technologies in the role.', evidence: [{ requirementId: 'r1', status: 'supported', quote: 'React and TypeScript', explanation: 'The experience is described in the document.' }], interviewQuestions: ['What did you contribute to that project?'] })) };
     res.end(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(answer) } }] }));
   });
   await new Promise(resolve => mock.listen(0, '127.0.0.1', resolve));
@@ -83,12 +88,58 @@ test('complete workflow: upload, role, consent, AI evidence, and persistent revi
   const state = await (await fetch(`${base}/api/state`)).json(); assert.equal(state.reports.length, 1); assert.equal(state.reviews[0].status, 'interview');
   assert.equal(JSON.stringify(state).includes('fixture-token'), false);
   const deletedCandidateId = report.candidates[0].candidateId;
+  const pause = stage => {
+    let started, release;
+    const ready = new Promise(resolve => { started = resolve; });
+    const released = new Promise(resolve => { release = resolve; });
+    gate = { stage, started, released };
+    return { ready, release: () => { release(); gate = null; } };
+  };
+  const translationPause = pause('translation');
+  const pendingTranslation = call(`/api/reports/${report.id}/translate`, { consent: true, language: 'de' });
+  await translationPause.ready;
   const deletion = await fetch(`${base}/api/candidates/${deletedCandidateId}`, { method: 'DELETE', headers: { 'X-TalentLens-Client': 'workspace', 'Content-Type': 'application/json' }, body: JSON.stringify({ reason: 'candidate privacy deletion request' }) });
   assert.equal(deletion.status, 200);
+  translationPause.release();
+  const rejectedTranslation = await pendingTranslation;
+  assert.equal(rejectedTranslation.status, 409);
+  assert.equal((await rejectedTranslation.json()).code, 'errors.contextChanged');
   const redacted = await (await fetch(`${base}/api/state`)).json();
   assert.equal(redacted.candidates.some(candidate => candidate.id === deletedCandidateId), false);
   const redactedReport = redacted.reports[0], redactedSource = redactedReport.sources.find(source => source.id === deletedCandidateId);
   assert.equal(redactedSource.text, null); assert.equal(redactedSource.name, 'Deleted candidate');
   assert.equal(redactedReport.candidates.find(candidate => candidate.candidateId === deletedCandidateId).evidence[0].quote, null);
   assert.equal((redactedReport.hmem.retrieved || []).some(item => item.candidateId === deletedCandidateId), false);
+  assert.equal(JSON.stringify(redactedReport).includes('PRIVATE_NARRATIVE'), false);
+  assert.equal(redactedReport.translations.de, undefined);
+  assert.equal(redactedReport.translations.fr.summary, translate('fr', 'privacy.reportRedacted'));
+
+  const deleteRequest = candidateId => fetch(`${base}/api/candidates/${candidateId}`, { method: 'DELETE', headers: { 'X-TalentLens-Client': 'workspace', 'Content-Type': 'application/json' }, body: JSON.stringify({ reason: 'privacy deletion while inference is running' }) });
+  const comparisonPause = pause('comparison');
+  const pendingAnalysis = call(`/api/vacancies/${vacancy.id}/analyze`, { consent: true });
+  await comparisonPause.ready;
+  assert.equal((await deleteRequest(report.candidates[1].candidateId)).status, 200);
+  comparisonPause.release();
+  assert.equal((await pendingAnalysis).status, 409);
+  const afterRace = await (await fetch(`${base}/api/state`)).json();
+  assert.equal(afterRace.reports.length, 1, 'an in-flight analysis cannot recreate deleted CV data');
+  assert.equal(afterRace.candidates.length, 1);
+
+  const updatePause = pause('comparison');
+  const pendingUpdateAnalysis = call(`/api/vacancies/${vacancy.id}/analyze`, { consent: true });
+  await updatePause.ready;
+  const update = new FormData();
+  update.append('file', new Blob(['Updated fictional CV. React and TypeScript experience with new source content.']), 'updated.txt');
+  assert.equal((await call(`/api/candidates/${afterRace.candidates[0].id}/documents`, update)).status, 200);
+  updatePause.release();
+  assert.equal((await pendingUpdateAnalysis).status, 409, 'an old document version cannot commit a report');
+
+  const callsBefore = seenCalls.length;
+  const requirementsPause = pause('requirements');
+  const pendingRequirements = call(`/api/vacancies/${vacancy.id}/analyze`, { consent: true });
+  await requirementsPause.ready;
+  assert.equal((await deleteRequest(afterRace.candidates[0].id)).status, 200);
+  requirementsPause.release();
+  assert.equal((await pendingRequirements).status, 409);
+  assert.equal(seenCalls.length, callsBefore + 1, 'deleted CVs must not be sent in a subsequent comparison call');
 });

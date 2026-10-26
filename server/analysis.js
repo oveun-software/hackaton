@@ -62,21 +62,32 @@ Use verifiable verbatim source quotations. Every quote must be ONE contiguous ex
 including punctuation. Never add ellipses, insert words or combine non-adjacent excerpts. A longer complete
 source sentence may be reused for separate requirements. Never translate quotations, even when the output language differs.
 Do not expose private chain-of-thought.`;
-async function completeValidated(messages, complete, validate, quotationErrors) {
-  const raw = await complete(messages);
+function validateModelResult(raw, validate) {
   try { return validate(raw); }
   catch (error) {
-    if (!quotationErrors.includes(error.message)) throw error;
+    if (!(error instanceof z.ZodError)) throw error;
+    const failure = new Error('errors.modelStructure');
+    failure.status = 502;
+    failure.validationIssues = error.issues.map(issue => ({ path: issue.path.join('.'), code: issue.code,
+      ...(issue.minimum !== undefined ? { minimum: issue.minimum } : {}), ...(issue.maximum !== undefined ? { maximum: issue.maximum } : {}) }));
+    throw failure;
+  }
+}
+async function completeValidated(messages, complete, validate, quotationErrors) {
+  const raw = await complete(messages);
+  try { return validateModelResult(raw, validate); }
+  catch (error) {
+    if (!quotationErrors.includes(error.message) && error.message !== 'errors.modelStructure') throw error;
     // One bounded correction by the model. Never repair, invent or silently
     // discard evidence in application code; the same validator must pass.
     const corrected = await complete([...messages, { role: 'assistant', content: JSON.stringify(raw) },
-      { role: 'user', content: `The result failed source validation (${error.message}). Return the ENTIRE JSON result again. Every non-null quote must be copied as one exact contiguous substring of the corresponding original source. Never add ellipses or join separate fragments. Use a longer complete source sentence if necessary. If a CV does not contain supporting evidence, use unclear or missing with quote null. Preserve all IDs and complete coverage. Do not invent or translate quotations.` }]);
-    return validate(corrected);
+      { role: 'user', content: `The result failed validation (${error.message}). ${error.validationIssues ? `Fix these schema constraints: ${JSON.stringify(error.validationIssues)}.` : ''} Return the ENTIRE JSON result again. Every non-null quote must be at least 8 characters, copied as one exact contiguous substring of the corresponding original source. Never add ellipses or join separate fragments. Use a longer complete source sentence if necessary. If a CV does not contain supporting evidence, use unclear or missing with quote null. Preserve all IDs and complete coverage. Do not invent or translate quotations.` }]);
+    return validateModelResult(corrected, validate);
   }
 }
 export async function runAnalysis({ vacancy, candidates, note, language = 'en', complete, retrieveMemory }) {
   const target = resolveLanguage(language);
-  const instruction = `${systemPrompt}\nWrite ALL narrative fields in ${languages[target].modelName}. Keep JSON keys, IDs and enum values unchanged. Keep every quote in its source language.`;
+  const instruction = `${systemPrompt}\nWrite ALL narrative fields in ${languages[target].modelName}. Keep JSON keys, IDs and enum values unchanged. Keep every quote in its source language. Non-null quotations must contain at least 8 characters. Use a complete original sentence when a short skill name is too short. Rationale and summary must each contain at least 10 characters.`;
   const parsed = await completeValidated([
     { role: 'system', content: instruction },
     { role: 'user', content: `Extract only professional requirements explicitly present in this job description.

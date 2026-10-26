@@ -29,7 +29,7 @@ Uploaded CVs, recruiter notes, company names and other user-provided content ret
 
 ## Connect NVIDIA Nemotron
 
-For the hackathon, connect Nemotron **through Meterless Nightshift**. The [Official Rules updated on 22 October](https://hackathon.genai.works/resources?id=01a08ff1-54cc-709a-bfe7-6b34452b676b) require Nightshift as the primary AI provider and at least one working Meterless Engine. Cursor is optional; any AI coding tool is permitted.
+For the hackathon, connect Nemotron **through Meterless Nightshift**. The [Official Rules updated on 23 October](https://hackathon.genai.works/resources?id=01a08ff1-54cc-709a-bfe7-6b34452b676b) require Nightshift as the primary AI provider and at least one working Meterless Engine. Cursor is optional; any AI coding tool is permitted.
 
 1. Sign in to the [Nemotron 3.5 Super VL model page](https://build.nvidia.com/nvidia/nemotron-3.5-super-vl-120b-a12b) and choose **Generate API Key**.
 2. If that button does not open the key dialog, use [NVIDIA NGC API Keys](https://org.ngc.nvidia.com/account/api-keys): sign in, generate a personal key and enable **NVIDIA Public API Endpoints**. Follow the [official NGC guide](https://docs.nvidia.com/ngc/latest/ngc-user-guide.html).
@@ -61,7 +61,7 @@ The verified configuration uses the **fast** application profile in Nightshift w
 
 NVIDIA currently advertises this hosted inference catalog as [free for development](https://build.nvidia.com/). This setup uses that endpoint and does not provision paid GPU infrastructure or subscribe to a plan. Trial availability and request limits are controlled by NVIDIA. Running Nightshift locally still uses the computer's resources.
 
-After setting up the fictional Zetaris sources, `npm run verify:live` exercises the actual Zetaris → Nightshift → Nemotron path. It checks every imported field against the three public fictional fixtures **before** sending anything to AI, validates all report citations, and writes a successful report plus execution IDs to ignored `data/live-verification.json`. Additional or changed database records stop the check without sending CVs. This command makes real provider requests and requires available quota; CI uses mocks instead.
+After setting up the fictional Zetaris sources, `npm run verify:live` exercises the actual application API and Zetaris → Nightshift → Nemotron path. It checks every imported field against the three public fictional fixtures **before** inference, runs a role, restarts the app with the same isolated database and runs a different role. It requires verified earlier H-MEM evidence in the second comparison input, validates citations and actual model/receipt IDs, and writes successful evidence to ignored `data/live-verification-hmem.json`. The temporary database is separate from your normal workspace. Additional or changed database records stop the check without sending CVs. This command makes real provider requests and requires available quota; CI uses mocks instead. `npm run verify:live:single` retains the earlier one-role connector check. See [the submission package](submission/README.md) for the latest real-run outcome.
 
 ## Meterless H-MEM
 
@@ -115,7 +115,7 @@ flowchart LR
   V --> H[Human review and interview questions]
 ```
 
-Analysis has two stages: requirement extraction and candidate comparison. The app validates output structure, coverage and exact source quotations, preserving the model’s recommendation order. If a stage fails citation validation, the model gets one correction attempt; the full result must pass the same validator. No evidence is repaired or silently discarded by application code. There are at most four model calls and no automatic retry of provider/network failures. Reports retain the job description and CV text they used. These checks provide traceability; they do not establish the truth of a CV or guarantee a correct, unbiased recommendation.
+Analysis has two stages: requirement extraction and candidate comparison. The app validates output structure, coverage and exact source quotations, preserving the model’s recommendation order. If a stage fails schema or citation validation, the model gets one correction attempt; the full result must pass the same validator. No evidence is repaired or silently discarded by application code. There are at most four model calls and no automatic retry of provider/network failures. Reports retain the job description and CV text they used. Deleting a source redacts the affected historical narrative and translations. Source changes invalidate analyses already running, so a late response cannot restore deleted CV data. These checks provide traceability; they do not establish the truth of a CV or guarantee a correct, unbiased recommendation.
 
 Roles, versioned document text, source snapshots, reports, translations, H-MEM records/traces/ledger and human review states persist in `data/talentlens.sqlite`. The application automatically migrates the previous database filename without discarding records. Original upload binaries are not retained.
 
@@ -140,4 +140,6 @@ npm.cmd audit
 
 Tests cover PDF/DOCX/TXT parsing, invalid inputs, origin controls, consent, evidence validation, locale completeness and parameters, selected model language, translation integrity/cache, localized exports, database migration, provider authentication, the Zetaris Lightning REST contract, H-MEM persistence/retrieval/versioning/conflicts/privacy and the official H-MEM conformance suite. Automated tests mock external services; live checks are reported separately. CI runs the same checks and a credential scan without personal API keys.
 
-See [submission notes](docs/SUBMISSION.md) for project provenance, sponsor contribution and verified delivery status.
+The official H-MEM runner and vectors download automatically from a pinned revision and must match SHA-256 hashes. A fresh clone needs network access for that first download; cached runs work offline. CI includes the same conformance command.
+
+The [English delivery package](submission/README.md) includes the application draft, editable PowerPoint, PDF and product visual. It remains **pending review and submission**. No video is included. HackOS allows only the team leader to create/manage the submission, so the prepared draft must be copied there from the leader's account. See [submission notes](docs/SUBMISSION.md) for provenance and sponsor contributions.

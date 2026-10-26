@@ -30,7 +30,7 @@ console.log('\n2) Simulated restart: SQLite is reopened and a different role ask
 store = new Store(directory); service = new TalentMemoryService(store, { organizationId });
 const recalled = service.retrieve({ vacancy: { id: 'data-role', title: 'Data Engineer', description: 'Python, SQL and backend APIs.' }, requirements: [{ id: 'r1', label: 'Python SQL APIs', quote: 'Python, SQL and backend APIs' }], candidateIds: candidates.map(([id]) => id) });
 for (const item of recalled.trace.retrieved) console.log(`- ${item.candidateId}: ${item.evidenceText} (${item.memoryId}, relevance ${item.relevance.toFixed(3)})`);
-console.log(`Passed to Nemotron: ${recalled.trace.retrieved.filter(item => item.providedToNemotron).length}; prior process: ${recalled.trace.retrieved.filter(item => item.fromPreviousProcess).length}.`);
+console.log(`Ready for Nemotron input: ${recalled.trace.retrieved.filter(item => item.providedToNemotron).length}; prior process: ${recalled.trace.retrieved.filter(item => item.fromPreviousProcess).length}. This deterministic demo makes no model calls. Use npm run verify:live for real inference.`);
 
 console.log('\n3) Every result keeps document/version evidence and an append-only Trust Ledger.');
 console.log({ traceId: recalled.trace.traceId, ledgerEntries: service.hmem.ledger.all().length, ranker: recalled.trace.rankerVersion });

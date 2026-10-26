@@ -93,9 +93,11 @@ npm.cmd run test:hmem:conformance
 npm.cmd run demo:hmem
 ```
 
-The conformance script runs the official `engines/hmem/conformance/runner.ts` directly against `server/hmem.js`. It expects the official checkout at `data/meterless-official/Meterless-main/engines/hmem`, or `HMEM_SPEC_DIR` pointing to another official `engines/hmem` directory.
+The conformance script runs the official `engines/hmem/conformance/runner.ts` directly against `server/hmem.js`. It automatically downloads only the runner and vectors from pinned revision `1742dec56a66e58eef9dda2d2b865823758ca8cd`, verifies their SHA-256 hashes and caches them under ignored `data/meterless-official/`. A fresh clone needs network access on the first run. `HMEM_SPEC_DIR` can point to another official `engines/hmem` checkout for explicit comparison; custom checkouts are not auto-downloaded or represented as the pinned revision. CI runs the pinned conformance suite.
 
-On 23 October 2026 the result was **13/13 official checks passed**. The local suite covers persistence/restart, contextual and candidate-scoped retrieval, organization isolation, source verification, CV supersession, unresolved contradictions, deletion and credential/content non-disclosure.
+On 26 October 2026 the result was **13/13 official checks passed**, including a fresh download/integrity check. The local suite covers persistence/restart, contextual and candidate-scoped retrieval, organization isolation, source verification, CV supersession, unresolved contradictions, deletion and credential/content non-disclosure. In-flight analyses cannot commit after a CV or memory change. Deleting a source also redacts generated narratives across its historical report and translations, and invalidates any translation already running.
+
+`npm run verify:live` exercises two real application analyses with the three exact fictional Zetaris inputs, a process restart and H-MEM recall through Nightshift/Nemotron. It uses an isolated temporary database and checks actual model IDs and execution receipts. Its latest outcome is recorded in [the submission package](../submission/README.md). The offline `demo:hmem` command does not call a model.
 
 ## Three-minute jury demo
 

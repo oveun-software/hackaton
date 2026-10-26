@@ -16,9 +16,11 @@
     "dev": "node --watch --env-file-if-exists=.env server/index.js",
     "test": "node --test tests/*.test.js",
     "test:hmem:conformance": "node scripts/run-hmem-conformance.js",
+    "hmem:prepare": "node scripts/prepare-hmem-spec.js",
     "demo:hmem": "node scripts/hmem-demo.js",
-    "check": "node --check server/index.js && node --check server/hmem.js && node --check server/providers.js && node --check public/app.js && node --check public/i18n.js && node --check scripts/setup-local.js && node --check scripts/doctor.js && node --check scripts/check-secrets.js && node --check scripts/generate-zetaris-samples.js && node --check scripts/verify-live.js && node --check scripts/hmem-demo.js && node --check scripts/run-hmem-conformance.js && node --check server/completion-stream.js",
-    "verify:live": "node --env-file-if-exists=.env scripts/verify-live.js"
+    "check": "node --check server/index.js && node --check server/hmem.js && node --check server/providers.js && node --check public/app.js && node --check public/i18n.js && node --check scripts/setup-local.js && node --check scripts/doctor.js && node --check scripts/check-secrets.js && node --check scripts/generate-zetaris-samples.js && node --check scripts/verify-live.js && node --check scripts/hmem-demo.js && node --check scripts/run-hmem-conformance.js && node --check server/completion-stream.js && node --check scripts/prepare-hmem-spec.js && node --check scripts/verify-live-hmem.js",
+    "verify:live": "node --env-file-if-exists=.env scripts/verify-live-hmem.js",
+    "verify:live:single": "node --env-file-if-exists=.env scripts/verify-live.js"
   },
   "dependencies": {
     "express": "^5.1.0",

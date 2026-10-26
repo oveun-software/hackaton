@@ -1,0 +1,533 @@
+{
+  "verifiedAt": "2026-10-26T08:01:39.342Z",
+  "synthetic": true,
+  "applicationRestarted": true,
+  "source": "Zetaris Lightning REST join view",
+  "reports": [
+    {
+      "id": "f0a5f753-416e-4b4e-b409-826a8b74992f",
+      "organizationId": "fictional-live-verification",
+      "vacancyId": "f5dea67e-4551-4dd8-ae78-dd7e26d36632",
+      "vacancyTitle": "Senior Frontend Developer",
+      "summary": "Three candidates evaluated against Senior Frontend Developer requirements; one strong match, two insufficient evidence.",
+      "candidates": [
+        {
+          "candidateId": "zetaris-c6a62eec4a9d3b343bab5a65",
+          "recommendation": "strong",
+          "rationale": "Meets required React/TypeScript experience, automated testing, and has design system and product collaboration.",
+          "evidence": [
+            {
+              "requirementId": "r1",
+              "status": "supported",
+              "quote": "Built B2B applications with React and TypeScript.",
+              "explanation": "CV includes professional experience with React and TypeScript; automated testing and accessibility further demonstrated elsewhere."
+            },
+            {
+              "requirementId": "r2",
+              "status": "supported",
+              "quote": "Led the creation of a design system with 35 components.",
+              "explanation": "Design system created with 35 components; collaboration with product teams also present as per CV."
+            }
+          ],
+          "interviewQuestions": []
+        },
+        {
+          "candidateId": "zetaris-0f28287f604b90fde19b4995",
+          "recommendation": "insufficient_evidence",
+          "rationale": "Limited professional experience with required technologies and no clear design system collaboration.",
+          "evidence": [
+            {
+              "requirementId": "r1",
+              "status": "missing",
+              "quote": null,
+              "explanation": "No evidence of professional experience with React and TypeScript, accessible interfaces, and automated testing."
+            },
+            {
+              "requirementId": "r2",
+              "status": "unclear",
+              "quote": "Created design systems and documented accessible components.",
+              "explanation": "Design systems experience present, but no explicit mention of collaboration with product teams."
+            }
+          ],
+          "interviewQuestions": []
+        },
+        {
+          "candidateId": "zetaris-7e94e9c80434e99e2c729368",
+          "recommendation": "insufficient_evidence",
+          "rationale": "Missing required React/TypeScript experience and limited design system evidence.",
+          "evidence": [
+            {
+              "requirementId": "r1",
+              "status": "missing",
+              "quote": null,
+              "explanation": "No evidence of professional experience with React and TypeScript, accessible interfaces, and automated testing."
+            },
+            {
+              "requirementId": "r2",
+              "status": "unclear",
+              "quote": "Collaborated with product teams on delivery planning.",
+              "explanation": "Product team collaboration mentioned, but no design system experience."
+            }
+          ],
+          "interviewQuestions": []
+        }
+      ],
+      "requirements": [
+        {
+          "id": "r1",
+          "label": "Professional experience with React and TypeScript, accessible interfaces and automated testing",
+          "priority": "required",
+          "quote": "Professional experience with React and TypeScript, accessible interfaces and automated testing is essential."
+        },
+        {
+          "id": "r2",
+          "label": "Experience with design systems and collaboration with product teams",
+          "priority": "preferred",
+          "quote": "Experience with design systems and collaboration with product teams is preferred."
+        }
+      ],
+      "clarificationQuestions": [
+        "Could you provide concrete project examples and describe your personal contribution?"
+      ],
+      "language": "en",
+      "hmem": {
+        "traceId": "trace-3d24955f-5bc5-4a2e-b427-df2677f7cf4e",
+        "retrievalReason": "hybrid ranking for domain professional",
+        "strategy": "comprehensive",
+        "queryDomain": "professional",
+        "queryEntities": [
+          {
+            "name": "react",
+            "type": "technology"
+          },
+          {
+            "name": "typescript",
+            "type": "technology"
+          },
+          {
+            "name": "frontend",
+            "type": "technology"
+          }
+        ],
+        "scores": {},
+        "rankerVersion": "hmem-canonical@2026-07",
+        "suppressedSuperseded": 0,
+        "retrieved": [],
+        "invalidSources": [],
+        "query": "Professional experience with React and TypeScript, accessible interfaces and automated testing\nProfessional experience with React and TypeScript, accessible interfaces and automated testing is essential.\nExperience with design systems and collaboration with product teams\nExperience with design systems and collaboration with product teams is preferred.\nSenior Frontend Developer\nWe are looking for a Senior Frontend Developer to build B2B tools. Professional experience with React and TypeScript, accessible interfaces and automated testing is essential. Experience with design systems and collaboration with product teams is preferred. The team works remotely. We would like concrete project examples and an explanation of the person’s contribution.",
+        "usedMemoryIds": [],
+        "stored": {
+          "created": [
+            "mem-85a4aaed-5cf0-44fb-85ef-80cb12d2837a",
+            "mem-837ac0ff-1ed8-4cc9-bce5-868ec4865e2d"
+          ],
+          "reused": [],
+          "conflicts": []
+        }
+      },
+      "provider": "Meterless Nightshift",
+      "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "executions": [
+        {
+          "requestedModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+          "actualModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+          "receiptId": "rcpt_req_yfp2qk9e"
+        },
+        {
+          "requestedModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+          "actualModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+          "receiptId": "rcpt_req_931pgsg1"
+        }
+      ],
+      "recruiterNote": "Fictional demonstration only.",
+      "sources": [
+        {
+          "id": "zetaris-0f28287f604b90fde19b4995",
+          "name": "Dani Vega",
+          "filename": "dani_vega.txt",
+          "source": "zetaris",
+          "text": "FICTIONAL PROFILE FOR DEMONSTRATION Dani Vega Product Designer Experience: 2020–2026 at Studio Three. Designed B2B products in Figma and conducted user research. Created design systems and documented accessible components. Worked daily with frontend developers. Produced high-fidelity prototypes, usability tests and user flows. Knowledge of HTML and CSS. No professional programming experience declared.",
+          "documentId": "doc-8e61515a-57ff-4c50-831a-f1356177958b",
+          "documentVersion": 1
+        },
+        {
+          "id": "zetaris-7e94e9c80434e99e2c729368",
+          "name": "Sam Torres",
+          "filename": "sam_torres.txt",
+          "source": "zetaris",
+          "text": "FICTIONAL PROFILE FOR DEMONSTRATION Sam Torres Full Stack Developer Experience: 2022–2026 at Services Two. Developed APIs with Python, FastAPI and PostgreSQL. Built internal dashboards with React and JavaScript. Backend testing with pytest. Collaborated with product teams on delivery planning. Automated deployments with Docker. Interested in learning TypeScript and developing web accessibility skills.",
+          "documentId": "doc-4b4c162e-b173-4844-9372-1d0115dd0dae",
+          "documentVersion": 1
+        },
+        {
+          "id": "zetaris-c6a62eec4a9d3b343bab5a65",
+          "name": "Alex Rivera",
+          "filename": "alex_rivera.txt",
+          "source": "zetaris",
+          "text": "FICTIONAL PROFILE FOR DEMONSTRATION Alex Rivera Frontend Developer Experience: 2021–2026 at Product One. Built B2B applications with React and TypeScript. Led the creation of a design system with 35 components. Added automated tests with Playwright and Vitest. Collaborated weekly with design and product teams. In 2025, improved accessibility with keyboard navigation and WCAG audits. A demonstration portfolio is available during the interview.",
+          "documentId": "doc-bc73cd7e-6a4a-495b-931b-fa6d10f3a7e6",
+          "documentVersion": 1
+        }
+      ],
+      "vacancySnapshot": {
+        "title": "Senior Frontend Developer",
+        "company": "North Studio",
+        "location": "Remote · Spain",
+        "description": "We are looking for a Senior Frontend Developer to build B2B tools. Professional experience with React and TypeScript, accessible interfaces and automated testing is essential. Experience with design systems and collaboration with product teams is preferred. The team works remotely. We would like concrete project examples and an explanation of the person’s contribution.",
+        "organizationId": "fictional-live-verification",
+        "id": "f5dea67e-4551-4dd8-ae78-dd7e26d36632",
+        "createdAt": "2026-10-26T07:55:45.991Z"
+      },
+      "createdAt": "2026-10-26T07:57:17.914Z"
+    },
+    {
+      "id": "4984a999-f2b2-414a-8289-27f36dde531b",
+      "organizationId": "fictional-live-verification",
+      "vacancyId": "06eb7432-5810-4893-8577-f8d71ebd99a9",
+      "vacancyTitle": "Frontend Engineer, design systems",
+      "summary": "Three candidates evaluated against Frontend Engineer, design systems role requirements. Alex Rivera strongest match with React/TypeScript, accessible interfaces, automated testing, design system experience, and collaboration. Sam Torres meets some required criteria but lacks remote work and concrete project examples. Dani Vega has limited relevant professional programming experience.",
+      "candidates": [
+        {
+          "candidateId": "zetaris-c6a62eec4a9d3b343bab5a65",
+          "recommendation": "strong",
+          "rationale": "Meets most required criteria: React and TypeScript, accessible interfaces, automated testing, design system experience, and collaboration; only remote work missing.",
+          "evidence": [
+            {
+              "requirementId": "r1",
+              "status": "supported",
+              "quote": "Built B2B applications with React and TypeScript.",
+              "explanation": "CV explicitly states built B2B applications with React and TypeScript."
+            },
+            {
+              "requirementId": "r2",
+              "status": "supported",
+              "quote": "In 2025, improved accessibility with keyboard navigation and WCAG audits.",
+              "explanation": "CV mentions improved accessibility with keyboard navigation and WCAG audits."
+            },
+            {
+              "requirementId": "r3",
+              "status": "supported",
+              "quote": "Added automated tests with Playwright and Vitest.",
+              "explanation": "CV added automated tests with Playwright and Vitest."
+            },
+            {
+              "requirementId": "r4",
+              "status": "supported",
+              "quote": "Led the creation of a design system with 35 components.",
+              "explanation": "CV led creation of a design system with 35 components."
+            },
+            {
+              "requirementId": "r5",
+              "status": "supported",
+              "quote": "Collaborated weekly with design and product teams.",
+              "explanation": "CV collaborated weekly with design and product teams."
+            },
+            {
+              "requirementId": "r6",
+              "status": "missing",
+              "quote": null,
+              "explanation": "No mention of remote work in CV or H-MEM sources."
+            },
+            {
+              "requirementId": "r7",
+              "status": "supported",
+              "quote": "A demonstration portfolio is available during the interview.",
+              "explanation": "CV states a demonstration portfolio is available, fulfilling concrete project example requirement."
+            }
+          ],
+          "interviewQuestions": [
+            "Can you describe a specific project where you contributed to a design system and your role in it?",
+            "How do you ensure accessibility in your frontend implementations?",
+            "Walk us through the automated testing setup you have used."
+          ]
+        },
+        {
+          "candidateId": "zetaris-7e94e9c80434e99e2c729368",
+          "recommendation": "possible",
+          "rationale": "Demonstrates relevant React experience, automated testing, and product‑team collaboration, but lacks explicit remote‑work experience and concrete project examples.",
+          "evidence": [
+            {
+              "requirementId": "r1",
+              "status": "unclear",
+              "quote": "Built internal dashboards with React and JavaScript.",
+              "explanation": "CV shows React use but does not mention TypeScript, so professional experience with React and TypeScript is not fully confirmed."
+            },
+            {
+              "requirementId": "r2",
+              "status": "supported",
+              "quote": "web accessibility skills.",
+              "explanation": "CV mentions developing web accessibility skills."
+            },
+            {
+              "requirementId": "r3",
+              "status": "supported",
+              "quote": "Backend testing with pytest.",
+              "explanation": "CV includes backend testing with pytest."
+            },
+            {
+              "requirementId": "r4",
+              "status": "missing",
+              "quote": null,
+              "explanation": "No experience with design systems mentioned."
+            },
+            {
+              "requirementId": "r5",
+              "status": "supported",
+              "quote": "Collaborated with product teams on delivery planning.",
+              "explanation": "CV collaborated with product teams on delivery planning."
+            },
+            {
+              "requirementId": "r6",
+              "status": "missing",
+              "quote": null,
+              "explanation": "No mention of remote work."
+            },
+            {
+              "requirementId": "r7",
+              "status": "supported",
+              "quote": "Developed APIs with Python, FastAPI and PostgreSQL.",
+              "explanation": "CV lists developing APIs as a project example."
+            }
+          ],
+          "interviewQuestions": [
+            "What specific TypeScript features have you used or would you like to learn?",
+            "Can you describe a project where you contributed to accessibility improvements?",
+            "How do you approach testing in your full‑stack work?"
+          ]
+        },
+        {
+          "candidateId": "zetaris-0f28287f604b90fde19b4995",
+          "recommendation": "insufficient_evidence",
+          "rationale": "Only one required criterion (accessible interfaces) is supported; lacks React/TypeScript, automated testing, remote work, and concrete project examples.",
+          "evidence": [
+            {
+              "requirementId": "r1",
+              "status": "missing",
+              "quote": null,
+              "explanation": "CV states no professional programming experience declared."
+            },
+            {
+              "requirementId": "r2",
+              "status": "supported",
+              "quote": "documented accessible components.",
+              "explanation": "CV documents accessible components as part of design systems."
+            },
+            {
+              "requirementId": "r3",
+              "status": "missing",
+              "quote": null,
+              "explanation": "No mention of automated testing."
+            },
+            {
+              "requirementId": "r4",
+              "status": "supported",
+              "quote": "Created design systems and documented accessible components.",
+              "explanation": "CV created design systems and documented accessible components."
+            },
+            {
+              "requirementId": "r5",
+              "status": "missing",
+              "quote": null,
+              "explanation": "No mention of collaboration with product teams."
+            },
+            {
+              "requirementId": "r6",
+              "status": "missing",
+              "quote": null,
+              "explanation": "No mention of remote work."
+            },
+            {
+              "requirementId": "r7",
+              "status": "missing",
+              "quote": null,
+              "explanation": "No concrete project examples or explanation of contribution."
+            }
+          ],
+          "interviewQuestions": [
+            "What professional programming experience do you have with React and TypeScript?",
+            "Can you provide examples of accessible components you have documented?",
+            "Describe any automated testing you have implemented."
+          ]
+        }
+      ],
+      "requirements": [
+        {
+          "id": "r1",
+          "label": "Professional experience with React and TypeScript",
+          "priority": "required",
+          "quote": "Professional experience with React and TypeScript, accessible interfaces and automated testing is essential."
+        },
+        {
+          "id": "r2",
+          "label": "Accessible interfaces",
+          "priority": "required",
+          "quote": "accessible interfaces and automated testing is essential."
+        },
+        {
+          "id": "r3",
+          "label": "Automated testing",
+          "priority": "required",
+          "quote": "automated testing is essential."
+        },
+        {
+          "id": "r4",
+          "label": "Experience with design systems",
+          "priority": "preferred",
+          "quote": "Experience with design systems"
+        },
+        {
+          "id": "r5",
+          "label": "Collaboration with product teams",
+          "priority": "preferred",
+          "quote": "collaboration with product teams"
+        },
+        {
+          "id": "r6",
+          "label": "Remote work",
+          "priority": "required",
+          "quote": "The team works remotely."
+        },
+        {
+          "id": "r7",
+          "label": "Concrete project examples",
+          "priority": "required",
+          "quote": "We would like concrete project examples and an explanation of the person’s contribution."
+        }
+      ],
+      "clarificationQuestions": [
+        "Can you describe a specific design system you have contributed to and your role in it?",
+        "What remote collaboration tools and practices do you use to maintain accessibility standards?",
+        "Please provide links or descriptions of concrete projects where you contributed reusable components and accessible interfaces."
+      ],
+      "language": "en",
+      "hmem": {
+        "traceId": "trace-bd9c7aa6-a1cf-4266-bb09-66f2a540a66c",
+        "retrievalReason": "hybrid ranking for domain professional",
+        "strategy": "comprehensive",
+        "queryDomain": "professional",
+        "queryEntities": [
+          {
+            "name": "react",
+            "type": "technology"
+          },
+          {
+            "name": "typescript",
+            "type": "technology"
+          },
+          {
+            "name": "frontend",
+            "type": "technology"
+          }
+        ],
+        "scores": {
+          "mem-85a4aaed-5cf0-44fb-85ef-80cb12d2837a": 0.496199
+        },
+        "rankerVersion": "hmem-canonical@2026-07",
+        "suppressedSuperseded": 0,
+        "retrieved": [
+          {
+            "memoryId": "mem-85a4aaed-5cf0-44fb-85ef-80cb12d2837a",
+            "candidateId": "zetaris-c6a62eec4a9d3b343bab5a65",
+            "documentId": "doc-bc73cd7e-6a4a-495b-931b-fa6d10f3a7e6",
+            "documentVersion": 1,
+            "sourceLocation": {
+              "kind": "text_offset",
+              "start": 105,
+              "end": 154,
+              "page": null
+            },
+            "evidenceText": "Built B2B applications with React and TypeScript.",
+            "relevance": 0.49619924858406816,
+            "retrievalReason": "hybrid ranking for domain professional",
+            "verified": true,
+            "fromPreviousProcess": true,
+            "providedToNemotron": true
+          }
+        ],
+        "invalidSources": [],
+        "query": "Professional experience with React and TypeScript\nProfessional experience with React and TypeScript, accessible interfaces and automated testing is essential.\nAccessible interfaces\naccessible interfaces and automated testing is essential.\nAutomated testing\nautomated testing is essential.\nExperience with design systems\nExperience with design systems\nCollaboration with product teams\ncollaboration with product teams\nRemote work\nThe team works remotely.\nConcrete project examples\nWe would like concrete project examples and an explanation of the person’s contribution.\nFrontend Engineer, design systems\nWe are looking for a Senior Frontend Developer to build B2B tools. Professional experience with React and TypeScript, accessible interfaces and automated testing is essential. Experience with design systems and collaboration with product teams is preferred. The team works remotely. We would like concrete project examples and an explanation of the person’s contribution.\nThis second hiring process focuses on reusable components and accessible interfaces.",
+        "usedMemoryIds": [
+          "mem-85a4aaed-5cf0-44fb-85ef-80cb12d2837a"
+        ],
+        "stored": {
+          "created": [
+            "mem-4e7e6004-4d7c-4867-946e-c9e58cc6570b",
+            "mem-9a4bf0e8-ae39-4f60-a2be-fbaf185d6e68",
+            "mem-cb768e9d-2e90-41fe-a11c-2a9c1eb23d25",
+            "mem-6cb0d3b9-6a69-4332-9575-e92dc8cdd094",
+            "mem-a4feda25-efea-4b33-9268-4c1a06bf7afc",
+            "mem-917df3e2-8b56-437e-9c2a-1c370e531d8f",
+            "mem-698b2472-81ea-4a2d-b21d-7175a570737c",
+            "mem-a08229be-6f2d-468b-a877-b679c462d15d",
+            "mem-5268d292-9a3e-43ed-9372-6f1c2b2bab67",
+            "mem-cb429565-61c3-4a66-aa55-2bd8d7669674"
+          ],
+          "reused": [
+            "mem-85a4aaed-5cf0-44fb-85ef-80cb12d2837a",
+            "mem-837ac0ff-1ed8-4cc9-bce5-868ec4865e2d"
+          ],
+          "conflicts": []
+        }
+      },
+      "provider": "Meterless Nightshift",
+      "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "executions": [
+        {
+          "requestedModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+          "actualModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+          "receiptId": "rcpt_req_caz63rq5"
+        },
+        {
+          "requestedModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+          "actualModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+          "receiptId": "rcpt_req_qrb2xws4"
+        },
+        {
+          "requestedModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+          "actualModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+          "receiptId": "rcpt_req_jguf303w"
+        }
+      ],
+      "recruiterNote": "Fictional demonstration only. Check current CVs and any verified prior evidence.",
+      "sources": [
+        {
+          "id": "zetaris-0f28287f604b90fde19b4995",
+          "name": "Dani Vega",
+          "filename": "dani_vega.txt",
+          "source": "zetaris",
+          "text": "FICTIONAL PROFILE FOR DEMONSTRATION Dani Vega Product Designer Experience: 2020–2026 at Studio Three. Designed B2B products in Figma and conducted user research. Created design systems and documented accessible components. Worked daily with frontend developers. Produced high-fidelity prototypes, usability tests and user flows. Knowledge of HTML and CSS. No professional programming experience declared.",
+          "documentId": "doc-8e61515a-57ff-4c50-831a-f1356177958b",
+          "documentVersion": 1
+        },
+        {
+          "id": "zetaris-7e94e9c80434e99e2c729368",
+          "name": "Sam Torres",
+          "filename": "sam_torres.txt",
+          "source": "zetaris",
+          "text": "FICTIONAL PROFILE FOR DEMONSTRATION Sam Torres Full Stack Developer Experience: 2022–2026 at Services Two. Developed APIs with Python, FastAPI and PostgreSQL. Built internal dashboards with React and JavaScript. Backend testing with pytest. Collaborated with product teams on delivery planning. Automated deployments with Docker. Interested in learning TypeScript and developing web accessibility skills.",
+          "documentId": "doc-4b4c162e-b173-4844-9372-1d0115dd0dae",
+          "documentVersion": 1
+        },
+        {
+          "id": "zetaris-c6a62eec4a9d3b343bab5a65",
+          "name": "Alex Rivera",
+          "filename": "alex_rivera.txt",
+          "source": "zetaris",
+          "text": "FICTIONAL PROFILE FOR DEMONSTRATION Alex Rivera Frontend Developer Experience: 2021–2026 at Product One. Built B2B applications with React and TypeScript. Led the creation of a design system with 35 components. Added automated tests with Playwright and Vitest. Collaborated weekly with design and product teams. In 2025, improved accessibility with keyboard navigation and WCAG audits. A demonstration portfolio is available during the interview.",
+          "documentId": "doc-bc73cd7e-6a4a-495b-931b-fa6d10f3a7e6",
+          "documentVersion": 1
+        }
+      ],
+      "vacancySnapshot": {
+        "title": "Frontend Engineer, design systems",
+        "company": "North Studio",
+        "location": "Remote · Spain",
+        "description": "We are looking for a Senior Frontend Developer to build B2B tools. Professional experience with React and TypeScript, accessible interfaces and automated testing is essential. Experience with design systems and collaboration with product teams is preferred. The team works remotely. We would like concrete project examples and an explanation of the person’s contribution.\nThis second hiring process focuses on reusable components and accessible interfaces.",
+        "organizationId": "fictional-live-verification",
+        "id": "06eb7432-5810-4893-8577-f8d71ebd99a9",
+        "createdAt": "2026-10-26T07:57:18.130Z"
+      },
+      "createdAt": "2026-10-26T08:01:39.339Z"
+    }
+  ]
+}

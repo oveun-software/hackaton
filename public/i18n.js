@@ -6,6 +6,10 @@ export const languages = {
 };
 // Each row is English, Spanish, French and German. All interface and API copy uses this catalog.
 const rows = {
+  'errors.modelStructure': ['The model returned an invalid result after one correction. Try a new analysis.', 'El modelo ha devuelto un resultado inválido tras una corrección. Prueba otro análisis.', 'Le modèle a renvoyé un résultat invalide après une correction. Relancez une analyse.', 'Das Modell hat nach einer Korrektur ein ungültiges Ergebnis geliefert. Starten Sie eine neue Analyse.'],
+  'errors.contextChanged': ['The CVs or evidence changed during this request. Run it again with the current sources.', 'Los CVs o las evidencias han cambiado durante la petición. Repítela con las fuentes actuales.', 'Les CV ou les preuves ont changé pendant la demande. Relancez-la avec les sources actuelles.', 'Die Lebensläufe oder Belege wurden während der Anfrage geändert. Wiederholen Sie sie mit den aktuellen Quellen.'],
+  'privacy.reportRedacted': ['Source deleted. Generated commentary has been removed. Run a new analysis with the remaining CVs.', 'Fuente eliminada. Se han retirado los comentarios generados. Ejecuta otro análisis con los CVs restantes.', 'Source supprimée. Les commentaires générés ont été retirés. Relancez une analyse avec les CV restants.', 'Quelle gelöscht. Generierte Kommentare wurden entfernt. Starten Sie eine neue Analyse mit den übrigen Lebensläufen.'],
+  'privacy.deletedCandidate': ['Deleted candidate', 'Candidato eliminado', 'Candidat supprimé', 'Gelöschter Kandidat'],
   pageTitle: ['TalentLens · CV discovery', 'TalentLens · Buscador de currículums', 'TalentLens · Recherche de CV', 'TalentLens · Lebensläufe entdecken'],
   metaDescription: ['Find relevant CVs and understand every recommendation with source evidence.', 'Encuentra CVs relevantes y comprende cada recomendación con evidencias.', 'Trouvez les CV pertinents et comprenez chaque recommandation grâce aux sources.', 'Finden Sie passende Lebensläufe und verstehen Sie jede Empfehlung anhand von Belegen.'],
   brandTagline: ['CV DISCOVERY', 'DESCUBRE TALENTO', 'DÉCOUVREZ LES TALENTS', 'TALENTE ENTDECKEN'],

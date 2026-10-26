@@ -10,6 +10,7 @@ import { runAnalysis } from './analysis.js';
 import { getProvider, completeJson, checkProvider, readZetaris, isZetarisConfigured, ServiceError } from './providers.js';
 import { demoCandidates, demoVacancy, localizeDemoCandidate, localizeDemoVacancy } from './demo.js';
 import { errorPayload, resolveLanguage } from './localization.js';
+import { translate } from '../public/i18n.js';
 import { translateReport } from './report-translation.js';
 import { TalentMemoryService } from './hmem.js';
 
@@ -36,6 +37,11 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '100kb' }));
 const vacancySchema = z.object({ title: z.string().trim().min(3).max(160), company: z.string().trim().max(160), location: z.string().trim().max(160), description: z.string().trim().min(40).max(16000) });
 const owned = item => Boolean(item && item.organizationId === organizationId);
+// In-flight inference must never restore a deleted or superseded source.
+let contextRevision = 0;
+function assertCurrentContext(revision) {
+  if (revision !== contextRevision) throw new ServiceError('errors.contextChanged', 409);
+}
 const publicCandidate = ({ text, hash, organizationId: _organizationId, ...candidate }) => ({ ...candidate, characters: text.length });
 function ensureLegacyOwnership() {
   store.transaction(() => {
@@ -66,6 +72,7 @@ app.post('/api/demo', (req, res) => {
     for (let i = 0; i < demoCandidates.length; i++) {
       const id = `demo-candidate-${i}`;
       if (!store.get('candidate', id) && store.list('candidate').filter(owned).length < 25) {
+        contextRevision++;
         const documentId = `demo-document-${i}`;
         store.put('candidate_document', { id: documentId, organizationId, candidateId: id, version: 1, filename: demoCandidates[i].filename,
           text: demoCandidates[i].text, hash: createHash('sha256').update(demoCandidates[i].text).digest('hex'), source: 'demo', status: 'current' });
@@ -91,6 +98,7 @@ function extract(file, extension) {
   });
 }
 function addCandidateDocument(candidateInput, { id = randomUUID(), version = 1 } = {}) {
+  contextRevision++;
   const documentId = `doc-${randomUUID()}`;
   const candidate = { ...candidateInput, id, organizationId, documentId, documentVersion: version };
   store.put('candidate_document', { id: documentId, organizationId, candidateId: id, version, filename: candidate.filename,
@@ -98,6 +106,9 @@ function addCandidateDocument(candidateInput, { id = randomUUID(), version = 1 }
   return store.put('candidate', candidate);
 }
 function updateCandidateDocument(candidate, input) {
+  const current = store.get('candidate', candidate.id);
+  if (!owned(current) || current.documentId !== candidate.documentId) throw new ServiceError('errors.contextChanged', 409);
+  contextRevision++;
   const previous = store.get('candidate_document', candidate.documentId);
   if (previous) store.put('candidate_document', { ...previous, status: 'superseded', supersededAt: new Date().toISOString() });
   const documentId = `doc-${randomUUID()}`, version = (candidate.documentVersion || 1) + 1;
@@ -172,16 +183,27 @@ app.post('/api/vacancies/:id/analyze', async (req, res) => {
   if (analyzing) throw new ServiceError('errors.analysisBusy', 409);
   analyzing = true;
   try {
+    const revision = contextRevision;
     const executions = [], reportId = randomUUID();
     const result = await runAnalysis({ vacancy, candidates, note: input.note, language,
-      retrieveMemory: requirements => memory.retrieve({ vacancy, requirements, candidateIds: candidates.map(candidate => candidate.id) }),
-      complete: messages => completeJson(provider, messages, fetch, execution => executions.push(execution)) });
-    const stored = memory.ingestAnalysis({ vacancy, reportId, requirements: result.requirements, candidates, reportCandidates: result.candidates });
-    const report = store.put('report', { id: reportId, organizationId, vacancyId: vacancy.id, vacancyTitle: vacancy.title, ...result,
-      hmem: result.hmem ? { ...result.hmem, stored } : { retrieved: [], usedMemoryIds: [], stored },
-      provider: provider.name, model: provider.model, executions, recruiterNote: input.note,
-      sources: candidates.map(c => ({ id: c.id, name: c.name, filename: c.filename, source: c.source, text: c.text, documentId: c.documentId, documentVersion: c.documentVersion })),
-      vacancySnapshot: vacancy });
+      retrieveMemory: requirements => {
+        assertCurrentContext(revision);
+        return memory.retrieve({ vacancy, requirements, candidateIds: candidates.map(candidate => candidate.id) });
+      },
+      complete: messages => {
+        assertCurrentContext(revision);
+        return completeJson(provider, messages, fetch, execution => executions.push(execution));
+      } });
+    let report;
+    store.transaction(() => {
+      assertCurrentContext(revision);
+      const stored = memory.ingestAnalysis({ vacancy, reportId, requirements: result.requirements, candidates, reportCandidates: result.candidates });
+      report = store.put('report', { id: reportId, organizationId, vacancyId: vacancy.id, vacancyTitle: vacancy.title, ...result,
+        hmem: result.hmem ? { ...result.hmem, stored } : { retrieved: [], usedMemoryIds: [], stored },
+        provider: provider.name, model: provider.model, executions, recruiterNote: input.note,
+        sources: candidates.map(c => ({ id: c.id, name: c.name, filename: c.filename, source: c.source, text: c.text, documentId: c.documentId, documentVersion: c.documentVersion })),
+        vacancySnapshot: vacancy });
+    });
     res.json(report);
   } finally { analyzing = false; }
 });
@@ -195,6 +217,7 @@ app.post('/api/reports/:id/translate', async (req, res) => {
   try {
     const translation = await translateReport(report, input.language, messages => completeJson(provider, messages));
     const current = store.get('report', req.params.id);
+    if (JSON.stringify(current) !== JSON.stringify(report)) throw new ServiceError('errors.contextChanged', 409);
     res.json(store.put('report', { ...current, translations: { ...current.translations, [input.language]: translation } }));
   } finally { analyzing = false; }
 });
@@ -211,22 +234,22 @@ app.get('/api/candidates/:id/memory', (req, res) => {
 });
 app.post('/api/memory/conflicts/:id/resolve', (req, res) => {
   const input = z.object({ strategy: z.enum(['keep_a', 'keep_b', 'keep_both']), justification: z.string().trim().min(8).max(1000) }).parse(req.body);
-  try { res.json(memory.resolveConflict(req.params.id, input.strategy, input.justification)); }
+  try { const result = memory.resolveConflict(req.params.id, input.strategy, input.justification); contextRevision++; res.json(result); }
   catch (error) { throw new ServiceError(error.message.startsWith('errors.') ? error.message : 'errors.memoryConflictNotFound', 404); }
 });
 app.post('/api/memories/:id/feedback', (req, res) => {
   const input = z.object({ kind: z.enum(['helpful', 'not_helpful', 'wrong']) }).parse(req.body);
   const item = memory.hmem.store.get(req.params.id); if (!item) throw new ServiceError('errors.memoryNotFound', 404);
-  memory.hmem.feedback(item.id, input.kind); res.json({ ok: true });
+  memory.hmem.feedback(item.id, input.kind); contextRevision++; res.json({ ok: true });
 });
 app.patch('/api/memories/:id', (req, res) => {
   const input = z.object({ documentId: z.string().min(1), evidenceText: z.string().min(8).max(1500), justification: z.string().trim().min(8).max(1000) }).parse(req.body);
-  try { res.json(memory.correctMemory(req.params.id, input)); }
+  try { const result = memory.correctMemory(req.params.id, input); contextRevision++; res.json(result); }
   catch (error) { throw new ServiceError(error.message.startsWith('errors.') ? error.message : 'errors.memoryNotFound', 400); }
 });
 app.delete('/api/memories/:id', (req, res) => {
   const input = z.object({ reason: z.string().trim().min(8).max(1000) }).parse(req.body);
-  try { memory.deleteMemory(req.params.id, input.reason); res.json({ deleted: true }); }
+  try { memory.deleteMemory(req.params.id, input.reason); contextRevision++; res.json({ deleted: true }); }
   catch { throw new ServiceError('errors.memoryNotFound', 404); }
 });
 function scrubReports({ candidateId, documentId }) {
@@ -235,19 +258,27 @@ function scrubReports({ candidateId, documentId }) {
     const traceMatch = item => item.candidateId === candidateId && (!documentId || item.documentId === documentId);
     const affected = report.sources?.some(sourceMatch) || report.hmem?.retrieved?.some(traceMatch);
     if (!affected) continue;
-    const scrubCandidates = list => list?.map(item => item.candidateId !== candidateId ? item : { ...item,
-      recommendation: 'insufficient_evidence', rationale: 'Source document deleted; this historical result is no longer verifiable.',
-      evidence: item.evidence.map(evidence => ({ ...evidence, status: 'unclear', quote: null, explanation: 'Source document deleted; evidence is no longer verifiable.' })), interviewQuestions: [] });
-    const translations = Object.fromEntries(Object.entries(report.translations || {}).map(([language, value]) => [language, { ...value, candidates: scrubCandidates(value.candidates) }]));
+    // Any generated narrative can mention another candidate, including summaries
+    // and translations. Clear it throughout the affected report.
+    const scrubCandidates = (list, language) => list?.map(item => ({ ...item,
+      ...(item.candidateId === candidateId ? { recommendation: 'insufficient_evidence' } : {}),
+      rationale: translate(language, 'privacy.reportRedacted'),
+      evidence: item.evidence.map(evidence => ({ ...evidence,
+        ...(item.candidateId === candidateId ? { status: 'unclear', quote: null } : {}),
+        explanation: translate(language, 'privacy.reportRedacted') })), interviewQuestions: [] }));
+    const translations = Object.fromEntries(Object.entries(report.translations || {}).map(([language, value]) => [language, { ...value,
+      summary: translate(language, 'privacy.reportRedacted'), clarificationQuestions: [], candidates: scrubCandidates(value.candidates, language) }]));
     const removedMemoryIds = new Set((report.hmem?.retrieved || []).filter(traceMatch).map(item => item.memoryId));
     const hmem = report.hmem ? { ...report.hmem, retrieved: (report.hmem.retrieved || []).filter(item => !traceMatch(item)),
       usedMemoryIds: (report.hmem.usedMemoryIds || []).filter(id => !removedMemoryIds.has(id)) } : report.hmem;
     const sources = report.sources.map(source => !sourceMatch(source) ? source : documentId ? { ...source, text: null, deleted: true } : {
-      id: source.id, name: 'Deleted candidate', filename: null, source: null, text: null, documentId: null, documentVersion: null, deleted: true });
-    store.put('report', { ...report, sources, candidates: scrubCandidates(report.candidates), translations, hmem, privacyRedacted: true });
+      id: source.id, name: translate(report.language, 'privacy.deletedCandidate'), filename: null, source: null, text: null, documentId: null, documentVersion: null, deleted: true });
+    store.put('report', { ...report, sources, summary: translate(report.language, 'privacy.reportRedacted'), recruiterNote: '', clarificationQuestions: [],
+      candidates: scrubCandidates(report.candidates, report.language), translations, hmem, privacyRedacted: true });
   }
 }
 function deleteCandidateData(candidate, reason) {
+  contextRevision++;
   memory.deleteCandidate(candidate.id, reason);
   store.removeWhere('candidate_document', document => owned(document) && document.candidateId === candidate.id);
   scrubReports({ candidateId: candidate.id });
@@ -261,7 +292,7 @@ app.delete('/api/candidates/:id/documents/:documentId', (req, res) => {
   let candidateDeleted = false;
   store.transaction(() => {
     if (candidate.documentId === document.id) { deleteCandidateData(candidate, input.reason); candidateDeleted = true; }
-    else { memory.deleteDocument(candidate.id, document.id, input.reason); store.remove('candidate_document', document.id); scrubReports({ candidateId: candidate.id, documentId: document.id }); }
+    else { contextRevision++; memory.deleteDocument(candidate.id, document.id, input.reason); store.remove('candidate_document', document.id); scrubReports({ candidateId: candidate.id, documentId: document.id }); }
   });
   res.json({ deleted: true, candidateDeleted });
 });

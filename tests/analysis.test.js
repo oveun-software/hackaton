@@ -54,18 +54,20 @@ test('reinjects only verified candidate H-MEM and records its use', async () => 
   assert.deepEqual(result.hmem.usedMemoryIds, ['mem-fixture']);
   assert.equal(result.hmem.retrieved[0].providedToNemotron, true);
 });
-test('requests one correction for an invalid citation and revalidates every source', async () => {
+test('requests one correction for invalid citations or structure and revalidates every source', async () => {
+  for (const [badQuote, expectedError] of [['Invented text that is not in the CV', 'errors.invalidQuote'], ['React', 'errors.modelStructure']]) {
   let calls = 0;
-  const invalid = valid(); invalid.candidates[0].evidence[0].quote = 'Invented text that is not in the CV';
+  const invalid = valid(); invalid.candidates[0].evidence[0].quote = badQuote;
   const report = await runAnalysis({ vacancy, candidates, complete: async messages => {
     calls++;
     if (calls === 1) return { requirements, clarificationQuestions: [] };
     if (calls === 2) return invalid;
     assert.equal(messages.length, 4);
-    assert.match(messages[3].content, /errors.invalidQuote/);
+    assert.ok(messages[3].content.includes(expectedError));
     return valid();
   } });
   assert.equal(calls, 3); assert.equal(report.candidates[0].evidence[0].quote, valid().candidates[0].evidence[0].quote);
+  }
 });
 
 test('rejects a correction with another invented citation and does not retry indefinitely', async () => {
