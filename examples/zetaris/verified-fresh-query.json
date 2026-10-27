@@ -1,0 +1,306 @@
+{
+  "verifiedAt": "2026-10-27T07:35:00.650Z",
+  "synthetic": true,
+  "mode": "recorded-live-output",
+  "status": "passed",
+  "report": {
+    "id": "ad61beb4-7b09-4073-a801-5a4bc189165e",
+    "organizationId": "fictional-zetaris-check",
+    "vacancyId": "aa23c8b9-3e12-4f0b-826c-97b452140549",
+    "vacancyTitle": "Product engineer",
+    "summary": "Three candidates evaluated against the Product engineer vacancy requirements (required TypeScript development, preferred Python API experience).",
+    "candidates": [
+      {
+        "candidateId": "zetaris-71561768786f6ccff00b3a43",
+        "recommendation": "possible",
+        "rationale": "Alex Rivera has documented TypeScript use in B2B applications but lacks explicit Python API experience.",
+        "evidence": [
+          {
+            "requirementId": "r1",
+            "status": "supported",
+            "quote": "Built B2B applications with React and TypeScript.",
+            "explanation": "The verbatim excerpt shows the candidate built applications using TypeScript, fulfilling the professional TypeScript development experience requirement.",
+            "sourceId": "doc-f1572411-068e-441d-b976-9227a79b79e7",
+            "followUpQuestion": null
+          },
+          {
+            "requirementId": "r2",
+            "status": "missing",
+            "quote": null,
+            "explanation": "No mention of Python or API development is present in Alex Rivera's CV.",
+            "sourceId": null,
+            "followUpQuestion": "Do you have experience developing Python APIs?"
+          }
+        ],
+        "interviewQuestions": [
+          "Can you describe a specific project where you developed a Python API?",
+          "What TypeScript features have you used in production code?"
+        ]
+      },
+      {
+        "candidateId": "zetaris-75102df51487c5d6bd8aeef8",
+        "recommendation": "possible",
+        "rationale": "Sam Torres has clear Python API experience but only expresses interest in learning TypeScript, not professional use.",
+        "evidence": [
+          {
+            "requirementId": "r1",
+            "status": "unclear",
+            "quote": "Interested in learning TypeScript and developing web accessibility skills.",
+            "explanation": "The quote reflects a learning interest rather than professional TypeScript development experience, so the requirement is not clearly supported.",
+            "sourceId": "doc-e7e87c30-779a-4ce5-bed6-3f9cd088d67e",
+            "followUpQuestion": "Have you professionally used TypeScript in a work context?"
+          },
+          {
+            "requirementId": "r2",
+            "status": "supported",
+            "quote": "Developed APIs with Python, FastAPI and PostgreSQL.",
+            "explanation": "The verbatim excerpt demonstrates experience developing Python APIs, meeting the preferred requirement.",
+            "sourceId": "doc-e7e87c30-779a-4ce5-bed6-3f9cd088d67e",
+            "followUpQuestion": null
+          }
+        ],
+        "interviewQuestions": [
+          "What Python API projects have you led and what was your role?",
+          "Can you provide an example of TypeScript code you have written professionally?"
+        ]
+      },
+      {
+        "candidateId": "zetaris-9afe0d4abcd87e6f412bf84c",
+        "recommendation": "insufficient_evidence",
+        "rationale": "Dani Vega declares no professional programming experience, so neither TypeScript nor Python API experience can be verified.",
+        "evidence": [
+          {
+            "requirementId": "r1",
+            "status": "missing",
+            "quote": null,
+            "explanation": "The CV explicitly states \"No professional programming experience declared,\" providing no evidence of TypeScript development.",
+            "sourceId": null,
+            "followUpQuestion": "Do you have professional TypeScript development experience?"
+          },
+          {
+            "requirementId": "r2",
+            "status": "missing",
+            "quote": null,
+            "explanation": "The CV explicitly states \"No professional programming experience declared,\" providing no evidence of Python API development.",
+            "sourceId": null,
+            "followUpQuestion": "Do you have experience developing Python APIs?"
+          }
+        ],
+        "interviewQuestions": [
+          "Could you elaborate on any software development experience outside of formal employment?",
+          "Are you open to acquiring TypeScript and Python skills through training or projects?"
+        ]
+      }
+    ],
+    "requirements": [
+      {
+        "id": "r1",
+        "label": "Professional TypeScript development experience",
+        "priority": "required",
+        "quote": "Professional TypeScript development experience is required."
+      },
+      {
+        "id": "r2",
+        "label": "Experience developing Python APIs",
+        "priority": "preferred",
+        "quote": "Experience developing Python APIs is preferred."
+      }
+    ],
+    "clarificationQuestions": [],
+    "language": "en",
+    "pipelineVersion": 2,
+    "review": {
+      "summary": "Independent critical evidence review; candidates assessed against required TypeScript and preferred Python API experience.",
+      "findings": [
+        {
+          "candidateId": "zetaris-71561768786f6ccff00b3a43",
+          "requirementId": "r2",
+          "issue": "missing_evidence",
+          "explanation": "No mention of Python or API development in Alex Rivera's CV."
+        },
+        {
+          "candidateId": "zetaris-75102df51487c5d6bd8aeef8",
+          "requirementId": "r1",
+          "issue": "unsupported_claim",
+          "explanation": "Quote \"Interested in learning TypeScript...\" reflects a learning interest, not professional TypeScript development experience."
+        },
+        {
+          "candidateId": "zetaris-9afe0d4abcd87e6f412bf84c",
+          "requirementId": "r1",
+          "issue": "missing_evidence",
+          "explanation": "CV explicitly states \"No professional programming experience declared,\" providing no TypeScript evidence."
+        },
+        {
+          "candidateId": "zetaris-9afe0d4abcd87e6f412bf84c",
+          "requirementId": "r2",
+          "issue": "missing_evidence",
+          "explanation": "CV explicitly states \"No professional programming experience declared,\" providing no Python API evidence."
+        }
+      ],
+      "changes": []
+    },
+    "hmem": {
+      "traceId": "trace-93ef16a7-d720-4724-b379-54e6e5668920",
+      "retrievalReason": "hybrid ranking for domain professional",
+      "strategy": "comprehensive",
+      "queryDomain": "professional",
+      "queryEntities": [
+        {
+          "name": "typescript",
+          "type": "technology"
+        },
+        {
+          "name": "python",
+          "type": "technology"
+        },
+        {
+          "name": "apis",
+          "type": "technology"
+        }
+      ],
+      "scores": {},
+      "rankerVersion": "hmem-canonical@2026-07",
+      "suppressedSuperseded": 0,
+      "retrieved": [],
+      "invalidSources": [],
+      "query": "Professional TypeScript development experience\nProfessional TypeScript development experience is required.\nExperience developing Python APIs\nExperience developing Python APIs is preferred.\nProduct engineer\nProfessional TypeScript development experience is required. Experience developing Python APIs is preferred.",
+      "matchedMemoryIds": [],
+      "stored": {
+        "created": [
+          "mem-f08d8854-419e-4dc5-8e76-a9fb12d98792",
+          "mem-807bd461-12e2-45bc-9256-1c038fc636b5"
+        ],
+        "reused": [],
+        "conflicts": []
+      }
+    },
+    "changes": {
+      "previousReportId": null,
+      "evidence": []
+    },
+    "provider": "Meterless Nightshift",
+    "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+    "executions": [
+      {
+        "requestedModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+        "actualModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+        "receiptId": "rcpt_req_rhse8pip"
+      },
+      {
+        "requestedModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+        "actualModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+        "receiptId": "rcpt_req_jfq5c0xw"
+      },
+      {
+        "requestedModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+        "actualModel": "nvidia/nemotron-3.5-lightning-30b-a3b",
+        "receiptId": "rcpt_req_0wa1b653"
+      }
+    ],
+    "dataAccess": {
+      "requestId": "73ffc237-ceb9-450b-b19d-fa9b6252041a",
+      "queryId": "014dc62e-3e20-4c15-9550-9d5c957223fd",
+      "sql": "SELECT candidate_id, display_name, document_name, cv_text FROM talentlens.candidates LIMIT 25",
+      "limit": 25,
+      "startedAt": "2026-10-27T07:33:08.252Z",
+      "completedAt": "2026-10-27T07:33:09.052Z",
+      "durationMs": 801,
+      "rowCount": 3,
+      "table": "talentlens.candidates",
+      "mode": "zetaris",
+      "status": "passed",
+      "documents": [
+        {
+          "candidateId": "zetaris-71561768786f6ccff00b3a43",
+          "documentId": "doc-f1572411-068e-441d-b976-9227a79b79e7",
+          "version": 1,
+          "filename": "alex_rivera.txt",
+          "sha256": "522decf2193a18c5049c1dd5c046464922c00116ad9c672936a3fd59487999d0"
+        },
+        {
+          "candidateId": "zetaris-75102df51487c5d6bd8aeef8",
+          "documentId": "doc-e7e87c30-779a-4ce5-bed6-3f9cd088d67e",
+          "version": 1,
+          "filename": "sam_torres.txt",
+          "sha256": "cd607c05cf2aa9b4ace16cab9fef572874bebe53e0e5421fc17ad38972ffeae7"
+        },
+        {
+          "candidateId": "zetaris-9afe0d4abcd87e6f412bf84c",
+          "documentId": "doc-50a0125f-cd6f-4895-8422-18ca1c93798f",
+          "version": 1,
+          "filename": "dani_vega.txt",
+          "sha256": "7ad3e0a92139efcec5cd8920f6b0e4ceaa45c1becc612563d787c57f6d908cc2"
+        }
+      ]
+    },
+    "recruiterNote": "",
+    "evidenceSources": [
+      {
+        "id": "doc-f1572411-068e-441d-b976-9227a79b79e7",
+        "kind": "cv",
+        "text": "FICTIONAL PROFILE FOR DEMONSTRATION Alex Rivera Frontend Developer Experience: 2021–2026 at Product One. Built B2B applications with React and TypeScript. Led the creation of a design system with 35 components. Added automated tests with Playwright and Vitest. Collaborated weekly with design and product teams. In 2025, improved accessibility with keyboard navigation and WCAG audits. A demonstration portfolio is available during the interview.",
+        "version": 1,
+        "filename": "alex_rivera.txt",
+        "source": "zetaris",
+        "candidateId": "zetaris-71561768786f6ccff00b3a43"
+      },
+      {
+        "id": "doc-e7e87c30-779a-4ce5-bed6-3f9cd088d67e",
+        "kind": "cv",
+        "text": "FICTIONAL PROFILE FOR DEMONSTRATION Sam Torres Full Stack Developer Experience: 2022–2026 at Services Two. Developed APIs with Python, FastAPI and PostgreSQL. Built internal dashboards with React and JavaScript. Backend testing with pytest. Collaborated with product teams on delivery planning. Automated deployments with Docker. Interested in learning TypeScript and developing web accessibility skills.",
+        "version": 1,
+        "filename": "sam_torres.txt",
+        "source": "zetaris",
+        "candidateId": "zetaris-75102df51487c5d6bd8aeef8"
+      },
+      {
+        "id": "doc-50a0125f-cd6f-4895-8422-18ca1c93798f",
+        "kind": "cv",
+        "text": "FICTIONAL PROFILE FOR DEMONSTRATION Dani Vega Product Designer Experience: 2020–2026 at Studio Three. Designed B2B products in Figma and conducted user research. Created design systems and documented accessible components. Worked daily with frontend developers. Produced high-fidelity prototypes, usability tests and user flows. Knowledge of HTML and CSS. No professional programming experience declared.",
+        "version": 1,
+        "filename": "dani_vega.txt",
+        "source": "zetaris",
+        "candidateId": "zetaris-9afe0d4abcd87e6f412bf84c"
+      }
+    ],
+    "sources": [
+      {
+        "id": "zetaris-71561768786f6ccff00b3a43",
+        "name": "Alex Rivera",
+        "filename": "alex_rivera.txt",
+        "source": "zetaris",
+        "text": "FICTIONAL PROFILE FOR DEMONSTRATION Alex Rivera Frontend Developer Experience: 2021–2026 at Product One. Built B2B applications with React and TypeScript. Led the creation of a design system with 35 components. Added automated tests with Playwright and Vitest. Collaborated weekly with design and product teams. In 2025, improved accessibility with keyboard navigation and WCAG audits. A demonstration portfolio is available during the interview.",
+        "documentId": "doc-f1572411-068e-441d-b976-9227a79b79e7",
+        "documentVersion": 1
+      },
+      {
+        "id": "zetaris-75102df51487c5d6bd8aeef8",
+        "name": "Sam Torres",
+        "filename": "sam_torres.txt",
+        "source": "zetaris",
+        "text": "FICTIONAL PROFILE FOR DEMONSTRATION Sam Torres Full Stack Developer Experience: 2022–2026 at Services Two. Developed APIs with Python, FastAPI and PostgreSQL. Built internal dashboards with React and JavaScript. Backend testing with pytest. Collaborated with product teams on delivery planning. Automated deployments with Docker. Interested in learning TypeScript and developing web accessibility skills.",
+        "documentId": "doc-e7e87c30-779a-4ce5-bed6-3f9cd088d67e",
+        "documentVersion": 1
+      },
+      {
+        "id": "zetaris-9afe0d4abcd87e6f412bf84c",
+        "name": "Dani Vega",
+        "filename": "dani_vega.txt",
+        "source": "zetaris",
+        "text": "FICTIONAL PROFILE FOR DEMONSTRATION Dani Vega Product Designer Experience: 2020–2026 at Studio Three. Designed B2B products in Figma and conducted user research. Created design systems and documented accessible components. Worked daily with frontend developers. Produced high-fidelity prototypes, usability tests and user flows. Knowledge of HTML and CSS. No professional programming experience declared.",
+        "documentId": "doc-50a0125f-cd6f-4895-8422-18ca1c93798f",
+        "documentVersion": 1
+      }
+    ],
+    "vacancySnapshot": {
+      "title": "Product engineer",
+      "company": "Fictional Studio",
+      "location": "Remote",
+      "description": "Professional TypeScript development experience is required. Experience developing Python APIs is preferred.",
+      "organizationId": "fictional-zetaris-check",
+      "id": "aa23c8b9-3e12-4f0b-826c-97b452140549",
+      "createdAt": "2026-10-27T07:33:08.213Z"
+    },
+    "createdAt": "2026-10-27T07:35:00.645Z"
+  }
+}

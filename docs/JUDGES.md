@@ -56,6 +56,8 @@ npm start
 
 Open **http://127.0.0.1:4317/?lang=en**. Create/open a role, select **Zetaris · fresh query**, grant consent and choose **Analyze from Zetaris**. No prior import is necessary. Inspect the query, row count and document versions in **Zetaris data access** above the matrix. [Detailed sponsor walkthrough](ZETARIS-WORKFLOW.md). For **Workspace CVs · local mode**, you can also upload the [English sample CVs](../examples/pilot/README.md) and copy an [example job](../examples/judges/README.md). A manual upload exercises document analysis but does not itself demonstrate Zetaris integration.
 
+The [27 October real fresh-query result](../examples/zetaris/verified-fresh-query.json) is available for offline inspection: exact SQL/timing, three fictional CV inputs, document versions/hashes, full output and three actual Nemotron Lightning/Nightshift receipts. It passed after the documented Docker socket recovery. This supplements the separate 26 October clarification/memory demonstration.
+
 Programmatic entry points, runnable from another terminal:
 
 | Command | Inputs and result | Services |

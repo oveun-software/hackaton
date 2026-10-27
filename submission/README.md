@@ -32,9 +32,9 @@ For fresh inference, configure your own services, run `npm run doctor`, then `np
 
 ## Zetaris reinforcement — 27 October
 
-The English PowerPoint and PDF now describe fresh queries before analysis and visible provenance. The app retains a separate local source mode. Run `npm run verify:zetaris` for the new route; see [current verification status and demo steps](../docs/ZETARIS-WORKFLOW.md). The saved 26 October results below remain historical and unchanged.
+The English PowerPoint and PDF describe fresh queries before analysis and visible provenance. **Real verification passed at 07:35 UTC:** the analysis request queried Zetaris, used three fictional CVs and completed three actual Nemotron Lightning calls with Nightshift receipts. The [recording](../examples/zetaris/verified-fresh-query.json) retains the SQL, timing and exact source hashes. The app retains a separate local source mode. Run `npm run verify:zetaris` to repeat it; see [current verification status and demo steps](../docs/ZETARIS-WORKFLOW.md). The saved 26 October results below remain historical and unchanged.
 
-## Latest real results
+## Clarification and memory results — 26 October
 
 **Passed on 26 October 2026.** Three reports and a paired no-memory condition, with ten actual Nemotron Lightning calls through Nightshift. Sam Torres's TypeScript evidence changed from unclear to supported after a separately attributed fictional answer. Following restart, another role retrieved and cited it. The otherwise matching current-CV-only condition remained unclear. This is one stochastic comparison, not proof of average causal benefit.
 

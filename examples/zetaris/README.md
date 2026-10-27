@@ -2,6 +2,8 @@
 
 For the current sponsor demo, use **Analyze from Zetaris** on a role. It queries this view before every analysis and exposes query/document provenance. Manual import remains available. [Workflow and verification status](../../docs/ZETARIS-WORKFLOW.md). `npm run verify:zetaris` checks the fresh-query route using these exact fictional fixtures.
 
+`verified-fresh-query.json` records the **real successful 27 October execution** of this route. It contains three fictional inputs, the exact SQL/request trace, document versions/hashes, validated report and three actual Nemotron Lightning/Nightshift receipts. It is a saved output, not a fresh offline inference. `npm run test:recordings` validates it without credentials. Earlier recordings below preserve their original dates and workflows.
+
 These three fictional profiles were written for TalentLens. They contain no real applicants, proprietary documents or third-party dataset. They are sample inputs, never fabricated model outputs. Regenerate them from `server/demo.js` with `npm run samples:zetaris`.
 
 `verified-analysis.json` is a recorded **real model output**, generated on 22 October 2026 from these three inputs through local Zetaris → Nightshift fast → NVIDIA Nemotron 3.5 Lightning. It includes the exact inputs, validated recommendations/citations and the two execution receipt IDs, with no credentials or reasoning. It can be inspected offline; it is not presented as a new live analysis. `npm run verify:live:single` repeats this earlier one-role check and writes to ignored `data/live-verification.json`. The full restart/memory check is `npm run verify:live`, which writes to ignored `data/live-verification-hmem.json`.

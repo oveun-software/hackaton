@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { evaluationGroups, groupCandidates } from '../evaluation/cases.js';
 import { validateReport } from '../server/analysis.js';
+import { demoCandidates } from '../server/demo.js';
 
 const read = async path => JSON.parse(await readFile(new URL(`../${path}`, import.meta.url), 'utf8'));
 const recording = await read('examples/zetaris/verified-review-workflow.json');
@@ -52,4 +53,23 @@ for (const group of tasks.groups) {
   const result = pilot.groups.find(g => g.id === group.id);
   assert.deepEqual(result, evaluation.groups.find(g => g.id === group.id)); translations(result.report);
 }
-console.log('Recorded workflow, four paired judge examples, exact source citations, dataset hash, 32 authored assessments and all 15 report translations verified offline.');
+const fresh = await read('examples/zetaris/verified-fresh-query.json');
+assert.equal(fresh.status, 'passed'); assert.equal(fresh.synthetic, true); assert.equal(fresh.mode, 'recorded-live-output');
+const live = fresh.report, query = live.dataAccess;
+assert.equal(live.pipelineVersion, 2); assert.ok(live.review); executions(live.executions);
+assert.equal(query.mode, 'zetaris'); assert.equal(query.status, 'passed'); assert.equal(query.rowCount, 3); assert.equal(query.limit, 25);
+assert.equal(query.sql, 'SELECT candidate_id, display_name, document_name, cv_text FROM talentlens.candidates LIMIT 25');
+for (const id of [query.requestId, query.queryId]) assert.match(id, /^[a-f0-9-]{36}$/);
+assert.ok(query.durationMs >= 0 && Date.parse(query.completedAt) >= Date.parse(query.startedAt));
+assert.ok(Date.parse(fresh.verifiedAt) >= Date.parse(query.completedAt));
+assert.equal(live.sources.length, demoCandidates.length); assert.equal(query.documents.length, live.sources.length);
+for (const source of live.sources) {
+  const expected = demoCandidates.find(c => c.name === source.name); assert.ok(expected);
+  assert.equal(source.text, expected.text.replace(/\r?\n/g, ' ')); assert.equal(source.source, 'zetaris');
+  assert.equal(source.filename, expected.filename);
+  const document = query.documents.find(d => d.documentId === source.documentId); assert.ok(document);
+  assert.equal(document.candidateId, source.id); assert.equal(document.version, source.documentVersion); assert.equal(document.filename, source.filename);
+  assert.equal(document.sha256, createHash('sha256').update(source.text).digest('hex'));
+}
+validateReport(live, live.sources.map(s => ({ ...s, evidenceSources: live.evidenceSources.filter(d => d.candidateId === s.id) })), live.requirements);
+console.log('Recorded workflows, real fresh Zetaris query/document trace, four paired judge examples, exact source citations, dataset hash, 32 authored assessments and all 15 report translations verified offline.');

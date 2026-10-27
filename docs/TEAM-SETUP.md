@@ -18,6 +18,8 @@ Everyone can work on the same source repository without sharing personal account
 
 ## Shared Zetaris instance
 
+If Docker fails before its Linux engine starts with an inaccessible `dockerInference` or `engine.sock`, see the [specific Windows runtime-socket recovery](DOCKER-WINDOWS-RECOVERY.md). Inspect the actual error first; do not reset or prune Docker to fix a generic connection failure.
+
 A shared instance can use separate named users and roles. Its administrator grants each developer only the required data access and each developer generates their own API key. Do not share an administrator login or personal image-registry login. Account, role and licensing availability depends on the instance and entitlement; verify these before choosing a shared deployment. [Zetaris user management](https://kbase.zetaris.com/knowledge/user-management).
 
 TalentLens currently binds to localhost and has no multi-user authentication. Run one local TalentLens workspace per developer. A shared remote Zetaris endpoint must use HTTPS. Do not expose the local app or Nightshift runtime publicly to make it a team service.
