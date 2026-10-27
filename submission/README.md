@@ -7,6 +7,7 @@ The project is **not submitted or marked complete**. No video is included, as re
 | English application text | [APPLICATION-DRAFT.md](APPLICATION-DRAFT.md), for the leader to review and copy into HackOS |
 | Updated ten-slide English PowerPoint | [TalentLens-Deck.pptx](TalentLens-Deck.pptx), editable text/architecture and actual product capture |
 | PDF deck | [TalentLens-Deck.pdf](TalentLens-Deck.pdf), ten matching pages |
+| Video script and screen directions | [VIDEO-SCRIPT.md](VIDEO-SCRIPT.md), English narration with a 3:20 recording plan; video not yet produced |
 | Product captures | [matrix](assets/evidence-matrix.png), [source](assets/evidence-source.png) |
 | Account-free recorded viewer | `npm run demo`, then http://127.0.0.1:4319 |
 | Judge walkthrough and paired examples | [Clean-clone steps](../docs/JUDGES.md), [four input/output pairs](../examples/judges/README.md); three primary scenarios entirely in English |
@@ -16,7 +17,7 @@ The project is **not submitted or marked complete**. No video is included, as re
 | Real clarification/restart/comparison | [recording](../examples/zetaris/verified-review-workflow.json) |
 | Individual account setup | [team setup](../docs/TEAM-SETUP.md) |
 | Sponsors and provenance | [submission notes](../docs/SUBMISSION.md) |
-| Engineering checks | 44/44 application tests, 13/13 official H-MEM checks; syntax and credential scan |
+| Engineering checks | 50/50 application tests, 13/13 official H-MEM checks; syntax and credential scan |
 | Video | Intentionally not produced |
 | HackOS draft | Not saved: current member cannot manage submissions. Maria Rodriguez is the leader |
 | Final submission | Pending user review and video; do not finalize |
