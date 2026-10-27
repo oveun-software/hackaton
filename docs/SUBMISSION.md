@@ -13,12 +13,12 @@ Nemotron performs semantic interpretation and recommendation. A separate call cr
 | NVIDIA Nemotron | Atomic requirements, comparison, questions and critical review | Actual Nemotron 3.5 Lightning executions, source validation and receipts in the workflow and evaluation |
 | Meterless Nightshift | Primary authenticated AI provider, routing, structured streaming and actual-model checks | Ten real calls in the latest clarification/restart/comparison workflow; all four evaluation groups also executed |
 | Meterless H-MEM Engine | Persistent source-backed memory, hybrid retrieval, version lineage, conflict review and Trust Ledger | 13/13 official checks at pinned revision 1742dec56a66e58eef9dda2d2b865823758ca8cd; restart, attribution, deletion and dispute tests |
-| Zetaris | Data layer joining fictional profile/document sources, bounded Lightning REST import | Real local deployment, joined view, separate GENERAL user with SELECT only and three imported records |
+| Zetaris | Data layer joining fictional profile/document sources, fresh bounded Lightning REST query before analysis and visible provenance | Real deployment/import verified previously; new fresh-query route covered by six simulated workflow tests. See [current verification status](ZETARIS-WORKFLOW.md) |
 | Cursor | Optional environment under the current rules | Installed with the official Codex extension; installation alone is not claimed as Cursor-built development |
 
 ## Reproducible evidence
 
-- **44/44 application tests**, with mocked external transport: exact-source validation, critical review, questions, translation invariants, conflict exclusion, attribution across restart, deletion and in-flight invalidation.
+- **50/50 application tests**, with mocked external transport: exact-source validation, critical review, questions, translation invariants, conflict exclusion, attribution across restart, deletion and in-flight invalidation.
 - **13/13 official H-MEM checks:** pinned and hash-verified runner, also run in CI.
 - **16 fictional cases / 32 assessments:** actual Nemotron output matched all authored expectations, with zero unsupported positives in this set. One CV instruction attack did not inject its marker. The critical review changed zero evidence cells; no incremental quality improvement from it is claimed. [Method](../evaluation/README.md), [outputs and receipts](../evaluation/results.json).
 - **Real clarification workflow, 26 October:** three reports, restart and paired no-memory condition. Sam's TypeScript evidence changes from unclear to supported after an attributed answer. In the later role, the earlier source is retrieved and cited; the current-CV-only result remains unclear. Ten calls retain actual model and receipt IDs. One stochastic comparison is illustrative, not a general causal estimate. [Recording](../examples/zetaris/verified-review-workflow.json).

@@ -13,7 +13,8 @@ Everyone can work on the same source repository without sharing personal account
 5. Follow Zetaris's [local installation guide](https://github.com/zetaris/getting-started/blob/main/docs/install/updated_zetaris_installation_guide.md). Windows uses Docker Desktop with WSL2. Allow at least 8 GB of memory, 4 CPUs and 15 GB of free disk space. Set your own administrator password before the first startup, keep the matching supplied image/configuration files together, and keep them outside Git.
 6. In the local Zetaris instance, obtain the organization ID and create a dedicated GENERAL user with SELECT only on the candidate view; generate an API key while signed in as that user. Keys inherit the user's permissions. Put `ZETARIS_ORG_ID`, `ZETARIS_API_KEY` and the view name in your private `.env`. See the [fictional-source recipe](../examples/zetaris/README.md) for the tested view/grant steps. Track the key's expiry and renew it locally.
 7. Run `npm run doctor`. Both services must report online and the selected Nemotron model must be advertised. `npm run doctor -- --infer` also sends a small JSON test through Nightshift. It sends no CVs and makes no hiring decisions.
-8. Run `npm start` and open `http://127.0.0.1:4317`. Keep Nightshift and Zetaris running while using live integrations.
+8. Run `npm run verify:zetaris` to check a fresh Zetaris query and Nemotron analysis using only the exact public fictional fixtures in an isolated workspace. This makes real requests.
+9. Run `npm start` and open `http://127.0.0.1:4317`. Keep Nightshift and Zetaris running while using live integrations.
 
 ## Shared Zetaris instance
 

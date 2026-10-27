@@ -54,12 +54,13 @@ npm run doctor
 npm start
 ```
 
-Open **http://127.0.0.1:4317/?lang=en**. Import the three fictional records from Zetaris, create/open a role, grant consent and run the analysis. You can also upload the [English sample CVs](../examples/pilot/README.md) and copy an [example job](../examples/judges/README.md). A manual upload exercises document analysis but does not itself demonstrate Zetaris integration.
+Open **http://127.0.0.1:4317/?lang=en**. Create/open a role, select **Zetaris · fresh query**, grant consent and choose **Analyze from Zetaris**. No prior import is necessary. Inspect the query, row count and document versions in **Zetaris data access** above the matrix. [Detailed sponsor walkthrough](ZETARIS-WORKFLOW.md). For **Workspace CVs · local mode**, you can also upload the [English sample CVs](../examples/pilot/README.md) and copy an [example job](../examples/judges/README.md). A manual upload exercises document analysis but does not itself demonstrate Zetaris integration.
 
 Programmatic entry points, runnable from another terminal:
 
 | Command | Inputs and result | Services |
 | --- | --- | --- |
+| `npm run verify:zetaris` | Fresh query inside one analysis request; checks the known fixtures, exact source hashes and actual model receipts; writes `data/live-zetaris-analysis.json` | Zetaris + Nightshift + NVIDIA Nemotron |
 | `npm run evaluate` | Four roles / 16 fictional profiles; writes new reports, checks and model receipts to `evaluation/results.json` | Nightshift + NVIDIA Nemotron |
 | `npm run verify:review` | Checks the three known Zetaris fixtures before inference; clarification, restart, H-MEM recall and paired comparison; writes `data/live-review-workflow.json` | Zetaris + Nightshift + NVIDIA Nemotron |
 

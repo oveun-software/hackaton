@@ -7,7 +7,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { Store } from './store.js';
 import { runAnalysis } from './analysis.js';
-import { getProvider, completeJson, checkProvider, assertProviderReady, readZetaris, isZetarisConfigured, ServiceError } from './providers.js';
+import { getProvider, completeJson, checkProvider, assertProviderReady, readZetaris, zetarisInputDigest, isZetarisConfigured, ServiceError } from './providers.js';
 import { demoCandidates, demoVacancy, localizeDemoCandidate, localizeDemoVacancy } from './demo.js';
 import { errorPayload, resolveLanguage } from './localization.js';
 import { translate } from '../public/i18n.js';
@@ -153,16 +153,25 @@ app.post('/api/candidates/:id/documents', upload.single('file'), async (req, res
   store.transaction(() => { updated = updateCandidateDocument(candidate, { name: candidate.name, filename, text, hash, source: candidate.source, synthetic: candidate.synthetic }); });
   res.json(publicCandidate(updated));
 });
-app.post('/api/sources/zetaris/import', async (req, res) => {
-  let rows;
-  try { rows = await readZetaris(); } catch (error) { throw error.status ? error : new ServiceError('errors.zetarisNetwork'); }
+function importZetarisRows(rows) {
   const rowSchema = z.object({ candidate_id: z.union([z.string().min(1), z.number()]), display_name: z.string().min(1).max(160), document_name: z.string().min(1).max(180), cv_text: z.string().min(40).max(40000) });
   const parsed = rows.map(row => rowSchema.parse(row));
+  if (new Set(parsed.map(row => String(row.candidate_id))).size !== parsed.length) throw new ServiceError('errors.zetarisDuplicate', 422);
+  if (parsed.reduce((total, row) => total + row.cv_text.length, 0) > 200000) throw new ServiceError('errors.totalText', 400);
   const mapped = parsed.map(row => ({ id: `zetaris-${createHash('sha256').update(`${organizationId}:${row.candidate_id}`).digest('hex').slice(0, 24)}`, name: row.display_name, filename: row.document_name,
     text: row.cv_text, hash: createHash('sha256').update(row.cv_text).digest('hex'), source: 'zetaris', synthetic: process.env.ZETARIS_SYNTHETIC === 'true' }));
   if (store.list('candidate').filter(owned).length + mapped.filter(c => !store.get('candidate', c.id)).length > 25) throw new ServiceError('errors.zetarisLimit', 400);
-  store.transaction(() => { for (const item of mapped) { const existing = store.get('candidate', item.id); if (!existing) addCandidateDocument(item, { id: item.id }); else if (existing.hash !== item.hash) updateCandidateDocument(existing, item); } });
-  res.json({ imported: mapped.length });
+  store.transaction(() => { for (const item of mapped) { const existing = store.get('candidate', item.id); if (!existing) addCandidateDocument(item, { id: item.id }); else if (existing.hash !== item.hash || existing.filename !== item.filename || existing.name !== item.name) updateCandidateDocument(existing, item); } });
+  return mapped.map(item => store.get('candidate', item.id));
+}
+app.post('/api/sources/zetaris/import', async (req, res) => {
+  if (analyzing) throw new ServiceError('errors.analysisBusy', 409);
+  const revision = contextRevision;
+  const rows = await readZetaris();
+  assertCurrentContext(revision);
+  // An analysis may have started while the import was waiting for Zetaris.
+  if (analyzing) throw new ServiceError('errors.analysisBusy', 409);
+  res.json({ imported: importZetarisRows(rows).length });
 });
 let analyzing = false;
 let analysisProgress = { stage: 'idle', startedAt: null };
@@ -181,34 +190,48 @@ app.post('/api/candidates/:id/clarifications', (req, res) => {
   res.status(201).json(document);
 });
 app.post('/api/vacancies/:id/analyze', async (req, res) => {
-  const input = z.object({ consent: z.literal(true), note: z.string().max(4000).default(''), language: z.enum(['en', 'es', 'fr', 'de']).optional() }).parse(req.body);
+  const input = z.object({ consent: z.literal(true), note: z.string().max(4000).default(''), language: z.enum(['en', 'es', 'fr', 'de']).optional(), sourceMode: z.enum(['workspace', 'zetaris']).default('workspace'), expectedZetarisDigest: z.string().regex(/^[a-f0-9]{64}$/).optional() }).parse(req.body);
   const language = input.language || req.language;
   const savedVacancy = store.get('vacancy', req.params.id), vacancy = owned(savedVacancy) && localizeDemoVacancy(savedVacancy, language);
-  const candidates = store.list('candidate').filter(owned).map(record => {
-    const candidate = localizeDemoCandidate(record, language);
-    if (!candidate.synthetic || candidate.text === record.text) return candidate;
-    const documentId = `${record.documentId}-${language}`;
-    if (!store.get('candidate_document', documentId)) store.put('candidate_document', { id: documentId, organizationId, candidateId: record.id, version: record.documentVersion,
-      filename: record.filename, text: candidate.text, hash: createHash('sha256').update(candidate.text).digest('hex'), source: record.source, status: 'current' });
-    return { ...candidate, documentId };
-  });
   if (!vacancy) throw new ServiceError('errors.roleNotFound', 404);
-  for (const candidate of candidates) {
-    const clarifications = store.list('candidate_document').filter(d => owned(d) && d.candidateId === candidate.id && d.kind === 'clarification' && d.status === 'current' && d.vacancyId === vacancy.id);
-    candidate.evidenceSources = [{ id: candidate.documentId, kind: 'cv', text: candidate.text, version: candidate.documentVersion, filename: candidate.filename, source: candidate.source },
-      ...clarifications.map(d => ({ id: d.id, kind: 'clarification', text: d.text, question: d.question, version: d.version, filename: d.filename, source: d.source, recordedAt: d.recordedAt, attribution: d.attribution }))];
-  }
-  if (!candidates.length) throw new ServiceError('errors.noCvs', 400);
-  if (candidates.reduce((total, c) => total + c.evidenceSources.reduce((n, s) => n + s.text.length, 0), 0) > 200000) throw new ServiceError('errors.totalText', 400);
   if (analyzing) throw new ServiceError('errors.analysisBusy', 409);
-  // Reserve the shared lock before any network wait, and keep the revision
-  // captured with these inputs. A deletion/update during preflight cancels them.
   analyzing = true;
   analysisProgress = { stage: 'connect', startedAt: new Date().toISOString() };
+  let dataAccess = { mode: input.sourceMode };
   try {
-    const revision = contextRevision;
+    let revision = contextRevision;
     await assertProviderReady(provider);
     assertCurrentContext(revision);
+    let records = store.list('candidate').filter(owned);
+    if (input.sourceMode === 'zetaris') {
+      dataAccess = { mode: 'zetaris', status: 'querying', startedAt: new Date().toISOString() };
+      analysisProgress = { ...analysisProgress, stage: 'zetaris', dataAccess };
+      const rows = await readZetaris(process.env, fetch, trace => { dataAccess = { ...trace, mode: 'zetaris', status: 'querying' }; });
+      assertCurrentContext(revision);
+      if (!rows.length) throw new ServiceError('errors.zetarisEmpty', 422);
+      if (input.expectedZetarisDigest && zetarisInputDigest(rows) !== input.expectedZetarisDigest) throw new ServiceError('errors.contextChanged', 409);
+      records = importZetarisRows(rows);
+      revision = contextRevision;
+      dataAccess = { ...dataAccess, status: 'passed', documents: records.map(c => ({ candidateId: c.id, documentId: c.documentId, version: c.documentVersion, filename: c.filename, sha256: c.hash })) };
+      // Progress retains query metadata only. Document provenance belongs to the report.
+      const { documents, ...progressTrace } = dataAccess;
+      analysisProgress = { ...analysisProgress, dataAccess: progressTrace };
+    }
+    const candidates = records.map(record => {
+      const candidate = localizeDemoCandidate(record, language);
+      if (!candidate.synthetic || candidate.text === record.text) return candidate;
+      const documentId = `${record.documentId}-${language}`;
+      if (!store.get('candidate_document', documentId)) store.put('candidate_document', { id: documentId, organizationId, candidateId: record.id, version: record.documentVersion,
+        filename: record.filename, text: candidate.text, hash: createHash('sha256').update(candidate.text).digest('hex'), source: record.source, status: 'current' });
+      return { ...candidate, documentId };
+    });
+    for (const candidate of candidates) {
+      const clarifications = store.list('candidate_document').filter(d => owned(d) && d.candidateId === candidate.id && d.kind === 'clarification' && d.status === 'current' && d.vacancyId === vacancy.id);
+      candidate.evidenceSources = [{ id: candidate.documentId, kind: 'cv', text: candidate.text, version: candidate.documentVersion, filename: candidate.filename, source: candidate.source },
+        ...clarifications.map(d => ({ id: d.id, kind: 'clarification', text: d.text, question: d.question, version: d.version, filename: d.filename, source: d.source, recordedAt: d.recordedAt, attribution: d.attribution }))];
+    }
+    if (!candidates.length) throw new ServiceError('errors.noCvs', 400);
+    if (candidates.reduce((total, c) => total + c.evidenceSources.reduce((n, s) => n + s.text.length, 0), 0) > 200000) throw new ServiceError('errors.totalText', 400);
     const executions = [], reportId = randomUUID();
     const previousReport = store.list('report').filter(owned).find(r => r.vacancyId === vacancy.id && r.language === language && !r.privacyRedacted);
     const result = await runAnalysis({ vacancy, candidates, note: input.note, language, previousReport,
@@ -235,13 +258,20 @@ app.post('/api/vacancies/:id/analyze', async (req, res) => {
       }
       report = store.put('report', { id: reportId, organizationId, vacancyId: vacancy.id, vacancyTitle: vacancy.title, ...result,
         hmem: result.hmem ? { ...result.hmem, stored } : { retrieved: [], matchedMemoryIds: [], stored },
-        provider: provider.name, model: provider.model, executions, recruiterNote: input.note,
+        provider: provider.name, model: provider.model, executions, dataAccess, recruiterNote: input.note,
         evidenceSources: [...new Map([...candidates.flatMap(c => c.evidenceSources.map(s => ({ ...s, candidateId: c.id }))),
           ...(result.hmem?.retrieved || []).map(item => { const d = store.get('candidate_document', item.documentId); return d && owned(d) ? { id: d.id, candidateId: d.candidateId, kind: d.kind || 'cv', text: d.text, question: d.question, version: d.version, filename: d.filename, source: d.source, recordedAt: d.recordedAt, attribution: d.attribution } : null; }).filter(Boolean)].map(s => [s.id, s])).values()],
         sources: candidates.map(c => ({ id: c.id, name: c.name, filename: c.filename, source: c.source, text: c.text, documentId: c.documentId, documentVersion: c.documentVersion })),
         vacancySnapshot: vacancy });
     });
     res.json(report);
+  } catch (error) {
+    if (dataAccess.mode === 'zetaris' && dataAccess.startedAt) {
+      const { documents, ...trace } = dataAccess;
+      error.dataAccess = { ...trace, status: dataAccess.status === 'passed' ? 'passed' : 'failed', errorCode: error instanceof z.ZodError ? 'errors.validation' : error.message.startsWith('errors.') ? error.message : 'errors.generic' };
+      analysisProgress = { ...analysisProgress, dataAccess: error.dataAccess };
+    }
+    throw error;
   } finally { analyzing = false; analysisProgress = { ...analysisProgress, stage: 'idle' }; }
 });
 app.post('/api/reports/:id/translate', async (req, res) => {
@@ -325,6 +355,7 @@ function scrubReports({ candidateId, documentId }) {
       id: source.id, name: translate(report.language, 'privacy.deletedCandidate'), filename: null, source: null, text: null, documentId: null, documentVersion: null, deleted: true });
     store.put('report', { ...report, sources, summary: translate(report.language, 'privacy.reportRedacted'), recruiterNote: '', clarificationQuestions: [],
       evidenceSources: (report.evidenceSources || []).filter(s => s.candidateId !== candidateId || (documentId && s.id !== documentId)),
+      dataAccess: report.dataAccess ? { ...report.dataAccess, documents: (report.dataAccess.documents || []).filter(d => d.candidateId !== candidateId || (documentId && d.documentId !== documentId)), redacted: true } : undefined,
       review: null, changes: null, candidates: scrubCandidates(report.candidates, report.language), translations, hmem, privacyRedacted: true });
   }
 }
@@ -359,7 +390,7 @@ app.use((error, req, res, next) => {
   const uploadError = error instanceof multer.MulterError;
   const status = validation || uploadError || error.type === 'entity.too.large' ? 400 : error.status || 500;
   const fallback = validation || error.type === 'entity.too.large' ? 'errors.validation' : uploadError ? 'errors.uploadLimit' : 'errors.generic';
-  res.status(status).json(errorPayload(error, req.language, fallback));
+  res.status(status).json({ ...errorPayload(error, req.language, fallback), ...(error.dataAccess ? { dataAccess: error.dataAccess } : {}) });
 });
 const port = Number(process.env.PORT || 4317);
 const server = app.listen(port, '127.0.0.1', () => console.log(`TalentLens ready at http://127.0.0.1:${server.address().port}`));

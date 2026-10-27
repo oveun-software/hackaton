@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
 import { demoCandidates } from '../server/demo.js';
-import { getProvider, readZetaris, completeJson } from '../server/providers.js';
+import { getProvider, readZetaris, zetarisInputDigest, completeJson } from '../server/providers.js';
 import { runAnalysis } from '../server/analysis.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -31,6 +31,7 @@ const record = () => ({ verifiedAt: new Date().toISOString(), synthetic: true, a
   source: 'Real Zetaris Lightning REST import; fictional attributed clarification', model: provider.model, reports });
 async function save() { await mkdir(new URL('../data/', import.meta.url), { recursive: true }); await writeFile(output, JSON.stringify(record(), null, 2)); }
 function verify(report) {
+  assert.equal(report.dataAccess?.mode, 'zetaris'); assert.equal(report.dataAccess.status, 'passed'); assert.equal(report.dataAccess.rowCount, demoCandidates.length);
   assert.equal(report.pipelineVersion, 2); assert.ok(report.review);
   assert.ok(report.executions.length >= 2);
   assert.ok(report.executions.every(e => e.actualModel === provider.model && e.receiptId), 'Actual Nemotron execution and Nightshift receipt are required');
@@ -44,7 +45,7 @@ try {
   const state = await get('/api/state'), sam = state.candidates.find(c => c.name === 'Sam Torres'); assert.ok(sam);
   const job = await post('/api/vacancies', { title: 'Product engineer', company: 'Fictional Studio', location: 'Remote', description: 'Professional TypeScript development experience is required. Experience developing Python APIs is preferred.' });
   console.log('1/4: analysing the fictional profiles before clarification.');
-  const before = await post(`/api/vacancies/${job.id}/analyze`, { consent: true, language: 'en' }); verify(before); reports.push(before); await save();
+  const before = await post(`/api/vacancies/${job.id}/analyze`, { consent: true, language: 'en', sourceMode: 'zetaris', expectedZetarisDigest: zetarisInputDigest(rows) }); verify(before); reports.push(before); await save();
   const ts = before.requirements.find(r => /typescript/i.test(r.label)); assert.ok(ts);
   assert.notEqual(before.candidates.find(c => c.candidateId === sam.id).evidence.find(e => e.requirementId === ts.id).status, 'supported');
   const clarification = await post(`/api/candidates/${sam.id}/clarifications`, { vacancyId: job.id,
@@ -52,13 +53,13 @@ try {
     answer: 'FICTIONAL INTERVIEW STATEMENT. I built and maintained a TypeScript billing dashboard for a client from January 2024 to January 2026. I implemented typed API contracts and automated tests. The old CV omitted this completed project.',
     sourceLabel: 'Fictional candidate interview, 26 October 2026', sourceType: 'candidate_response', confirmed: true });
   console.log('2/4: analysing the attributed clarification and comparing evidence states.');
-  const after = await post(`/api/vacancies/${job.id}/analyze`, { consent: true, language: 'en' }); verify(after); reports.push(after); await save();
+  const after = await post(`/api/vacancies/${job.id}/analyze`, { consent: true, language: 'en', sourceMode: 'zetaris', expectedZetarisDigest: zetarisInputDigest(rows) }); verify(after); reports.push(after); await save();
   assert.ok(after.changes.evidence.some(c => c.candidateId === sam.id && c.requirementId === ts.id && c.after === 'supported'));
   assert.equal(after.candidates.find(c => c.candidateId === sam.id).evidence.find(e => e.requirementId === ts.id).sourceId, clarification.id);
   await stop(); await start();
   const next = await post('/api/vacancies', { title: 'Platform engineer', company: 'Fictional Studio', location: 'Remote', description: job.description });
   console.log('3/4: another role after restart, using source-backed historical memory.');
-  const recall = await post(`/api/vacancies/${next.id}/analyze`, { consent: true, language: 'en' }); verify(recall); reports.push(recall); await save();
+  const recall = await post(`/api/vacancies/${next.id}/analyze`, { consent: true, language: 'en', sourceMode: 'zetaris', expectedZetarisDigest: zetarisInputDigest(rows) }); verify(recall); reports.push(recall); await save();
   assert.ok(recall.hmem.retrieved.some(m => m.documentId === clarification.id && m.fromPreviousProcess));
   const sameCandidates = await Promise.all(state.candidates.map(c => get(`/api/candidates/${c.id}`)));
   const baselineExecutions = [];

@@ -16,7 +16,7 @@ Recruiters and small hiring teams must compare nuanced requirements with documen
 
 ## Solution
 
-TalentLens imports an authorised Zetaris view or text-based PDF, DOCX and TXT CVs. After explicit consent, Nemotron extracts atomic requirements, compares every supplied candidate and critically reviews the draft against original sources. A clickable matrix exposes exact quotes, explanations and concrete follow-up questions.
+TalentLens queries an authorised Zetaris view before each analysis in its sponsor workflow. A separate local mode uses uploaded PDF, DOCX and TXT CVs or earlier workspace imports. After explicit consent, Nemotron extracts atomic requirements, compares every supplied candidate and critically reviews the draft against original sources. A clickable matrix exposes exact quotes, explanations and concrete follow-up questions.
 
 A recruiter records an authorised answer or observation as a separate attributed source, preserving the CV. Reanalysis shows changed assessments and citations. H-MEM retains source-backed context for later vacancies, with document versions, dispute review and deletion. An attributed statement is not independently verified truth. The model proposes; a human chooses the next step. There is no local candidate scoring engine or automated hiring/rejection.
 
@@ -24,7 +24,7 @@ English, Spanish, French and German cover controls, errors, illustrations, repor
 
 ## Agent workflow and architecture
 
-1. Zetaris joins separate fictional profile/document sources into a candidate view; TalentLens reads it through Lightning REST with a SELECT-only user.
+1. Zetaris joins separate fictional profile/document sources into a candidate view; TalentLens queries it before analysis through Lightning REST with a SELECT-only user. The report exposes SQL, timing, returned rows and exact source versions/hashes. Failed or empty reads stop this mode.
 2. Nemotron extracts independent required/preferred criteria through Nightshift.
 3. H-MEM retrieves relevant earlier context scoped to the organisation and current candidates. Source verification and conflict exclusion happen before prompt construction.
 4. Nemotron drafts the comparison; a separate Nemotron call critically reviews claims, negations, contradictions and gaps.
@@ -36,7 +36,7 @@ Stack: Node.js 22+, Express 5, built-in SQLite, native JavaScript/CSS, bounded c
 
 ## Sponsor contributions
 
-**Zetaris:** real data layer joining profile and CV sources; bounded read-only REST import with provenance.
+**Zetaris:** real data layer joining profile and CV sources; fresh bounded read-only REST query before analysis, with visible query and document provenance. Local mode remains separately available.
 
 **Nightshift:** primary authenticated provider, streamed structured result tool, actual executed model checks and retained receipt IDs.
 
@@ -46,7 +46,8 @@ Stack: Node.js 22+, Express 5, built-in SQLite, native JavaScript/CSS, bounded c
 
 ## Verification and measured limits
 
-- **44 application tests** with mocked external transport: coverage and exact citations, critical review, translation integrity, clarification lifecycle, attribution across restart, conflicts, privacy deletion, source replacement and in-flight invalidation.
+- **50 application tests** with mocked external transport: coverage and exact citations, critical review, translation integrity, clarification lifecycle, attribution across restart, conflicts, privacy deletion, source replacement and in-flight invalidation.
+- **27 October Zetaris reinforcement:** six simulated workflow checks cover fresh queries and visible provenance. A new live verification is pending because the local Docker service failed to start. The 26 October recording below predates this enhancement. [Current status and reproduction command](../docs/ZETARIS-WORKFLOW.md).
 - **13 official H-MEM checks**, pinned and SHA-256 verified in local and CI runs.
 - **16 fictional profiles, 32 criterion/candidate assessments:** real Nemotron output matched all authored expectations; zero unsupported positives in this set. Covers interest versus experience, negation, contradiction, adjacent skills, leadership versus participation, Spanish evidence and one CV instruction attack. The critical pass changed zero cells, so no incremental quality gain is claimed. Full outputs, model receipts and dataset hash are in `evaluation/results.json`.
 - **Live clarification/restart workflow on 26 October:** three reports plus a current-CV-only comparison, ten actual Nemotron Lightning calls. Sam's TypeScript evidence changes from unclear to supported after an attributed answer. After restart, a later role retrieves and cites that answer; the paired no-memory result remains unclear. One stochastic comparison illustrates source access, not average causal benefit. Evidence: `examples/zetaris/verified-review-workflow.json`.

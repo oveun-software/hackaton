@@ -69,7 +69,7 @@ The live workspace requires **Node.js 22.16 or later** and npm. Node 22 is recom
    npm.cmd run doctor -- --infer
    ```
 
-   Continue only when `ai.state` is `online`, `ai.modelAvailable` is `true` and `ai.inference` is `passed`. Zetaris is reported separately and is optional for a workflow based on uploaded files. Add `--require-zetaris` to also require a successful Zetaris `SELECT 1` connection check. That check does not verify the candidate view or full import; use `npm run verify:review` for the end-to-end sponsor workflow.
+   Continue only when `ai.state` is `online`, `ai.modelAvailable` is `true` and `ai.inference` is `passed`. Zetaris is reported separately and is optional for a workflow based on uploaded files. Add `--require-zetaris` to also require a successful Zetaris `SELECT 1` connection check. That check does not verify the candidate view or full import; use `npm run verify:zetaris` for the fresh-query route or `npm run verify:review` for the full clarification/memory workflow.
 
 5. Start TalentLens:
 
@@ -86,10 +86,10 @@ Without live credentials, you can still create roles, upload and inspect CVs, lo
 1. Open **CV library** and upload PDF, DOCX or TXT files, or choose **Use sample CVs**.
 2. Open **Open roles**, create a role with a clear description or select the sample role.
 3. Open **Connections** and choose **Test active connection**. A token labelled “configured” has not yet proved that Nightshift is running.
-4. Return to the role, review the CV count, accept the explicit data-transfer consent and choose **Analyse with Nemotron**.
+4. Return to the role and select **Workspace CVs · local mode** for those uploaded/sample files, or **Zetaris · fresh query** to query the configured view. Review the source scope, accept the explicit data-transfer consent and run the analysis.
 5. Review every recommendation against its source quotation and H-MEM trace, record the human next step and use **New CV version** when a candidate updates a CV.
 
-The `?` button in the top bar shows this workflow inside the application. Every CV currently in the library is included in a new analysis; remove unrelated fictional records before demonstrating a different scenario.
+The `?` button in the top bar explains the workflow. Workspace mode includes every CV currently in the library; remove unrelated fictional records before demonstrating a different scenario. Zetaris mode includes only the latest query's returned candidates and shows their query/document trace.
 
 ## Languages
 
@@ -182,7 +182,11 @@ ZETARIS_API_KEY=your-own-read-only-key
 ZETARIS_TABLE=talentlens.candidates
 ```
 
-Choose **Connections → Import from Zetaris**. The adapter calls `/api/v1.0/sql-editor/sqls/run` with bearer authentication, `X-Org-ID`, a unique `X-Request-ID`, fixed selected columns and `LIMIT 25`. It sends only SELECT queries, rejects redirects and malformed/oversized row sets, and applies a 30-second timeout. A remote connection requires HTTPS. `npm run doctor` verifies `SELECT 1` separately from the candidate-view import; an online database does not establish that the view exists or has permission to be read. Local uploads do not demonstrate use of Zetaris as the data layer.
+For the sponsor workflow, open a role, select **Zetaris · fresh query**, grant consent and choose **Analyze from Zetaris**. Each run queries the view first and analyzes only its returned candidates. A failed or empty query stops this mode without substituting cached CVs. **Workspace CVs · local mode** remains available without Zetaris. The separate **Connections → Import from Zetaris** action still prepares a workspace without inference.
+
+Each successful Zetaris report displays **Zetaris data access** above the matrix: SQL, UTC timing, row count/limit, client correlation IDs and exact document versions/hashes. The Markdown export includes the same trace. Read the [workflow, API and verification details](docs/ZETARIS-WORKFLOW.md). Run `npm run verify:zetaris` for a fresh one-role sponsor check with the public fictional fixtures. Historical recordings remain dated and are not presented as proof of this new route.
+
+The query is bounded to 25 rows and may omit other candidates in a larger view; it is not an exhaustive database search. The adapter calls `/api/v1.0/sql-editor/sqls/run` with bearer authentication, `X-Org-ID`, a unique `X-Request-ID`, fixed selected columns and `LIMIT 25`. It sends only SELECT queries, rejects redirects and malformed/oversized row sets, and applies a 30-second timeout. A remote connection requires HTTPS. `npm run doctor` verifies `SELECT 1` separately from the candidate-view import; an online database does not establish that the view exists or has permission to be read. Local uploads do not demonstrate use of Zetaris as the data layer.
 
 The [reproducible fictional sources](examples/zetaris/README.md) contain two CSV sources and the join-view SQL. Creating the view, granting a separate GENERAL user SELECT on that view, and importing its three CVs through the application all passed against a real local Zetaris installation on 22 October 2026. Set `ZETARIS_SYNTHETIC=true` only when using these fictional sources.
 
@@ -196,7 +200,9 @@ Each developer uses their own NVIDIA key, Nightshift token and Zetaris access. D
 flowchart LR
   F[PDF / DOCX / TXT] --> E[Bounded text extraction]
   E --> D[(Local SQLite)]
-  Z[Zetaris read-only view] --> D
+  Z[Zetaris read-only view] --> S[Fresh SELECT before analysis]
+  S --> D
+  S --> T[Query trace and document versions]
   J[Job description] --> N[Nemotron: understand requirements]
   D --> C[Explicit consent]
   N --> A[Nemotron: compare every supplied CV]

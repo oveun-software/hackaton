@@ -1,7 +1,7 @@
 import { languages, resolveLanguage, translate } from './i18n.js';
 import { icon } from './icons.js';
 import { reportMarkdown } from './report-export.js';
-import { evidenceView, evidenceDetail } from './evidence-view.js';
+import { evidenceView, evidenceDetail, dataAccessView } from './evidence-view.js';
 
 const $ = selector => document.querySelector(selector);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
@@ -15,6 +15,7 @@ const date = value => new Date(value).toLocaleDateString(languages[language].loc
 const page = () => ['overview', 'library', 'vacancies', 'connections'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview';
 const initials = name => name.split(/\s+/).slice(0, 2).map(s => s[0] || '').join('').toUpperCase();
 let state = { candidates: [], vacancies: [], reports: [], reviews: [] }, status = {}, selectedVacancy = null, selectedReport = null;
+let sourceMode = 'workspace', sourceModeInitialized = false, failedDataAccess = null;
 let running = false, translating = false, errorMessage = null, consent = false, translationConsent = false, note = '', toastTimer, uploading = false, updatingCandidateId = null;
 
 class RemoteError extends Error { constructor(payload) { super(payload.error || 'errors.generic'); this.payload = payload; } }
@@ -36,7 +37,7 @@ function notify(message, error = false) {
 async function refresh() {
   const requestedLanguage = language;
   const data = await Promise.all([api('/api/state'), api('/api/status')]);
-  if (requestedLanguage === language) [state, status] = data;
+  if (requestedLanguage === language) { [state, status] = data; if (!sourceModeInitialized) { sourceMode = status.zetarisConfigured ? 'zetaris' : 'workspace'; sourceModeInitialized = true; } }
 }
 function renderShell() {
   document.documentElement.lang = language; document.title = t('pageTitle');
@@ -100,8 +101,8 @@ function vacancies() {
   if (!state.vacancies.length) return `${heading('vacanciesEyebrow', 'vacanciesTitle', 'vacanciesSubtitle')}<div class="panel">${empty('emptyRoleTitle', 'emptyRoleBody', `<button class="button button-dark" data-new-vacancy>${tr('createFirstRole')} ↗</button> <button class="button button-outline" data-demo>${tr('exploreSample')}</button>`)}</div>`;
   const vacancy = state.vacancies.find(v => v.id === selectedVacancy) || state.vacancies[0]; selectedVacancy = vacancy.id;
   const reports = state.reports.filter(r => r.vacancyId === vacancy.id), report = reports.find(r => r.id === selectedReport) || reports[0];
-  return `${heading('analysisEyebrow', 'analysisTitle', 'analysisSubtitle')}<div class="info-banner workflow-hint"><strong>${tr('beforeAnalysisTitle')}</strong><br>${tr('beforeAnalysisBody')} <a href="#connections">${tr('verifyConnection')} ↗</a></div><div class="vacancy-workspace"><section class="panel vacancy-config"><label for="vacancy-select">${tr('selectedRole')}</label><select id="vacancy-select">${state.vacancies.map(v => `<option value="${escape(v.id)}" ${v.id === vacancy.id ? 'selected' : ''}>${escape(v.title)}</option>`).join('')}</select><h3>${escape(vacancy.title)}</h3><div class="vacancy-meta">${escape(vacancy.company)} · ${escape(vacancy.location)}</div><div class="vacancy-description">${escape(vacancy.description)}</div><label>${tr('teamContext')}<textarea id="analysis-note" rows="3" maxlength="4000" placeholder="${tr('contextPlaceholder')}">${escape(note)}</textarea></label><label class="consent"><input type="checkbox" id="analysis-consent" ${consent ? 'checked' : ''}><span>${tr('consentAnalysis', { count: number(state.candidates.length), provider: status.provider })}</span></label><button id="analyze" class="button button-dark full-width" ${running || !consent || !status.configured || !state.candidates.length ? 'disabled' : ''}>${icon('spark')} ${tr(running ? 'analyzing' : 'analyze')}</button><p class="small-note">${tr(status.configured ? 'analysisDuration' : 'connectFirst')} ${!status.configured ? `<a href="#connections" class="text-link">${tr('viewConnections')} ↗</a>` : ''}</p><p class="small-note">${tr('privacyNote')}</p></section>
-    <section>${errorMessage ? `<div role="alert" class="error-inline">${escape(errorText(errorMessage))}</div>` : ''}${running ? `<div class="panel analysis-placeholder running"><div class="core">${icon('spark')}</div><h2>${tr('runningTitle')}</h2><p id="analysis-progress" aria-live="polite">${tr('stage_connect')}</p><p>${tr('runningBody')}</p><div class="trust-row">${['read', 'compare', 'verify'].map(k => `<span>${icon('check')} ${tr(k)}</span>`).join('')}</div></div>` : report ? reportMarkup(report) : `<div class="panel analysis-placeholder"><div class="core"><img src="/logo.svg" alt=""></div><span class="eyebrow">${tr('placeholderEyebrow')}</span><h2>${tr('placeholderTitle')}</h2><p>${tr('placeholderBody')}</p><div class="trust-row">${['verifiableQuotes', 'humanReview', 'noPercentages'].map(k => `<span>${icon('check')} ${tr(k)}</span>`).join('')}</div></div>`}${reports.length ? `<div class="history"><div class="section-heading"><h2>${tr('history')}</h2></div><div class="panel">${reports.map(r => `<button data-history="${escape(r.id)}"><span>${escape(r.vacancyTitle)}</span><small>${date(r.createdAt)} · ${tr('cvCount', { count: number(r.candidates.length) })} ↗</small></button>`).join('')}</div></div>` : ''}</section></div>`;
+  return `${heading('analysisEyebrow', 'analysisTitle', 'analysisSubtitle')}<div class="info-banner workflow-hint"><strong>${tr('beforeAnalysisTitle')}</strong><br>${tr('beforeAnalysisBody')} <a href="#connections">${tr('verifyConnection')} ↗</a></div><div class="vacancy-workspace"><section class="panel vacancy-config"><label for="vacancy-select">${tr('selectedRole')}</label><select id="vacancy-select">${state.vacancies.map(v => `<option value="${escape(v.id)}" ${v.id === vacancy.id ? 'selected' : ''}>${escape(v.title)}</option>`).join('')}</select><h3>${escape(vacancy.title)}</h3><div class="vacancy-meta">${escape(vacancy.company)} · ${escape(vacancy.location)}</div><div class="vacancy-description">${escape(vacancy.description)}</div><label>${tr('teamContext')}<textarea id="analysis-note" rows="3" maxlength="4000" placeholder="${tr('contextPlaceholder')}">${escape(note)}</textarea></label><label for="analysis-source">${tr("analysisSource")}</label><select id="analysis-source" ${running ? "disabled" : ""}><option value="zetaris" ${sourceMode === "zetaris" ? "selected" : ""}>${tr("sourceZetaris")}</option><option value="workspace" ${sourceMode === "workspace" ? "selected" : ""}>${tr("sourceWorkspace")}</option></select><p class="small-note">${tr(sourceMode === "zetaris" ? "zetarisAnalysisHelp" : "workspaceAnalysisHelp")}</p><label class="consent"><input type="checkbox" id="analysis-consent" ${consent ? 'checked' : ''}><span>${tr(sourceMode === 'zetaris' ? 'consentZetaris' : 'consentAnalysis', { count: number(state.candidates.length), provider: status.provider })}</span></label><button id="analyze" class="button button-dark full-width" ${running || !consent || !status.configured || (sourceMode === 'workspace' && !state.candidates.length) ? 'disabled' : ''}>${icon('spark')} ${tr(running ? 'analyzing' : sourceMode === 'zetaris' ? 'analyzeZetaris' : 'analyze')}</button><p class="small-note">${tr(status.configured ? (sourceMode === 'zetaris' ? 'zetarisDuration' : 'analysisDuration') : 'connectFirst')} ${!status.configured ? `<a href="#connections" class="text-link">${tr('viewConnections')} ↗</a>` : ''}</p><p class="small-note">${tr('privacyNote')}</p></section>
+    <section>${errorMessage ? `<div role="alert" class="error-inline">${escape(errorText(errorMessage))}</div>${dataAccessView(failedDataAccess, language)}` : ''}${running ? `<div class="panel analysis-placeholder running"><div class="core">${icon('spark')}</div><h2>${tr('runningTitle')}</h2><p id="analysis-progress" aria-live="polite">${tr('stage_connect')}</p><p>${tr('runningBody')}</p><div class="trust-row">${['read', 'compare', 'verify'].map(k => `<span>${icon('check')} ${tr(k)}</span>`).join('')}</div></div>` : report ? reportMarkup(report) : `<div class="panel analysis-placeholder"><div class="core"><img src="/logo.svg" alt=""></div><span class="eyebrow">${tr('placeholderEyebrow')}</span><h2>${tr('placeholderTitle')}</h2><p>${tr('placeholderBody')}</p><div class="trust-row">${['verifiableQuotes', 'humanReview', 'noPercentages'].map(k => `<span>${icon('check')} ${tr(k)}</span>`).join('')}</div></div>`}${reports.length ? `<div class="history"><div class="section-heading"><h2>${tr('history')}</h2></div><div class="panel">${reports.map(r => `<button data-history="${escape(r.id)}"><span>${escape(r.vacancyTitle)}</span><small>${date(r.createdAt)} · ${tr('cvCount', { count: number(r.candidates.length) })} ↗</small></button>`).join('')}</div></div>` : ''}</section></div>`;
 }
 function connections() {
   const viaNightshift = status.providerId === 'meterless' && status.configured && status.model.startsWith('nvidia/');
@@ -199,7 +200,8 @@ document.addEventListener('input', event => { if (event.target.id === 'analysis-
 document.addEventListener('change', async event => {
   const target = event.target;
   if (target.id === 'vacancy-select') { selectedVacancy = target.value; selectedReport = null; consent = false; translationConsent = false; note = ''; errorMessage = null; render(); }
-  if (target.id === 'analysis-consent') { consent = target.checked; $('#analyze').disabled = !consent || running || !status.configured || !state.candidates.length; }
+  if (target.id === 'analysis-source') { sourceMode = target.value; consent = false; errorMessage = null; failedDataAccess = null; render(); }
+  if (target.id === 'analysis-consent') { consent = target.checked; $('#analyze').disabled = !consent || running || !status.configured || (sourceMode === 'workspace' && !state.candidates.length); }
   if (target.id === 'translation-consent') { translationConsent = target.checked; $('[data-translate]').disabled = !translationConsent || translating || !status.configured; }
   if (target.dataset.review) {
     target.disabled = true;
@@ -245,12 +247,12 @@ async function uploadCandidateVersion(candidateId, file) {
 }
 async function analyze() {
   if (!consent || running) return;
-  running = true; errorMessage = null; const vacancyId = selectedVacancy, analysisNote = note, analysisLanguage = language; render();
+  running = true; errorMessage = null; failedDataAccess = null; const vacancyId = selectedVacancy, analysisNote = note, analysisLanguage = language, analysisSource = sourceMode; render();
   const progressTimer = setInterval(async () => {
     try { const progress = await api('/api/analysis/progress'); const label = $('#analysis-progress'); if (label) label.textContent = t(`stage_${progress.stage}`); } catch { /* Analysis request reports any failure. */ }
   }, 1200);
-  try { const report = await api(`/api/vacancies/${encodeURIComponent(vacancyId)}/analyze`, { method: 'POST', body: JSON.stringify({ consent: true, note: analysisNote, language: analysisLanguage }) }); await refresh(); selectedVacancy = vacancyId; selectedReport = report.id; notify(t('analysisSaved')); }
-  catch (error) { errorMessage = error; notify(errorText(error), true); } finally { clearInterval(progressTimer); running = false; render(); }
+  try { const report = await api(`/api/vacancies/${encodeURIComponent(vacancyId)}/analyze`, { method: 'POST', body: JSON.stringify({ consent: true, note: analysisNote, language: analysisLanguage, sourceMode: analysisSource }) }); await refresh(); selectedVacancy = vacancyId; selectedReport = report.id; notify(t('analysisSaved')); }
+  catch (error) { errorMessage = error; failedDataAccess = error.payload?.dataAccess; await refresh(); notify(errorText(error), true); } finally { clearInterval(progressTimer); running = false; render(); }
 }
 async function translateReport(id) {
   if (!translationConsent || translating) return;

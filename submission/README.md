@@ -30,6 +30,10 @@ Choose **Try a guided CV review** for two rounds with different fictional tasks,
 
 For fresh inference, configure your own services, run `npm run doctor`, then `npm run verify:review`. This verifies the three public Zetaris fixtures before sending them and uses an isolated temporary database. `npm run evaluate` exercises 16 profiles. `npm run demo:publish-recording` validates and translates saved outputs. Run these commands sequentially; publication and live verification share an intermediate file.
 
+## Zetaris reinforcement — 27 October
+
+The English PowerPoint and PDF now describe fresh queries before analysis and visible provenance. The app retains a separate local source mode. Run `npm run verify:zetaris` for the new route; see [current verification status and demo steps](../docs/ZETARIS-WORKFLOW.md). The saved 26 October results below remain historical and unchanged.
+
 ## Latest real results
 
 **Passed on 26 October 2026.** Three reports and a paired no-memory condition, with ten actual Nemotron Lightning calls through Nightshift. Sam Torres's TypeScript evidence changed from unclear to supported after a separately attributed fictional answer. Following restart, another role retrieved and cited it. The otherwise matching current-CV-only condition remained unclear. This is one stochastic comparison, not proof of average causal benefit.

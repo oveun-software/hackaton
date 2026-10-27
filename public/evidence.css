@@ -6,3 +6,4 @@
 .evidence-matrix table{white-space:normal}.evidence-matrix .evidence-cell{white-space:normal;line-height:1.4}
 
 #pilot-form label{display:block;margin:18px 0;font-weight:600}#pilot-form select,#pilot-form textarea{display:block;width:100%;margin-top:8px;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);font:inherit}#pilot-main>.panel{margin:20px 0}#pilot-main h1{font-size:38px;line-height:1.2}#pilot-main>p{line-height:1.65;max-width:850px}.showcase-languages button:disabled{opacity:.55;cursor:default}
+.data-trace{margin-bottom:20px}.data-trace dl{display:grid;grid-template-columns:minmax(100px,1fr) 2fr;gap:8px;margin:18px 0}.data-trace dt{font-weight:600}.data-trace dd{margin:0;overflow-wrap:anywhere}.data-trace code,.data-trace small{overflow-wrap:anywhere}.data-trace li{margin:12px 0}.data-trace details{margin-top:14px}

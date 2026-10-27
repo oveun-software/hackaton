@@ -2,6 +2,12 @@ import { translate } from './i18n.js';
 export function reportMarkdown(report, language) {
   const t = (key, values) => translate(language, key, values);
   let text = `# TalentLens · ${report.vacancyTitle}\n\n${report.summary}\n\n${t('exportProvider')}: ${report.provider}\n${t('modelLabel')}: ${report.model}\n${t('exportDate')}: ${report.createdAt}\n\n${t('exportNotice')}\n`;
+  if (report.dataAccess?.mode === 'zetaris') {
+    const q = report.dataAccess;
+    text += `\n## ${t('zetarisTraceTitle')}\n\n${t('queryTime')}: ${q.startedAt}\n${t('queryRows')}: ${q.rowCount} / ${q.limit}\n${t('queryDuration')}: ${q.durationMs} ms\n\n${q.sql}\n\n${t('queryId')}: ${q.queryId}\n${t('requestId')}: ${q.requestId}\n\n${t('queryIdsHelp')}\n\n${t('zetarisTraceHelp')}\n`;
+    for (const d of q.documents || []) text += `\n- ${d.filename} · ${t('documentVersion', { version: d.version })} · ${d.documentId}\n  SHA-256: ${d.sha256}\n`;
+    if (q.redacted) text += `\n${t('queryRedacted')}\n`;
+  } else if (report.dataAccess) text += `\n${t('workspaceTrace')}\n`;
   if (report.hmem) {
     const recovered = report.hmem.retrieved || [], used = new Set(report.hmem.matchedMemoryIds || report.hmem.usedMemoryIds || []);
     text += `\n## ${t('hmemTitle')}\n\n- ${t('hmemRecovered', { count: recovered.length })}\n- ${t('hmemPrior', { count: recovered.filter(item => item.fromPreviousProcess).length })}\n- ${t('matchedEvidence', { count: used.size })}\n`;

@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { readCompletionStream } from './completion-stream.js';
 
 const resultTool = { type: 'function', function: { name: 'emit_structured_result',
@@ -97,14 +97,16 @@ function zetarisConfig(env) {
 export function isZetarisConfigured(env = process.env) {
   try { zetarisConfig(env); return true; } catch { return false; }
 }
-async function zetarisQuery(sql, limit, env, fetcher) {
+async function zetarisQuery(sql, limit, env, fetcher, onQuery = () => {}) {
   const config = zetarisConfig(env);
+  const requestId = randomUUID(), queryId = randomUUID(), startedAt = new Date().toISOString(), started = performance.now();
+  onQuery({ requestId, queryId, sql, limit, startedAt });
   let response;
   try {
     response = await fetcher(`${config.base}/sql-editor/sqls/run`, {
       method: 'POST', redirect: 'error', signal: AbortSignal.timeout(30000),
-      headers: { Authorization: `Bearer ${config.key}`, 'Content-Type': 'application/json', 'X-Org-ID': config.org, 'X-Request-ID': randomUUID() },
-      body: JSON.stringify({ queryId: randomUUID(), sql, source: 'SqlEditor', limit })
+      headers: { Authorization: `Bearer ${config.key}`, 'Content-Type': 'application/json', 'X-Org-ID': config.org, 'X-Request-ID': requestId },
+      body: JSON.stringify({ queryId, sql, source: 'SqlEditor', limit })
     });
   } catch (error) { throw new ServiceError(error.name === 'TimeoutError' ? 'errors.zetarisTimeout' : 'errors.zetarisNetwork'); }
   if ([401, 403].includes(response.status)) throw new ServiceError('errors.zetarisAuth', 503);
@@ -113,6 +115,7 @@ async function zetarisQuery(sql, limit, env, fetcher) {
   try { result = await response.json(); } catch { throw new ServiceError('errors.zetarisQuery'); }
   if (!result || result.error || result.success === false || !Array.isArray(result.data)) throw new ServiceError('errors.zetarisQuery');
   if (result.data.length > limit) throw new ServiceError('errors.zetarisLimit');
+  onQuery({ requestId, queryId, sql, limit, startedAt, completedAt: new Date().toISOString(), durationMs: Math.round(performance.now() - started), rowCount: result.data.length });
   return result.data;
 }
 export async function checkZetaris(env = process.env, fetcher = fetch) {
@@ -123,12 +126,13 @@ export async function checkZetaris(env = process.env, fetcher = fetch) {
     return { state: Number(value) === 1 ? 'online' : 'offline' };
   } catch (error) { return { state: error.message === 'errors.zetarisAuth' ? 'unauthorized' : 'offline' }; }
 }
-export async function readZetaris(env = process.env, fetcher = fetch) {
+export async function readZetaris(env = process.env, fetcher = fetch, onQuery = () => {}) {
   const table = env.ZETARIS_TABLE || 'talentlens.candidates';
   if (!/^[a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*){0,2}$/.test(table)) throw new ServiceError('errors.zetarisTable', 400);
   const columns = ['candidate_id', 'display_name', 'document_name', 'cv_text'];
-  const rows = await zetarisQuery(`SELECT ${columns.join(', ')} FROM ${table} LIMIT 25`, 25, env, fetcher);
-  return rows.map(row => {
+  let trace;
+  const rows = await zetarisQuery(`SELECT ${columns.join(', ')} FROM ${table} LIMIT 25`, 25, env, fetcher, value => { trace = value; onQuery({ ...trace, table }); });
+  const parsed = rows.map(row => {
     if (Array.isArray(row)) {
       if (row.length !== columns.length) throw new ServiceError('errors.zetarisQuery');
       return Object.fromEntries(columns.map((name, index) => [name, row[index]]));
@@ -136,4 +140,12 @@ export async function readZetaris(env = process.env, fetcher = fetch) {
     if (!row || typeof row !== 'object' || !columns.every(name => Object.hasOwn(row, name))) throw new ServiceError('errors.zetarisQuery');
     return Object.fromEntries(columns.map(name => [name, row[name]]));
   });
+  onQuery({ ...trace, table });
+  return parsed;
+}
+// Verification scripts bind consent to the exact public fixture set, including metadata.
+export function zetarisInputDigest(rows) {
+  const canonical = rows.map(r => [String(r.candidate_id), r.display_name, r.document_name, r.cv_text])
+    .sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
+  return createHash('sha256').update(JSON.stringify(canonical)).digest('hex');
 }
