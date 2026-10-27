@@ -9,7 +9,7 @@ TalentLens helps a recruiter inspect what a candidate's sources support, identif
 3. Source-verified H-MEM context is retrieved for the current organisation and candidates. Open disputes, superseded facts and review-tagged memories are excluded.
 4. Nemotron drafts a comparison with exact source quotations and document IDs.
 5. A second Nemotron call critiques the draft against the original sources, including negations, interest versus experience, contradictory statements and injected instructions. It returns the final report and concise observations, not private chain-of-thought. This pass can still make mistakes.
-6. The application validates every candidate, requirement, citation and source ID. Unclear/missing rows need a concrete follow-up question. One bounded correction is permitted per model stage; failure returns an error rather than a fabricated result.
+6. The application validates every candidate, requirement, citation and source ID. Unclear/missing rows need a concrete follow-up question. Extraction and comparison allow one correction each; critical review allows two, with targeted feedback for attribution and follow-up omissions. Every attempt uses the same validator. The maximum is seven calls for a new role; provider/network failures are not retried automatically.
 7. Open a matrix cell to inspect the source, highlighted quote, explanation and next question. Record an authorised candidate statement or recruiter observation with a source reference.
 8. Explicitly consent and rerun. The report shows changed evidence states/citations compared with the prior report for the same role and language. Previously extracted requirements are reused only for an unchanged role description and a current version-2 report.
 9. Source-backed clarification evidence can become H-MEM context for another role. The UI labels it as an attributed statement, not independently verified truth.
@@ -23,6 +23,12 @@ TalentLens helps a recruiter inspect what a candidate's sources support, identif
 - A source/candidate deletion removes relevant memories, snapshots and generated commentary, review findings, follow-up questions and history changes. In-flight requests are invalidated on source changes.
 - `matchedMemoryIds` means a final citation also appears in supplied memory. It is not proof of causal model use. Legacy `usedMemoryIds` remain readable in historical artifacts, with the same qualified UI wording.
 - Progress labels reflect actual backend stages, not a simulated completion percentage.
+
+## Readiness and cancellation
+
+Before analysis or report translation, the server checks the configured provider's authenticated model catalog without sending CVs. This verifies reachability and advertised-model availability, not inference quota or the actual route; the response model is still validated after inference. An unavailable service, rejected token or missing model returns a specific error.
+
+The shared inference lock is acquired before that network check. Its entire lifetime, including preflight and failure, uses `try/finally`. The source revision is captured before waiting, then checked before every inference request and before saving. Deleting or replacing a CV during preflight cancels the request before source text is sent; translation also verifies that its captured report has not been redacted or changed. The targeted tests use a deliberately paused catalog response to reproduce concurrent requests and source changes.
 
 ## Reproduction
 

@@ -18,8 +18,8 @@ if not exist node_modules (
 powershell.exe -NoProfile -Command "if (Get-NetTCPConnection -LocalPort 8088 -State Listen -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }"
 if errorlevel 1 (
   echo.
-  echo NOTICE: Nightshift is not listening on port 8088.
-  echo Start the Nightshift desktop app before requesting a fresh AI analysis.
+  echo NOTICE: No listener was found on the default Nightshift port 8088.
+  echo Start Nightshift, or check your custom runtime address in Connections.
   echo You can still upload CVs and use the recorded demo. Docker is not required for Nightshift.
   echo.
 )

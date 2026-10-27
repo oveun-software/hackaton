@@ -28,7 +28,7 @@ English, Spanish, French and German cover controls, errors, illustrations, repor
 2. Nemotron extracts independent required/preferred criteria through Nightshift.
 3. H-MEM retrieves relevant earlier context scoped to the organisation and current candidates. Source verification and conflict exclusion happen before prompt construction.
 4. Nemotron drafts the comparison; a separate Nemotron call critically reviews claims, negations, contradictions and gaps.
-5. Application code validates IDs, full coverage and literal quotes against the identified source. A failed stage has one bounded correction, up to six calls for a new role.
+5. Application code validates IDs, full coverage and literal quotes against the identified source. Extraction and comparison allow one correction each; critical review allows two, up to seven calls for a new role. Provider preflight and every model call respect source-change cancellation and a shared inference lock.
 6. The recruiter opens evidence, records a clarification and reruns. Stable requirements allow a meaningful before/after comparison.
 7. SQLite persists reports, attributed sources and H-MEM/Trust Ledger state. Deletion and source changes invalidate in-flight requests.
 
@@ -46,7 +46,7 @@ Stack: Node.js 22+, Express 5, built-in SQLite, native JavaScript/CSS, bounded c
 
 ## Verification and measured limits
 
-- **36 application tests** with mocked external transport: coverage and exact citations, critical review, translation integrity, clarification lifecycle, attribution across restart, conflicts, privacy deletion, source replacement and in-flight invalidation.
+- **44 application tests** with mocked external transport: coverage and exact citations, critical review, translation integrity, clarification lifecycle, attribution across restart, conflicts, privacy deletion, source replacement and in-flight invalidation.
 - **13 official H-MEM checks**, pinned and SHA-256 verified in local and CI runs.
 - **16 fictional profiles, 32 criterion/candidate assessments:** real Nemotron output matched all authored expectations; zero unsupported positives in this set. Covers interest versus experience, negation, contradiction, adjacent skills, leadership versus participation, Spanish evidence and one CV instruction attack. The critical pass changed zero cells, so no incremental quality gain is claimed. Full outputs, model receipts and dataset hash are in `evaluation/results.json`.
 - **Live clarification/restart workflow on 26 October:** three reports plus a current-CV-only comparison, ten actual Nemotron Lightning calls. Sam's TypeScript evidence changes from unclear to supported after an attributed answer. After restart, a later role retrieves and cites that answer; the paired no-memory result remains unclear. One stochastic comparison illustrates source access, not average causal benefit. Evidence: `examples/zetaris/verified-review-workflow.json`.

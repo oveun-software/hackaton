@@ -16,7 +16,7 @@ The project is **not submitted or marked complete**. No video is included, as re
 | Real clarification/restart/comparison | [recording](../examples/zetaris/verified-review-workflow.json) |
 | Individual account setup | [team setup](../docs/TEAM-SETUP.md) |
 | Sponsors and provenance | [submission notes](../docs/SUBMISSION.md) |
-| Engineering checks | 36/36 application tests, 13/13 official H-MEM checks; syntax and credential scan |
+| Engineering checks | 44/44 application tests, 13/13 official H-MEM checks; syntax and credential scan |
 | Video | Intentionally not produced |
 | HackOS draft | Not saved: current member cannot manage submissions. Maria Rodriguez is the leader |
 | Final submission | Pending user review and video; do not finalize |

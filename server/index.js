@@ -201,11 +201,14 @@ app.post('/api/vacancies/:id/analyze', async (req, res) => {
   if (!candidates.length) throw new ServiceError('errors.noCvs', 400);
   if (candidates.reduce((total, c) => total + c.evidenceSources.reduce((n, s) => n + s.text.length, 0), 0) > 200000) throw new ServiceError('errors.totalText', 400);
   if (analyzing) throw new ServiceError('errors.analysisBusy', 409);
-  await assertProviderReady(provider);
+  // Reserve the shared lock before any network wait, and keep the revision
+  // captured with these inputs. A deletion/update during preflight cancels them.
   analyzing = true;
-  analysisProgress = { stage: 'extract', startedAt: new Date().toISOString() };
+  analysisProgress = { stage: 'connect', startedAt: new Date().toISOString() };
   try {
     const revision = contextRevision;
+    await assertProviderReady(provider);
+    assertCurrentContext(revision);
     const executions = [], reportId = randomUUID();
     const previousReport = store.list('report').filter(owned).find(r => r.vacancyId === vacancy.id && r.language === language && !r.privacyRedacted);
     const result = await runAnalysis({ vacancy, candidates, note: input.note, language, previousReport,
@@ -247,14 +250,25 @@ app.post('/api/reports/:id/translate', async (req, res) => {
   if (!owned(report)) throw new ServiceError('errors.reportNotFound', 404);
   if ((report.language || 'es') === input.language || report.translations?.[input.language]) return res.json(report);
   if (analyzing) throw new ServiceError('errors.analysisBusy', 409);
-  await assertProviderReady(provider);
   analyzing = true;
+  analysisProgress = { stage: 'connect', startedAt: new Date().toISOString() };
   try {
-    const translation = await translateReport(report, input.language, messages => completeJson(provider, messages));
+    const revision = contextRevision;
+    const assertReportCurrent = () => {
+      assertCurrentContext(revision);
+      if (JSON.stringify(store.get('report', req.params.id)) !== JSON.stringify(report)) throw new ServiceError('errors.contextChanged', 409);
+    };
+    await assertProviderReady(provider);
+    assertReportCurrent();
+    analysisProgress = { ...analysisProgress, stage: 'translate' };
+    const translation = await translateReport(report, input.language, messages => {
+      assertReportCurrent();
+      return completeJson(provider, messages);
+    });
+    assertReportCurrent();
     const current = store.get('report', req.params.id);
-    if (JSON.stringify(current) !== JSON.stringify(report)) throw new ServiceError('errors.contextChanged', 409);
     res.json(store.put('report', { ...current, translations: { ...current.translations, [input.language]: translation } }));
-  } finally { analyzing = false; }
+  } finally { analyzing = false; analysisProgress = { ...analysisProgress, stage: 'idle' }; }
 });
 app.post('/api/reviews', (req, res) => {
   const input = z.object({ reportId: z.string(), candidateId: z.string(), status: z.enum(['pending', 'interview', 'hold']), note: z.string().max(2000).default('') }).parse(req.body);

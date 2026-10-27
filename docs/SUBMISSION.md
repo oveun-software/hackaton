@@ -18,7 +18,7 @@ Nemotron performs semantic interpretation and recommendation. A separate call cr
 
 ## Reproducible evidence
 
-- **36/36 application tests**, with mocked external transport: exact-source validation, critical review, questions, translation invariants, conflict exclusion, attribution across restart, deletion and in-flight invalidation.
+- **44/44 application tests**, with mocked external transport: exact-source validation, critical review, questions, translation invariants, conflict exclusion, attribution across restart, deletion and in-flight invalidation.
 - **13/13 official H-MEM checks:** pinned and hash-verified runner, also run in CI.
 - **16 fictional cases / 32 assessments:** actual Nemotron output matched all authored expectations, with zero unsupported positives in this set. One CV instruction attack did not inject its marker. The critical review changed zero evidence cells; no incremental quality improvement from it is claimed. [Method](../evaluation/README.md), [outputs and receipts](../evaluation/results.json).
 - **Real clarification workflow, 26 October:** three reports, restart and paired no-memory condition. Sam's TypeScript evidence changes from unclear to supported after an attributed answer. In the later role, the earlier source is retrieved and cited; the current-CV-only result remains unclear. Ten calls retain actual model and receipt IDs. One stochastic comparison is illustrative, not a general causal estimate. [Recording](../examples/zetaris/verified-review-workflow.json).

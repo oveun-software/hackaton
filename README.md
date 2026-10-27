@@ -26,7 +26,7 @@ The three steps show the original evidence, a documented clarification and anoth
 - A second Nemotron review checking unsupported claims, negations, contradictions and evidence gaps; unresolved rows include a concrete question.
 - Attributed clarification sources, reanalysis and an explicit comparison with the prior report. Candidate statements remain labelled as statements, not independently verified facts.
 - Memory with source type, date, provenance and human conflict resolution. Repeating an analysis cannot reactivate a disputed memory.
-- **38 automated tests and 13/13 official H-MEM checks.** A real model evaluation matched **32/32 authored evidence expectations across 16 fictional cases**, with zero unsupported positive assessments in that set. This is a small diagnostic evaluation, not a general accuracy or fairness guarantee. The critical review made no evidence-state/citation changes in that evaluation run; no incremental quality gain is claimed.
+- **44 automated tests and 13/13 official H-MEM checks.** A real model evaluation matched **32/32 authored evidence expectations across 16 fictional cases**, with zero unsupported positive assessments in that set. This is a small diagnostic evaluation, not a general accuracy or fairness guarantee. The critical review made no evidence-state/citation changes in that evaluation run; no incremental quality gain is claimed.
 
 See [evidence review](docs/EVIDENCE-REVIEW.md), [evaluation results](evaluation/results.json), [evaluation methodology](evaluation/README.md), and the [guided fictional-CV pilot](evaluation/RECRUITER-PILOT.md).
 
@@ -43,7 +43,7 @@ All inputs are fictional and committed, along with [individual CV files](example
 
 ## Live application: download and configure
 
-The live workspace requires **Node.js 22.16 or later** and npm. Node 22 is recommended. A fresh Nemotron analysis also requires the Nightshift desktop runtime to remain open. Docker is **not** required for local CV uploads, H-MEM or Nightshift; it is only required when you use the optional local Zetaris import.
+The live workspace requires **Node.js 22.16 or later** and npm. Node 22 is recommended. A fresh Nemotron analysis also requires the Nightshift desktop runtime to remain open. Local uploads, H-MEM and Nightshift can run without Docker. The local Zetaris installation uses Docker. **Zetaris integration remains required for the hackathon submission**; local-upload and recorded-sample modes are additional ways to test the product.
 
 1. Clone and install the exact dependencies:
 
@@ -69,7 +69,7 @@ The live workspace requires **Node.js 22.16 or later** and npm. Node 22 is recom
    npm.cmd run doctor -- --infer
    ```
 
-   Continue only when `ai.state` is `online`, `ai.modelAvailable` is `true` and `ai.inference` is `passed`. Zetaris is reported separately and is optional for a workflow based on uploaded files. Add `--require-zetaris` when you want this command to fail unless the complete Zetaris path is also online.
+   Continue only when `ai.state` is `online`, `ai.modelAvailable` is `true` and `ai.inference` is `passed`. Zetaris is reported separately and is optional for a workflow based on uploaded files. Add `--require-zetaris` to also require a successful Zetaris `SELECT 1` connection check. That check does not verify the candidate view or full import; use `npm run verify:review` for the end-to-end sponsor workflow.
 
 5. Start TalentLens:
 
@@ -142,11 +142,11 @@ npm.cmd run doctor -- --infer
 
 | Symptom | Meaning | Action |
 | --- | --- | --- |
-| Connections says Nightshift is unavailable | Nothing is listening at `127.0.0.1:8088` | Start the Nightshift desktop app, wait a few seconds and test again. Docker does not start Nightshift. |
+| Connections says Nightshift is unavailable | The configured runtime cannot be reached or did not return a valid model catalog | Start Nightshift and check `METERLESS_BASE_URL` (default `http://127.0.0.1:8088/v1`), then test again. Docker does not start Nightshift. |
 | Credentials are rejected | `.env` contains a missing or stale runtime token | Keep Nightshift open, run the refresh-token setup command, restart TalentLens and test again. |
 | Provider is online but the model is unavailable | `METERLESS_MODEL` is not present in `/v1/models` | Enable the model in Nightshift or select an advertised concrete model, then rerun the doctor. |
 | A catalog check passes but inference fails | The NVIDIA key, quota or Nightshift route cannot complete a request | Inspect Nightshift Providers and enabled models, then use the doctor inference result as the gate. |
-| Zetaris is unavailable but uploaded CVs work | The optional local data service or Docker engine is stopped | Continue with uploaded CVs, or start Docker Desktop and the Zetaris stack before using **Import from Zetaris**. |
+| Zetaris is unavailable but uploaded CVs work | The data service or Docker engine may be stopped | Local uploads remain available. Start Docker Desktop and the Zetaris stack to demonstrate the required sponsor integration. |
 
 **Live verification passed on 22 October 2026:** three fictional CVs were retrieved from Zetaris and analysed through Nightshift by `nvidia/nemotron-3.5-lightning-30b-a3b`; both actual model IDs and receipt IDs were confirmed. Every candidate and requirement was covered and every source quotation passed validation. The successful run used two model calls.
 
@@ -164,7 +164,7 @@ CV updates create new document versions and place older facts into pending verif
 
 ## Connect Zetaris
 
-The event's current [Zetaris setup repository](https://github.com/zetaris/getting-started) uses a local Docker installation with Lightning JDBC and REST access. This is an optional import path: Docker is not involved in Nightshift, local file uploads or H-MEM. Obtain the platform bundle, matching configuration and registry credentials from [Zetaris Cloud](https://cloud.enterprise.zetaris.com), then follow its [local installation guide](https://github.com/zetaris/getting-started/blob/main/docs/install/updated_zetaris_installation_guide.md). The platform distribution and evaluation entitlement are separate from the open-source recipes. On Windows, the guide uses WSL2 with Docker Desktop integration. Before troubleshooting Zetaris logs, confirm that Docker Desktop's Linux engine is running with `docker version` and `docker ps`.
+The event's current [Zetaris setup repository](https://github.com/zetaris/getting-started) uses a local Docker installation with Lightning JDBC and REST access. Zetaris is the required sponsor data-layer integration; individual local-upload sessions can work while it is offline. Docker is not involved in Nightshift, local file uploads or H-MEM. Obtain the platform bundle, matching configuration and registry credentials from [Zetaris Cloud](https://cloud.enterprise.zetaris.com), then follow its [local installation guide](https://github.com/zetaris/getting-started/blob/main/docs/install/updated_zetaris_installation_guide.md). The platform distribution and evaluation entitlement are separate from the open-source recipes. On Windows, the guide uses WSL2 with Docker Desktop integration. Before troubleshooting Zetaris logs, confirm that Docker Desktop's Linux engine is running with `docker version` and `docker ps`.
 
 TalentLens uses the bundle's **Lightning REST API**, following Zetaris's [official REST channel implementation](https://github.com/zetaris/getting-started/blob/main/scripts/zetaris_sql.py). Configure a dedicated read-only API key and an authorised candidate view with these columns:
 

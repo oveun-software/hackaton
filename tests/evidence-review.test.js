@@ -42,6 +42,15 @@ test('source attribution cannot borrow a literal quote from another source or ca
   const bad = structuredClone(draft); bad.candidates[0].evidence[0].sourceId = 'note';
   assert.throws(() => validateReport(bad, [withSources], requirements), /errors.invalidQuote/);
 });
+test('critical review stops after two corrections and never accepts missing attribution', async () => {
+  const incomplete = { summary: 'A fictional review still missing source attribution.', findings: [], report: structuredClone(draft) };
+  delete incomplete.report.candidates[0].evidence[0].sourceId;
+  let calls = 0;
+  await assert.rejects(() => runAnalysis({ vacancy, candidates: [candidate], complete: async () => {
+    calls++; return calls === 1 ? { requirements, clarificationQuestions: [] } : calls === 2 ? draft : incomplete;
+  } }), /errors.reviewCoverage/);
+  assert.equal(calls, 5, 'one extraction, one comparison and three review attempts');
+});
 test('history comparison records changed evidence without inventing ranking scores', () => {
   const before = { ...structuredClone(draft), requirements }, after = structuredClone(before);
   before.candidates[0].evidence[0].status = 'unclear'; after.candidates[0].evidence[0].sourceId = 'clarification';

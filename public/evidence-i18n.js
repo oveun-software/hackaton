@@ -63,6 +63,8 @@ export const evidenceMessages = {
   saveClarification: ['Save source', 'Guardar fuente', 'Enregistrer la source', 'Quelle speichern'],
   'errors.reviewCoverage': ['The review did not provide complete sources or follow-up questions. Please try again.', 'La revisión no aportó fuentes o preguntas completas. Vuelve a intentarlo.', 'La vérification n’a pas fourni toutes les sources ou questions. Réessayez.', 'Die Prüfung lieferte nicht alle Quellen oder Rückfragen. Bitte erneut versuchen.'],
   'errors.clarificationLimit': ['This candidate has reached the limit of 20 clarification sources.', 'Esta candidatura ha alcanzado el límite de 20 fuentes de aclaración.', 'Ce candidat a atteint la limite de 20 sources de clarification.', 'Für diese Person wurde das Limit von 20 Klärungsquellen erreicht.'],
+  stage_connect: ['Checking the AI connection', 'Comprobando la conexión de IA', 'Vérification de la connexion à l’IA', 'KI-Verbindung wird geprüft'],
+  stage_translate: ['Translating the report', 'Traduciendo el informe', 'Traduction du rapport', 'Bericht wird übersetzt'],
   stage_extract: ['Interpreting each requirement', 'Interpretando cada requisito', 'Interprétation de chaque critère', 'Jede Anforderung wird interpretiert'],
   stage_retrieve: ['Checking earlier source evidence', 'Comprobando evidencias anteriores', 'Vérification des preuves antérieures', 'Frühere Quellenbelege werden geprüft'],
   stage_compare: ['Comparing professional evidence', 'Comparando evidencias profesionales', 'Comparaison des preuves professionnelles', 'Berufliche Belege werden verglichen'],
