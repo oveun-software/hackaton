@@ -1,6 +1,6 @@
 # English entry draft
 
-Prepared for the additional Zetaris Demo Challenge. **These are reusable text blocks, not verified form fields.** They contain no assertion that the entry has been submitted or is eligible under conditions not yet inspected.
+Prepared for the additional Zetaris Demo Challenge and updated after reading its official rules on 31 October. The one-sentence answer below is explicitly required; other blocks are reusable copy to fit the actual write-up. No entry has been submitted or consent accepted. See [the rules and remaining uncertainties](RULES-AND-VIDEO-CHECK.md).
 
 ## Project title
 
@@ -11,13 +11,21 @@ TalentLens — Traceable Recruiting with Zetaris
 - Project: TalentLens
 - Team: Los pichones de Oveun
 - Original hackathon team: Ariana García, Maria Rodriguez, Diego Rodríguez Domínguez
-- New challenge's entrant/representative: to confirm against the form and team agreement. Do not assume the email recipient and original team leader must be the same entrant.
+- New challenge's entrant/representative: the team must nominate one member and agree to entry and the content-use permission. Do not assume the email recipient and original team leader must be the same entrant.
 
 Do not insert private contact details or personal credentials in the public repository. Enter the representative's own contact information directly into the verified form if requested.
 
 ## One-line summary
 
 TalentLens uses Zetaris to join candidate profiles and CV documents, query the current candidate pool, and connect AI recommendations to inspectable source evidence.
+
+## Required one-sentence answer: what impressed us about Zetaris
+
+**Draft for the team's approval; only use it if it reflects your actual experience:**
+
+Zetaris impressed us by making separate profile and CV sources available through one read-only view that our application could query and connect to exact, inspectable evidence behind each recommendation.
+
+The video must separately include a 40–60 second personal/team explanation. This one-sentence written answer does not replace that segment. The rules permit Zetaris to quote the submitted statement with attribution in marketing and social material, so the team must approve the final wording before consenting.
 
 ## Short description
 
@@ -61,7 +69,9 @@ This is a local single-user prototype. The synthetic demonstration uses **two CS
 - Real query, source documents, output and receipts: https://github.com/oveun-software/hackaton/blob/669fa56/examples/zetaris/verified-fresh-query.json
 - Zetaris source/view recipe: https://github.com/oveun-software/hackaton/blob/669fa56/examples/zetaris/create.sql
 - Source-mode walkthrough: https://github.com/oveun-software/hackaton/blob/669fa56/docs/ZETARIS-WORKFLOW.md
-- Final Zetaris challenge video URL: **not yet available**. Add only after the official format is verified and the final upload is accessible.
+- New challenge consent: https://hackathon.genai.works/competition-consent/zetaris-demo-video
+- Official rules and upload link: https://www.zetaris.com/zetaris-demo-challenge-official-rules
+- Final Zetaris challenge video/file: **not yet prepared or uploaded**. Verify the content, actual duration limit, filename/date and team consent before delivery.
 
 ## Optional video description
 

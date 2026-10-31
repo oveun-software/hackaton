@@ -1,6 +1,6 @@
 # Zetaris-focused demo video
 
-**Proposed duration: 2:00.** The official duration/format is not yet verified because the invitation screenshot omits its participation link. Confirm the actual rules before recording the final edit. Narration and product controls are English.
+**Proposed duration: 2:50**, including the required 40–60 second personal/team explanation. The official page was checked on 31 October and still contains `[X] minutes` for the maximum length. Confirm the final limit; 2:50 is our edit proposal. Narration and product controls are English.
 
 The objective is to show what Zetaris actually does: source registration/join, a fresh application query and inspectable document lineage. The original hackathon's general 3:27 video should not be assumed sufficient for this new challenge.
 
@@ -50,7 +50,13 @@ LIMIT 25
 
 > This assessment opens directly onto the original source quotation. Where support is missing, the agent proposes a follow-up question. A separate model pass reviews its claims, while application checks validate citations. The recruiter can inspect the evidence and choose the next step.
 
-### 01:45–02:00 — Sponsor contribution and close
+### 01:45–02:35 — Required team explanation (50 seconds)
+
+**Screen:** A team member can speak on camera, or use their own voiceover over the actual joined view, query and report. Keep the segment continuous, clearly introduced with `What impressed us about Zetaris`. Time the final spoken take: it must last 40–60 seconds. The speaker should edit the draft below to reflect their actual experience. It is not a claim that the team has already approved this wording.
+
+> What stood out to us was being able to connect the candidate profile to the CV text and then inspect that data handoff. We wanted each recommendation to show where its input came from. With Zetaris, we could expose one read-only view and query it before each analysis. The report then kept the query, source versions and hashes alongside the model's quotations. For us, the useful moment was opening a recommendation and tracing it back to the exact document it used. Zetaris supplied the candidate data, and our application preserved the evidence for a person to review.
+
+### 02:35–02:50 — Sponsor contribution and close
 
 **Screen:** Return briefly to the Zetaris joined view, then the report trace. End with the TalentLens logo and repository link. If displaying receipt JSON, use the recording belonging to the displayed run and label its date.
 
@@ -58,10 +64,11 @@ LIMIT 25
 
 ## Edit notes
 
-- Target approximately 2:00, leaving reading time for the query and quotation. Adjust to the verified event limit when available.
+- Target approximately 2:50, leaving reading time for the query and quotation. The personal explanation must itself last 40–60 seconds. Adjust the overall edit if the organiser specifies a maximum.
 - Spend at least half the edit on Zetaris and its data/query trace. H-MEM can be mentioned briefly if time permits; a long memory replay would dilute this entry's focus.
 - Show genuine UI interactions and query results. A logo slide or sponsor name alone does not demonstrate the integration.
 - Keep the three candidates labelled fictional. Hide notifications, private account details, `.env`, bearer headers and API-key screens.
 - Client-generated query/request IDs are correlation identifiers, not signed Zetaris receipts. Nightshift receipts are separate model-execution metadata.
 - Do not claim production data federation, exhaustive candidate search, zero data movement, measured recruiter productivity gains or guaranteed model correctness.
 - Export a test copy and check readability, audio, event format and reviewer access before the final upload. No final video has been produced by this package.
+- The [rules/reuse check](RULES-AND-VIDEO-CHECK.md) records the conflicting closing dates, required filename/write-up and the separate team/content permission. Do not submit merely by reusing the original HackOS link.

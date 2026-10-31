@@ -1,6 +1,6 @@
 # Evidence index for the Zetaris demo
 
-All paths below refer to the existing TalentLens build. The dated evidence is preserved unchanged. These checks support the product demonstration; they do not establish compliance with this additional event's unpublished/uninspected conditions.
+All paths below refer to the existing TalentLens build. The dated evidence is preserved unchanged. These checks support the product demonstration. The additional event's official conditions were inspected on 31 October; unresolved placeholders and the existing-video check are recorded in [RULES-AND-VIDEO-CHECK.md](RULES-AND-VIDEO-CHECK.md).
 
 | Claim to demonstrate | Evidence | What it establishes |
 | --- | --- | --- |
@@ -22,7 +22,7 @@ All paths below refer to the existing TalentLens build. The dated evidence is pr
 - Completed model calls: **3**.
 - Inputs: Alex Rivera, Sam Torres and Dani Vega, all explicitly fictional.
 
-No new live inference was performed when preparing this package on 30 October. The date above belongs to the original recorded check.
+No new live inference was performed when preparing/updating this package on 30–31 October. The date above belongs to the original recorded check.
 
 ## Reproduce without provider calls
 
